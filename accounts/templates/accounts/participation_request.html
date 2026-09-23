@@ -1,0 +1,268 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Participation — DSE Digital Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/eya.css' %}">
+</head>
+<body>
+<div class="login-wrap">
+  <!-- LEFT: Form panel -->
+  <div class="login-left">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <a href="https://auditaxinternational.co.tz/" target="_blank" rel="noopener noreferrer">
+        <img src="{% static 'auditax.png' %}" alt="Auditax International" style="height:64px;width:auto;display:block;">
+      </a>
+      <img src="{% static 'dse_logo.png' %}" alt="EYA" style="height:64px;width:auto;display:block;">
+    </div>
+
+    <div class="login-form" style="padding-top:8px;">
+      <div style="margin-bottom:4px;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold-2);">EYA 2026 · Employer of the Year Award</div>
+      <h1 style="color:var(--navy);font-size:22px;font-weight:600;margin-bottom:6px;">Request Participation</h1>
+      <a href="{% url 'login' %}" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--gold-2);font-weight:500;text-decoration:none;margin-bottom:14px;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Already have credentials? Sign in
+      </a>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;height:0;width:0;overflow:hidden;">
+          <label for="{{ form.website.id_for_label }}">Website</label>
+          {{ form.website }}
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="non-field-errors" style="margin-bottom:12px;">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <!-- Two-column form grid -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;">
+
+          <!-- Section: Organization Details -->
+          <div style="grid-column:1/-1;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);padding-bottom:6px;border-bottom:1px solid var(--line);margin-top:4px;">
+            Organization Details
+          </div>
+
+          <!-- Organization Name — full width -->
+          <div class="field" style="grid-column:1/-1;">
+            <div class="label" style="margin-bottom:4px;">{{ form.org_name.label }} <span style="color:var(--brick);">*</span></div>
+            {{ form.org_name }}
+            {% for error in form.org_name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+
+          <!-- Type | Region -->
+          <div class="field">
+            <div class="label" style="margin-bottom:4px;">{{ form.org_type.label }} <span style="color:var(--brick);">*</span></div>
+            {{ form.org_type }}
+            {% for error in form.org_type.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="field">
+            <div class="label" style="margin-bottom:4px;">{{ form.region.label }} <span style="color:var(--brick);">*</span></div>
+            {{ form.region }}
+            {% for error in form.region.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+
+          <!-- Hidden inputs for org_subtype and org_subtype_other (values managed by JS) -->
+          {{ form.org_subtype }}
+          {{ form.org_subtype_other }}
+
+          <!-- Subtype dropdown — hidden until a type is chosen (JS-managed) -->
+          <div class="field" id="subtype-row" style="display:none;grid-column:1/-1;">
+            <div class="label" style="margin-bottom:4px;">Organization Subtype <span style="color:var(--brick);">*</span></div>
+            <select id="subtype-visible" class="input">
+              <option value="">— Select subtype —</option>
+            </select>
+            {% for error in form.org_subtype.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+
+          <!-- Other description — hidden until "Other" subtype chosen (JS-managed) -->
+          <div class="field" id="other-row" style="display:none;grid-column:1/-1;">
+            <div class="label" style="margin-bottom:4px;">Subtype description <span style="color:var(--brick);">*</span></div>
+            <input type="text" id="other-visible" class="input" placeholder="Describe your subtype…" autocomplete="off">
+            {% for error in form.org_subtype_other.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+
+          <!-- Physical Address — full width -->
+          <div class="field" style="grid-column:1/-1;">
+            <div class="label" style="margin-bottom:4px;">{{ form.physical_address.label }}</div>
+            {{ form.physical_address }}
+            {% for error in form.physical_address.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+
+          <!-- Postal Address | Employees -->
+          <div class="field">
+            <div class="label" style="margin-bottom:4px;">{{ form.postal_address.label }}</div>
+            {{ form.postal_address }}
+            {% for error in form.postal_address.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="field">
+            <div class="label" style="margin-bottom:4px;">{{ form.num_employees.label }}</div>
+            {{ form.num_employees }}
+            {% for error in form.num_employees.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+
+          <!-- Investment Capital — full width -->
+          <div class="field" style="grid-column:1/-1;">
+            <div class="label" style="margin-bottom:4px;">{{ form.investment_capital.label }}</div>
+            {{ form.investment_capital }}
+            {% for error in form.investment_capital.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+
+          <!-- Section: Respondent Details -->
+          <div style="grid-column:1/-1;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);padding-bottom:6px;border-bottom:1px solid var(--line);margin-top:8px;">
+            Respondent Details
+          </div>
+
+          <!-- First Name | Last Name -->
+          <div class="field">
+            <div class="label" style="margin-bottom:4px;">{{ form.first_name.label }} <span style="color:var(--brick);">*</span></div>
+            {{ form.first_name }}
+            {% for error in form.first_name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="field">
+            <div class="label" style="margin-bottom:4px;">{{ form.last_name.label }} <span style="color:var(--brick);">*</span></div>
+            {{ form.last_name }}
+            {% for error in form.last_name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+
+          <!-- Position — full width -->
+          <div class="field" style="grid-column:1/-1;">
+            <div class="label" style="margin-bottom:4px;">{{ form.position.label }} <span style="color:var(--brick);">*</span></div>
+            {{ form.position }}
+            {% for error in form.position.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+
+          <!-- Phone | Email -->
+          <div class="field">
+            <div class="label" style="margin-bottom:4px;">{{ form.phone_number.label }} <span style="color:var(--brick);">*</span></div>
+            {{ form.phone_number }}
+            {% for error in form.phone_number.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="field">
+            <div class="label" style="margin-bottom:4px;">{{ form.email.label }} <span style="color:var(--brick);">*</span></div>
+            {{ form.email }}
+            {% for error in form.email.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+
+          <!-- Submit — full width -->
+          <div style="grid-column:1/-1;margin-top:8px;">
+            <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">
+              Submit Request
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+
+        </div><!-- /grid -->
+
+        {{ subtypes_data|json_script:"subtypes-data" }}
+        <script>
+        (function () {
+          var SUBTYPES = JSON.parse(document.getElementById('subtypes-data').textContent);
+          var typeSelect    = document.getElementById('id_org_type');
+          var subtypeHidden = document.getElementById('id_org_subtype');
+          var subtypeRow    = document.getElementById('subtype-row');
+          var subtypeVis    = document.getElementById('subtype-visible');
+          var otherRow      = document.getElementById('other-row');
+          var otherHidden   = document.getElementById('id_org_subtype_other');
+          var otherVis      = document.getElementById('other-visible');
+
+          function rebuildSubtypes(subtypes, selected) {
+            subtypeVis.innerHTML = '<option value="">— Select subtype —</option>';
+            subtypes.forEach(function (pair) {
+              var opt = document.createElement('option');
+              opt.value = pair[0]; opt.textContent = pair[1];
+              if (pair[0] === selected) { opt.selected = true; }
+              subtypeVis.appendChild(opt);
+            });
+          }
+
+          function applyOtherRow() {
+            if (subtypeVis.value === 'other') {
+              otherRow.style.display = '';
+              otherVis.value = otherHidden.value;
+            } else {
+              otherRow.style.display = 'none';
+              otherVis.value = ''; otherHidden.value = '';
+            }
+          }
+
+          typeSelect.addEventListener('change', function () {
+            var subs = SUBTYPES[typeSelect.value] || [];
+            subtypeHidden.value = ''; otherHidden.value = '';
+            if (subs.length === 0) {
+              subtypeRow.style.display = 'none';
+              subtypeVis.innerHTML = '<option value="">— Select subtype —</option>';
+              otherRow.style.display = 'none'; otherVis.value = '';
+            } else {
+              subtypeRow.style.display = ''; rebuildSubtypes(subs, '');
+              applyOtherRow();
+            }
+          });
+
+          subtypeVis.addEventListener('change', function () {
+            subtypeHidden.value = subtypeVis.value; applyOtherRow();
+          });
+
+          otherVis.addEventListener('input', function () {
+            otherHidden.value = otherVis.value;
+          });
+
+          // Re-initialise on page load for validation-error re-renders
+          (function init() {
+            var subs = SUBTYPES[typeSelect.value] || [];
+            if (subs.length > 0) {
+              subtypeRow.style.display = ''; rebuildSubtypes(subs, subtypeHidden.value);
+              applyOtherRow();
+            }
+          }());
+        }());
+        </script>
+      </form>
+    </div>
+
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-4);font-family:var(--font-mono);">
+      © 2026 Dar es Salaam Stock Exchange · Developed by <a href="https://auditaxinternational.co.tz/" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">Auditax International</a>
+    </div>
+  </div>
+
+  <!-- RIGHT: Branding panel -->
+  <div class="login-right">
+    <div style="position:relative;z-index:1;">
+      <div style="margin-bottom:6px;">
+        <div style="font-size:18px;font-weight:600;color:rgba(255,255,255,0.9);letter-spacing:-0.01em;">EYA Digital Assessment Platform</div>
+        <div style="font-size:11.5px;color:var(--gold-mid);margin-top:4px;letter-spacing:0.04em;">Association of Tanzania Employers</div>
+      </div>
+      <div style="font-family:var(--font-display);font-size:46px;line-height:1.05;letter-spacing:-0.03em;font-weight:600;color:#fff;max-width:520px;margin-top:28px;">
+        The Employer of the<br>Year Award,<br>
+        <span style="color:var(--gold-mid);">end&#8209;to&#8209;end.</span>
+      </div>
+      <div style="color:rgba(255,255,255,0.55);margin-top:18px;max-width:440px;font-size:14px;line-height:1.7;">
+        Twenty years of paper questionnaires, now running as one organized digital workspace — for ATE, member organizations, and Secretariat and judges.
+      </div>
+    </div>
+    <div style="position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid rgba(196,146,42,0.25);padding-top:24px;margin-top:48px;">
+      <div style="border-right:1px solid rgba(255,255,255,0.1);padding-right:20px;">
+        <div style="font-family:var(--font-display);font-size:28px;font-weight:600;color:var(--gold-mid);letter-spacing:-0.02em;">11</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.45);margin-top:4px;">Assessment<br>criteria</div>
+      </div>
+      <div style="border-right:1px solid rgba(255,255,255,0.1);padding:0 20px;">
+        <div style="font-family:var(--font-display);font-size:28px;font-weight:600;color:var(--gold-mid);letter-spacing:-0.02em;">80+</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.45);margin-top:4px;">Participating<br>organizations</div>
+      </div>
+      <div style="padding-left:20px;">
+        <div style="font-family:var(--font-display);font-size:28px;font-weight:600;color:var(--gold-mid);letter-spacing:-0.02em;">20 yrs</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.45);margin-top:4px;">Programme<br>history</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

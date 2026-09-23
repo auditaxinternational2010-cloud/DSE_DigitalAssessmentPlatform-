@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Organization — DSE{% endblock %}
+{% block breadcrumb_parent %}DSE Admin{% endblock %}
+{% block breadcrumb_current %}{{ action }} Organization{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <h1 class="page-title t-display">{{ action }} Organization</h1>
+    <a href="{% url 'org_list' %}" class="btn btn-ghost">← Cancel</a>
+  </div>
+  <div class="card" style="max-width:560px;">
+    <div class="card-head">
+      <h3 class="card-title">{{ action }} Organization</h3>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+          {% if field.html_name == 'org_type' %}
+            <div class="field" style="margin-bottom:14px;">
+              <div class="label">{{ field.label }}</div>
+              <div>{{ field }}</div>
+              {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+              {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+            {# Subtype row — inserted right after org_type, shown/hidden by JS #}
+            <div class="field" id="subtype-row" style="display:none;margin-bottom:14px;">
+              <div class="label">Organization Subtype <span style="color:var(--brick);">*</span></div>
+              <select id="subtype-visible" class="form-control">
+                <option value="">— Select subtype —</option>
+              </select>
+              {% for error in form.org_subtype.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+            {# Other description row — shown only when subtype == 'other' #}
+            <div class="field" id="other-row" style="display:none;margin-bottom:14px;">
+              <div class="label">Subtype description <span style="color:var(--brick);">*</span></div>
+              <div><input type="text" id="other-visible" class="form-control" placeholder="Describe your subtype…" autocomplete="off"></div>
+              {% for error in form.org_subtype_other.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+          {% elif field.html_name == 'org_subtype' or field.html_name == 'org_subtype_other' %}
+            {# Render hidden inputs inline — visible UI is above in the org_type block #}
+            {{ field }}
+          {% elif field.field.widget.input_type == 'checkbox' and field.html_name != 'verifiers' %}
+            <div class="field" style="margin-bottom:14px;">
+              <div class="label">{{ field.label }}</div>
+              <div style="display:flex;align-items:center;gap:8px;">{{ field }}</div>
+              {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+              {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+          {% elif field.html_name == 'verifiers' %}
+            <div class="field" style="margin-bottom:14px;">
+              <div class="label">{{ field.label }}</div>
+              <div style="border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:10px;max-height:160px;overflow-y:auto;">
+                {% for choice in field %}
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                    {{ choice.tag }} <label>{{ choice.choice_label }}</label>
+                  </div>
+                {% empty %}
+                  <span class="t-muted" style="font-size:12px;">No Secretariat users available.</span>
+                {% endfor %}
+              </div>
+              {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+              {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+          {% else %}
+            <div class="field" style="margin-bottom:14px;">
+              <div class="label">{{ field.label }}</div>
+              <div>{{ field }}</div>
+              {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+              {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+          {% endif %}
+        {% endfor %}
+        <div class="row" style="gap:8px;">
+          <button type="submit" class="btn btn-primary">{{ action }}</button>
+          <a href="{% url 'org_list' %}" class="btn btn-ghost">Cancel</a>
+        </div>
+      </form>
+
+      {{ subtypes_data|json_script:"subtypes-data" }}
+      <script>
+      (function () {
+        var SUBTYPES = JSON.parse(document.getElementById('subtypes-data').textContent);
+        var typeSelect    = document.getElementById('id_org_type');
+        var subtypeHidden = document.getElementById('id_org_subtype');
+        var subtypeRow    = document.getElementById('subtype-row');
+        var subtypeVis    = document.getElementById('subtype-visible');
+        var otherRow      = document.getElementById('other-row');
+        var otherHidden   = document.getElementById('id_org_subtype_other');
+        var otherVis      = document.getElementById('other-visible');
+
+        function rebuildSubtypes(subtypes, selected) {
+          subtypeVis.innerHTML = '<option value="">— Select subtype —</option>';
+          subtypes.forEach(function (pair) {
+            var opt = document.createElement('option');
+            opt.value = pair[0]; opt.textContent = pair[1];
+            if (pair[0] === selected) { opt.selected = true; }
+            subtypeVis.appendChild(opt);
+          });
+        }
+
+        function applyOtherRow() {
+          if (subtypeVis.value === 'other') {
+            otherRow.style.display = '';
+            otherVis.value = otherHidden.value;
+          } else {
+            otherRow.style.display = 'none';
+            otherVis.value = ''; otherHidden.value = '';
+          }
+        }
+
+        typeSelect.addEventListener('change', function () {
+          var subs = SUBTYPES[typeSelect.value] || [];
+          subtypeHidden.value = ''; otherHidden.value = '';
+          if (subs.length === 0) {
+            subtypeRow.style.display = 'none';
+            subtypeVis.innerHTML = '<option value="">— Select subtype —</option>';
+            otherRow.style.display = 'none'; otherVis.value = '';
+          } else {
+            subtypeRow.style.display = ''; rebuildSubtypes(subs, '');
+            applyOtherRow();
+          }
+        });
+
+        subtypeVis.addEventListener('change', function () {
+          subtypeHidden.value = subtypeVis.value; applyOtherRow();
+        });
+
+        otherVis.addEventListener('input', function () {
+          otherHidden.value = otherVis.value;
+        });
+
+        (function init() {
+          var subs = SUBTYPES[typeSelect.value] || [];
+          if (subs.length > 0) {
+            subtypeRow.style.display = ''; rebuildSubtypes(subs, subtypeHidden.value);
+            applyOtherRow();
+          }
+        }());
+      }());
+      </script>
+    </div>
+  </div>
+</div>
+{% endblock %}

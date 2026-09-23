@@ -1,0 +1,353 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}DMA Questionnaire System{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/eya.css' %}">
+  {% block extra_css %}{% endblock %}
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC7WEEX236"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-VC7WEEX236');
+  </script>
+</head>
+<body>
+
+{% if user.is_authenticated %}
+  {% with role=user.userprofile.role %}
+  <div class="app">
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <!-- Brand -->
+      <div class="brand">
+        <a href="https://auditaxinternational.co.tz/" target="_blank" rel="noopener noreferrer">
+          <img src="{% static 'auditax.png' %}" alt="Auditax International" style="height:62px;width:auto;display:block;filter:brightness(0) invert(1);opacity:0.95;">
+        </a>
+      </div>
+
+      <!-- Nav -->
+      <nav class="sidebar-nav">
+
+        {% if role == 'admin' %}
+          <div class="nav-section">Overview</div>
+
+          <a href="{% url 'admin_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+              Dashboard
+            </span>
+          </a>
+
+          <a href="{% url 'cycle_list' %}" class="nav-item {% if request.resolver_match.url_name == 'cycle_list' or request.resolver_match.url_name == 'cycle_detail' or request.resolver_match.url_name == 'cycle_create' or request.resolver_match.url_name == 'cycle_results' or request.resolver_match.url_name == 'category_edit' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 4v5h-5"/></svg>
+              Award Cycles
+            </span>
+          </a>
+
+          <a href="{% url 'reports_list' %}" class="nav-item {% if request.resolver_match.url_name == 'reports_list' or request.resolver_match.url_name == 'reports_cycle' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              Reports
+            </span>
+          </a>
+
+          <div class="nav-section">Participants</div>
+
+          <a href="{% url 'org_list' %}" class="nav-item {% if request.resolver_match.url_name == 'org_list' or request.resolver_match.url_name == 'org_create' or request.resolver_match.url_name == 'org_edit' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h2M14 15h2M10 21v-3h4v3"/></svg>
+              Organizations
+            </span>
+          </a>
+
+          <a href="{% url 'user_list' %}" class="nav-item {% if request.resolver_match.url_name == 'user_list' or request.resolver_match.url_name == 'user_create' or request.resolver_match.url_name == 'user_edit' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M1 21c0-4 3.5-7 8-7s8 3 8 7"/><path d="M17 3a4 4 0 0 1 0 8"/><path d="M21 21c0-3-2-5.5-5-6.5"/></svg>
+              Users
+            </span>
+          </a>
+
+          <a href="{% url 'request_list' %}" class="nav-item {% if request.resolver_match.url_name == 'request_list' or request.resolver_match.url_name == 'request_detail' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Requests
+            </span>
+            {% if pending_request_count %}
+            <span style="background:rgba(196,146,42,0.25);color:var(--gold-mid);border-radius:3px;padding:1px 5px;font-size:10.5px;font-weight:600;">{{ pending_request_count }}</span>
+            {% endif %}
+          </a>
+
+          <div class="nav-section">System</div>
+
+          <a href="{% url 'audit_log' %}" class="nav-item {% if request.resolver_match.url_name == 'audit_log' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/></svg>
+              Activity Log
+            </span>
+          </a>
+
+          <a href="{% url 'email_log' %}" class="nav-item {% if request.resolver_match.url_name == 'email_log' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Email Log
+            </span>
+          </a>
+
+          <a href="{% url 'sharelink_list' %}" class="nav-item {% if request.resolver_match.url_name == 'sharelink_list' or request.resolver_match.url_name == 'sharelink_create' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>
+              Share Links
+            </span>
+          </a>
+
+          <a href="{% url 'profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+              My Profile
+            </span>
+          </a>
+
+        {% elif role == 'member' %}
+          <div class="nav-section">Your Submission</div>
+
+          <a href="{% url 'member_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'member_dashboard' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+              Dashboard
+            </span>
+          </a>
+
+          <a href="{% url 'member_questionnaire' %}" class="nav-item {% if request.resolver_match.url_name == 'questionnaire_fill' or request.resolver_match.url_name == 'questionnaire_submit' or request.resolver_match.url_name == 'questionnaire_submitted' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
+              Questionnaire
+            </span>
+          </a>
+
+          <a href="{% url 'library_list' %}" class="nav-item {% if request.resolver_match.url_name == 'library_list' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Document Library
+            </span>
+          </a>
+
+          <a href="{% url 'reports_list' %}" class="nav-item {% if request.resolver_match.url_name == 'reports_list' or request.resolver_match.url_name == 'reports_cycle' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              Reports
+            </span>
+          </a>
+
+          <a href="{% url 'profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+              My Profile
+            </span>
+          </a>
+
+        {% elif role == 'verifier' %}
+          <div class="nav-section">Workspace</div>
+
+          <a href="{% url 'verifier_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'verifier_dashboard' or request.resolver_match.url_name == 'verify_questionnaire' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+              Dashboard
+            </span>
+          </a>
+
+          <a href="{% url 'reports_list' %}" class="nav-item {% if request.resolver_match.url_name == 'reports_list' or request.resolver_match.url_name == 'reports_cycle' or request.resolver_match.url_name == 'org_report' or request.resolver_match.url_name == 'export_org_excel' or request.resolver_match.url_name == 'export_org_pdf' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              Reports
+            </span>
+          </a>
+
+          <a href="{% url 'profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+              My Profile
+            </span>
+          </a>
+
+        {% elif role == 'judges' or role == 'judge' %}
+          <div class="nav-section">Judging</div>
+
+          <a href="{% url 'judges_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'judges_dashboard' or request.resolver_match.url_name == 'judge_questionnaire' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5L12 3z"/>
+              </svg>
+              Judges Dashboard
+            </span>
+          </a>
+
+          <a href="{% url 'profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            <span style="display:inline-flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+              My Profile
+            </span>
+          </a>
+
+        {% endif %}
+
+      </nav>
+
+      <!-- User card -->
+      <div style="margin-top:auto;"></div>
+      <div class="user-card">
+        <div class="avatar {% if role == 'admin' %}gold{% elif role == 'verifier' %}accent{% elif role == 'judges' or role == 'judge' %}accent{% else %}slate{% endif %}">
+          {{ user.username|first|upper }}
+        </div>
+        <a href="{% url 'profile' %}" style="min-width:0;flex:1;text-decoration:none;">
+          <div style="font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;">{{ user.get_full_name|default:user.username }}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.45);">
+            {% if role == 'admin' %}Administrator{% elif role == 'verifier' %}Verifier{% elif role == 'judges' or role == 'judge' %}Judge{% else %}Member representative{% endif %}
+          </div>
+        </a>
+        <form method="post" action="{% url 'logout' %}" style="margin:0;padding:0;display:inline;">
+          {% csrf_token %}
+          <button type="submit" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.45);font-size:11px;padding:0;display:flex;align-items:center;" title="Sign out" aria-label="Sign out">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </form>
+      </div>
+
+    </aside>
+    <!-- END SIDEBAR -->
+
+    <!-- MAIN AREA -->
+    <div class="main">
+
+      <!-- Topbar -->
+      <div class="topbar">
+        <button class="hamburger btn btn-ghost btn-sm" id="hamburger-btn" aria-label="Open menu" style="padding:6px;margin-right:4px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <div class="crumbs">
+          <span>{% block breadcrumb_parent %}EYA{% endblock %}</span>
+          <span class="sep">/</span>
+          <span class="cur">{% block breadcrumb_current %}Dashboard{% endblock %}</span>
+        </div>
+        <a href="{% url 'profile' %}" class="hamburger btn btn-ghost btn-sm" aria-label="My profile" style="padding:6px;margin-left:auto;" title="{{ user.get_full_name|default:user.username }}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+        </a>
+      </div>
+
+      <!-- Django messages -->
+      {% if messages %}
+      <div style="padding: 12px 32px 0;" aria-live="polite">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="margin-bottom:8px;">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% block content %}{% endblock %}
+
+    </div>
+    <!-- END MAIN -->
+
+  </div>
+  {% endwith %}
+
+{% endif %}
+
+<!-- eya.confirm() modal -->
+<dialog id="eya-confirm-dialog" class="eya-dialog" aria-modal="true" aria-labelledby="eya-confirm-title">
+  <div class="eya-dialog-title" id="eya-confirm-title">Confirm</div>
+  <div class="eya-dialog-body" id="eya-confirm-body"></div>
+  <div class="eya-dialog-actions">
+    <button id="eya-confirm-cancel" class="btn btn-ghost">Cancel</button>
+    <button id="eya-confirm-ok" class="btn btn-primary">Confirm</button>
+  </div>
+</dialog>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+<script>
+(function() {
+  var btn = document.getElementById('hamburger-btn');
+  var overlay = document.getElementById('sidebar-overlay');
+  function openSidebar() { document.body.classList.add('sidebar-open'); }
+  function closeSidebar() { document.body.classList.remove('sidebar-open'); }
+  if (btn) btn.addEventListener('click', openSidebar);
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+  document.querySelectorAll('.nav-item').forEach(function(el) {
+    el.addEventListener('click', closeSidebar);
+  });
+})();
+</script>
+<script>
+var eya = (function() {
+  var dialog = document.getElementById('eya-confirm-dialog');
+  if (!dialog) return {};
+  var titleEl = document.getElementById('eya-confirm-title');
+  var bodyEl = document.getElementById('eya-confirm-body');
+  var cancelBtn = document.getElementById('eya-confirm-cancel');
+  var okBtn = document.getElementById('eya-confirm-ok');
+  var _cb = null;
+
+  function confirm(msg, onOk, opts) {
+    opts = opts || {};
+    titleEl.textContent = opts.title || 'Confirm';
+    bodyEl.textContent = msg;
+    okBtn.className = 'btn ' + (opts.danger ? 'btn-danger' : 'btn-primary');
+    okBtn.textContent = opts.okLabel || 'Confirm';
+    _cb = onOk;
+    dialog.showModal();
+  }
+
+  cancelBtn.addEventListener('click', function() { dialog.close(); });
+  okBtn.addEventListener('click', function() { dialog.close(); if (_cb) _cb(); });
+  dialog.addEventListener('click', function(e) { if (e.target === dialog) dialog.close(); });
+
+  return { confirm: confirm };
+})();
+
+// Auto-dismiss success and info banners after 4 seconds
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.alert-success, .alert-info').forEach(function(el) {
+    setTimeout(function() {
+      var inst = bootstrap.Alert.getOrCreateInstance(el);
+      inst.close();
+    }, 4000);
+  });
+});
+</script>
+<script>
+document.addEventListener('submit', function (e) {
+  var btn = e.target.querySelector('[type="submit"]');
+  if (!btn || btn.disabled) return;
+  var originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML =
+    '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Please wait…';
+  var timer = setTimeout(function () {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }, 30000);
+  window.addEventListener('beforeunload', function () { clearTimeout(timer); });
+});
+</script>
+</body>
+</html>

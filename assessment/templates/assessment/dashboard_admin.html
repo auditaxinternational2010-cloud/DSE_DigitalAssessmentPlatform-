@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — DMA{% endblock %}
+{% block breadcrumb_parent %}DSE Admin{% endblock %}
+{% block breadcrumb_current %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-head">
+    <div>
+      <h1 class="page-title t-display">{% if open_cycle %}{{ open_cycle.name }} overview{% else %}Award Dashboard{% endif %}</h1>
+      <div class="page-subtitle">Award management dashboard</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <a href="{% url 'cycle_list' %}" class="btn btn-primary">Manage Cycles</a>
+    </div>
+  </div>
+
+  {% if open_cycle %}
+
+  <div class="stat-row" style="margin-bottom:24px;">
+    <div class="stat">
+      <div class="stat-label">Open Cycle</div>
+      <div class="stat-value">{{ open_cycle.year }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Submissions</div>
+      <div class="stat-value">{{ submitted }}/{{ total_q }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Organizations</div>
+      <div class="stat-value">{{ total_orgs }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Submission Rate</div>
+      <div class="stat-value">{{ submission_rate }}%</div>
+    </div>
+  </div>
+
+  {% if org_data %}
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Organization Progress</div>
+      <span class="badge sage">{{ open_cycle.name }}</span>
+    </div>
+    <div class="card-body tight">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Organization</th>
+            <th>Criteria Answered</th>
+            <th>Submitted</th>
+            <th>Verified</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in org_data %}
+          <tr>
+            <td style="font-weight:500;">{{ item.org.name }}</td>
+            <td><span class="num">{{ item.answered_count }}</span> <span style="color:var(--ink-4);font-size:12px;">criteria</span></td>
+            <td>
+              {% if item.questionnaire.is_submitted %}
+                <span class="badge sage"><span class="dot"></span>Submitted</span>
+              {% else %}
+                <span class="badge slate"><span class="dot"></span>Pending</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if item.verified_count %}
+                <span class="badge accent"><span class="dot"></span>{{ item.verified_count }} scored</span>
+              {% else %}
+                <span class="badge"><span class="dot"></span>Pending</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if item.questionnaire.is_submitted %}
+                <a href="{% url 'cycle_results' open_cycle.pk %}" class="btn btn-sm btn-ghost">View →</a>
+              {% else %}
+                <span style="font-size:12px;color:var(--ink-4);">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}
+
+  <div class="card">
+    <div class="card-body">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3"/><path d="M4 12h16"/></svg>
+        </div>
+        <div class="empty-title">No active cycle</div>
+        <div class="empty-body">Create a new award cycle to begin collecting submissions.</div>
+        <a href="{% url 'cycle_list' %}" class="btn btn-primary">New Cycle →</a>
+      </div>
+    </div>
+  </div>
+
+  {% endif %}
+
+</div>
+{% endblock %}

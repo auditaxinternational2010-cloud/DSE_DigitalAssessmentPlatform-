@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Judges Dashboard — DMA{% endblock %}
+{% block breadcrumb_parent %}Judges{% endblock %}
+{% block breadcrumb_current %}Dashboard{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div><h1 class="page-title t-display">Judges Dashboard</h1>{% if open_cycle %}<div class="page-subtitle">{{ open_cycle.name }}</div>{% else %}<div class="page-subtitle t-muted">No award cycle is currently open.</div>{% endif %}</div>
+  </div>
+  {% if open_cycle %}
+  <div class="stat-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px;">
+    <div class="stat"><div class="stat-label">Available Judges</div><div class="stat-value">{{ available_judges }}</div></div>
+    <div class="stat"><div class="stat-label">Ready</div><div class="stat-value">{{ pending_count }}</div></div>
+    <div class="stat"><div class="stat-label">My Completed</div><div class="stat-value">{{ judged_count }}</div></div>
+    <div class="stat"><div class="stat-label">Organizations</div><div class="stat-value">{{ org_data|length }}</div></div>
+  </div>
+  <div class="card"><div class="card-body tight"><table class="table"><thead><tr><th>Organization</th><th>Secretariat Coverage</th><th>Judges Submitted</th><th>My Status</th><th>Action</th></tr></thead><tbody>
+  {% for item in org_data %}
+  <tr><td><strong>{{ item.org.name }}</strong><div class="t-muted" style="font-size:11px;">Independent judging — other judges' marks are private</div></td>
+  <td><span class="badge {% if item.verifier_complete %}sage{% else %}slate{% endif %}">{{ item.covered }}/{{ item.total }}</span></td>
+  <td>{{ item.submitted_judges }}/{{ item.available_judges }}</td>
+  <td>{% if item.status == 'judged' %}<span class="badge sage">My scoring complete</span>{% elif item.status == 'ready' %}<span class="badge accent">Ready for me</span>{% else %}<span class="badge slate">Waiting for Secretariat</span>{% endif %}</td>
+  <td>{% if item.status != 'waiting' %}<a href="{% url 'judge_questionnaire' item.questionnaire.pk %}" class="btn btn-primary btn-sm">{% if item.my_complete %}View / Edit{% else %}Score / Review{% endif %}</a>{% else %}<button class="btn btn-ghost btn-sm" disabled>Waiting</button>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="5" style="padding:28px;text-align:center;" class="text-muted">No organizations are configured for the judging workflow in this cycle.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  {% else %}<div class="card"><div class="card-body"><div class="empty-state"><div class="empty-title">No award cycle is currently open</div><div class="empty-body">Judging assignments will appear here when a cycle is open.</div></div></div></div>{% endif %}
+</div>
+{% endblock %}

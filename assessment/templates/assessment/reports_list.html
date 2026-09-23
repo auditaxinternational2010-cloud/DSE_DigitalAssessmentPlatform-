@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Reports — DMA{% endblock %}
+{% block breadcrumb_parent %}DMA{% endblock %}
+{% block breadcrumb_current %}Reports{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-head">
+    <div class="page-title">Reports</div>
+  </div>
+
+  {% if role == 'member' %}
+    <div class="card">
+      <div class="card-body tight">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Cycle</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in cycle_data %}
+            <tr>
+              <td>{{ item.cycle.name }}</td>
+              <td>
+                {% if item.available %}
+                  <span class="badge sage">Available</span>
+                {% else %}
+                  <span class="badge" style="background:var(--ink-2);color:#fff;">Not yet available</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if item.available %}
+                  <a href="{% url 'reports_cycle' item.cycle.pk %}" class="btn btn-sm btn-primary">View Report</a>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-muted" style="padding:24px;text-align:center;">No cycles found for your organisation.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  {% else %}
+    <div class="card">
+      <div class="card-body tight">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Cycle</th>
+              <th>Organisations</th>
+              <th>Submitted</th>
+              <th>Distributed</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in cycle_data %}
+            <tr>
+              <td>{{ item.cycle.name }}</td>
+              <td>{{ item.org_count }}</td>
+              <td>{{ item.submitted_count }}</td>
+              <td>{{ item.distributed_count }}</td>
+              <td><a href="{% url 'reports_cycle' item.cycle.pk %}" class="btn btn-sm btn-primary">Manage</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-muted" style="padding:24px;text-align:center;">No cycles found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

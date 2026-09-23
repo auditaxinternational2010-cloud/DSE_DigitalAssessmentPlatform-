@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block title %}Results — {{ cycle.name }} — DMA{% endblock %}
+{% block breadcrumb_parent %}DSE Admin{% endblock %}
+{% block breadcrumb_current %}Results — {{ cycle.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-head">
+    <div>
+      <div class="page-title">{{ cycle.name }} — Results</div>
+      <div class="page-subtitle">Submitted questionnaire scores by organization</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <a href="{% url 'export_cycle_excel' cycle.pk %}" class="btn btn-ghost">↓ Export Excel</a>
+      <a href="{% url 'cycle_detail' cycle.pk %}" class="btn btn-ghost">← Back to Cycle</a>
+    </div>
+  </div>
+
+  {# Stat cards #}
+  <div class="stat-row" style="margin-bottom:24px;">
+    <div class="stat-card">
+      <div class="stat-value">{{ analytics.ranked_orgs|length }}</div>
+      <div class="stat-label">Organizations Ranked</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ analytics.cycle_avg_judge|default:"—" }}</div>
+      <div class="stat-label">Cycle Average <span style="color:var(--ink-4);">(verified)</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ analytics.cycle_high|default:"—" }}</div>
+      <div class="stat-label">Highest Verified Score</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ analytics.cycle_low|default:"—" }}</div>
+      <div class="stat-label">Lowest Verified Score</div>
+    </div>
+  </div>
+
+  {% if analytics.ranked_orgs %}
+
+  {% comment %} One league per comparable group. Informal-sector organisations answer a
+     different category set, so ranking them against everyone else would not
+     be a like-for-like comparison. {% endcomment %}
+  {% for league in analytics.leagues %}
+  <div class="card" style="margin-bottom:24px;">
+    <div class="card-head">
+      <div>
+        <div class="card-title">{{ league.label }}</div>
+        <div class="rpt-league-note">
+          {{ league.ranked_count }} ranked of {{ league.count }} submitted ·
+          average {{ league.avg|default:"—" }} ·
+          range {{ league.low|default:"—" }}–{{ league.high|default:"—" }}
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body" style="padding:16px;">
+      <canvas id="rankChart-{{ league.key }}" style="max-height:360px;"></canvas>
+    </div>
+
+    <div class="card-body tight">
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:52px;">Rank</th>
+            <th>Organization</th>
+            <th style="text-align:center;">Verified</th>
+            <th style="text-align:center;">Self-assessed</th>
+            <th style="text-align:center;">Self-awareness</th>
+            <th style="text-align:center;">Completed</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in league.ranked_orgs %}
+          <tr>
+            <td class="rpt-rank-cell {% if entry.rank == 1 %}rpt-medal-1{% endif %}">
+              {{ entry.rank|default:"—" }}
+            </td>
+            <td>{{ entry.org.name }}</td>
+            <td style="text-align:center;">
+              {% if entry.overall_verified_score is not None %}
+              <span class="badge {% if entry.overall_verified_score >= 3 %}sage{% elif entry.overall_verified_score >= 2 %}accent{% else %}brick{% endif %}">
+                {{ entry.overall_verified_score }}
+              </span>
+              {% else %}<span class="rpt-sub">not scored</span>{% endif %}
+            </td>
+            <td style="text-align:center;" class="rpt-muted-cell">
+              {{ entry.overall_claimed_score|default:"—" }}
+            </td>
+            <td style="text-align:center;">
+              {% if entry.gap_direction == 'over' %}
+              <span class="rpt-delta rpt-delta-down">over-stated {{ entry.overall_gap|cut:"-" }}</span>
+              {% elif entry.gap_direction == 'under' %}
+              <span class="rpt-delta rpt-delta-up">under-stated {{ entry.overall_gap }}</span>
+              {% elif entry.gap_direction == 'match' %}
+              <span class="rpt-sub">accurate</span>
+              {% else %}—{% endif %}
+            </td>
+            {% comment %} Completeness sits beside the score so a thin submission that
+               scored well cannot be mistaken for a strong one. {% endcomment %}
+            <td style="text-align:center;">
+              <div class="{% if entry.completeness < 60 %}rpt-complete-low{% endif %}"
+                   style="display:inline-block;">
+                <div>{{ entry.completeness }}%</div>
+                <div class="rpt-complete-bar">
+                  <div class="rpt-complete-fill" style="width:{{ entry.completeness }}%;"></div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <a href="{% url 'org_report' cycle.pk entry.questionnaire.pk %}" class="btn btn-sm">
+                View Report
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+
+  {# Every organisation's standing in every category, not only best and worst. #}
+  {% if analytics.category_table %}
+  <div class="card" style="margin-bottom:24px;">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Standings by Category</div>
+        <div class="rpt-league-note">Full ranking within each assessment category</div>
+      </div>
+    </div>
+    <div class="rpt-catgrid">
+      {% for entry in analytics.category_table %}
+      <div class="rpt-catcard">
+        <div class="rpt-catcard-head">
+          <div>
+            <div class="rpt-catcard-name">{{ entry.category.name }}</div>
+            {% if analytics.leagues|length > 1 %}
+            <div class="rpt-sub">{{ entry.league_label }}</div>
+            {% endif %}
+          </div>
+          <div class="rpt-sub">avg {{ entry.avg|default:"—" }}</div>
+        </div>
+        {% for place in entry.placings %}
+        <div class="rpt-place {% if place.rank == 1 %}rpt-place-1{% endif %}">
+          <div class="rpt-place-rank">{{ place.rank }}</div>
+          <a class="rpt-place-org" href="{% url 'org_report' cycle.pk place.questionnaire.pk %}">{{ place.org.name }}</a>
+          <span class="badge {% if place.score >= 3 %}sage{% elif place.score >= 2 %}accent{% else %}brick{% endif %}">
+            {{ place.score }}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="card">
+    <div class="card-body" style="color:var(--ink-4);text-align:center;padding:40px 16px;">
+      No submitted questionnaires yet.
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if analytics.ranked_orgs %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+{% for league in analytics.leagues %}
+(function () {
+  var canvas = document.getElementById('rankChart-{{ league.key }}');
+  if (!canvas) return;
+  var labels = [{% for r in league.ranked_orgs %}'{{ r.org.name|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+  var verified = [{% for r in league.ranked_orgs %}{{ r.overall_verified_score|default:'null' }}{% if not forloop.last %},{% endif %}{% endfor %}];
+  var claimed = [{% for r in league.ranked_orgs %}{{ r.overall_claimed_score|default:'null' }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+  new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Verified score',
+          data: verified,
+          backgroundColor: 'rgba(11,37,69,0.85)',
+          borderRadius: 3,
+        },
+        {
+          // Shown behind the verified bar so over-claiming reads at a glance.
+          label: 'Self-assessed',
+          data: claimed,
+          backgroundColor: 'rgba(196,146,42,0.35)',
+          borderRadius: 3,
+        },
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      scales: { x: { min: 0, max: 5, ticks: { stepSize: 1 } } },
+      plugins: { legend: { position: 'bottom' } },
+      responsive: true,
+    }
+  });
+})();
+{% endfor %}
+</script>
+{% endif %}
+{% endblock %}

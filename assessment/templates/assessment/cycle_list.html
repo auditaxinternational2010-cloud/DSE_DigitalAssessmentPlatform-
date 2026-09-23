@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Cycles — DMA{% endblock %}
+{% block breadcrumb_parent %}DSE Admin{% endblock %}
+{% block breadcrumb_current %}Award Cycles{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-head">
+    <div>
+      <h1 class="page-title t-display">Award Cycles</h1>
+      <div class="page-subtitle">Manage DMA assessment cycles</div>
+    </div>
+    <a href="{% url 'cycle_create' %}" class="btn btn-primary">+ New Cycle</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">All Cycles</div>
+    </div>
+    <div class="card-body tight">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Organizations</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cycle in cycles %}
+          <tr>
+            <td>{{ cycle.year }}</td>
+            <td>{{ cycle.name }}</td>
+            <td>
+              {% if cycle.is_open %}
+                <span class="badge sage">Open</span>
+              {% else %}
+                <span class="badge">Closed</span>
+              {% endif %}
+            </td>
+            <td>{{ cycle.questionnaires.count }}</td>
+            <td><a href="{% url 'cycle_detail' cycle.pk %}" class="btn btn-sm btn-ghost">Manage</a></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5">
+              <div class="empty-state" style="padding:40px 24px;">
+                <div class="empty-icon">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3"/><path d="M4 12h16"/></svg>
+                </div>
+                <div class="empty-title">No cycles yet</div>
+                <div class="empty-body">Create your first award cycle to begin.</div>
+                <a href="{% url 'cycle_create' %}" class="btn btn-primary">New Cycle →</a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

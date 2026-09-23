@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}{{ cycle.name }} — DMA{% endblock %}
+{% block breadcrumb_parent %}DSE Admin{% endblock %}
+{% block breadcrumb_current %}{{ cycle.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-head">
+    <div>
+      <div class="page-title">{{ cycle.name }}</div>
+      <div class="page-subtitle">
+        {% if cycle.is_open %}
+          <span class="badge sage">Open</span>
+        {% else %}
+          <span class="badge">Closed</span>
+        {% endif %}
+      </div>
+    </div>
+    <form method="post" action="{% url 'cycle_toggle_open' cycle.pk %}">
+      {% csrf_token %}
+      {% if cycle.is_open %}
+        <button class="btn btn-ghost">Close Cycle</button>
+      {% else %}
+        <button class="btn btn-primary">Open Cycle</button>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="row" style="gap:20px;margin-bottom:20px;">
+
+    <div style="flex:1;min-width:280px;">
+      <div class="card" style="height:100%;">
+        <div class="card-head">
+          <div class="card-title">Re-upload Questionnaire</div>
+        </div>
+        <div class="card-body">
+          {% if cycle.is_open %}
+            <p style="font-size:13px;color:var(--ink-3);margin:0;">
+              Questionnaire upload is locked — cycle is open.
+            </p>
+          {% else %}
+            <form method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="field" style="margin-bottom:12px;">
+                <div class="label">Excel File (.xlsx)</div>
+                <input type="file" name="excel_file" accept=".xlsx" class="input" required>
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">Upload &amp; Parse</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:1;min-width:280px;">
+      <div class="card" style="height:100%;">
+        <div class="card-head">
+          <div class="card-title">Categories</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="badge">{{ categories|length }}</span>
+            <button type="button" id="cat-toggle-all" class="btn btn-ghost btn-sm">Expand All</button>
+          </div>
+        </div>
+        <div class="card-body tight">
+          <table class="table">
+            <tbody>
+              {% for cat in categories %}
+              <tr class="cat-row" data-cat="{{ cat.pk }}">
+                <td>
+                  <span class="cat-chevron">&#9660;</span>
+                  <span style="font-weight:500;">{{ cat.name }}</span>
+                </td>
+                <td style="text-align:right;">
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;">
+                    <span class="badge">{{ cat.active_criteria|length }} criteria</span>
+                    <a href="{% url 'category_edit' cat.pk %}" onclick="event.stopPropagation()" style="font-size:12px;color:var(--gold-2);font-weight:500;text-decoration:none;white-space:nowrap;">Edit</a>
+                  </div>
+                </td>
+              </tr>
+              <tr class="cat-detail" data-cat="{{ cat.pk }}">
+                <td colspan="2">
+                  {% if cat.description %}
+                  <div class="cat-preamble">{{ cat.description }}</div>
+                  {% endif %}
+                  <ul class="cat-criteria-list">
+                    {% for criterion in cat.active_criteria %}
+                    <li>
+                      <span class="cat-criteria-num">{{ criterion.number }}</span>
+                      <span>{{ criterion.name }}</span>
+                    </li>
+                    {% endfor %}
+                  </ul>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="2" style="color:var(--ink-4);padding:20px 16px;">No questionnaire uploaded yet.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Organizations</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        {% if cycle.is_open %}
+        <a href="{% url 'cycle_results' cycle.pk %}" class="btn btn-sm btn-accent">View Results</a>
+        <form method="post" action="{% url 'cycle_add_org' cycle.pk %}" style="display:inline;display:flex;gap:6px;align-items:center;">
+          {% csrf_token %}
+          <select name="org_id" style="padding:4px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;">
+            {% for org in missing_orgs %}
+              <option value="{{ org.pk }}">{{ org.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-sm btn-ghost">+ Add Org</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    <div class="card-body tight">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Organization</th>
+            <th>Status</th>
+            <th>Completion</th>
+            <th>Submitted</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for q in questionnaires %}
+          <tr>
+            <td>{{ q.organization.name }}</td>
+            <td>
+              {% if q.is_submitted %}
+                <span class="badge accent">Submitted</span>
+              {% else %}
+                <span class="badge slate">In Progress</span>
+              {% endif %}
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div class="progress" style="width:80px;">
+                  <div class="progress-bar {% if q.is_submitted %}sage{% else %}accent{% endif %}" style="width:{{ q.completion_percentage }}%;"></div>
+                </div>
+                <span style="font-size:13px;color:var(--ink-3);">{{ q.completion_percentage }}%</span>
+              </div>
+            </td>
+            <td>{{ q.submitted_at|date:"Y-m-d"|default:"—" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" style="text-align:center;color:var(--ink-4);padding:32px 16px;">No questionnaires. Open the cycle to auto-create them.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var toggleBtn = document.getElementById('cat-toggle-all');
+
+  function allExpanded() {
+    return Array.from(document.querySelectorAll('.cat-row')).every(function (r) {
+      return r.classList.contains('open');
+    });
+  }
+  function updateToggleBtn() {
+    if (toggleBtn) toggleBtn.textContent = allExpanded() ? 'Collapse All' : 'Expand All';
+  }
+
+  document.querySelectorAll('.cat-row').forEach(function (row) {
+    row.addEventListener('click', function () {
+      var pk = row.dataset.cat;
+      var detail = document.querySelector('.cat-detail[data-cat="' + pk + '"]');
+      if (!detail) return;
+      var isOpen = row.classList.contains('open');
+      if (isOpen) {
+        row.classList.remove('open');
+        detail.style.display = 'none';
+      } else {
+        row.classList.add('open');
+        detail.style.display = 'table-row';
+      }
+      updateToggleBtn();
+    });
+  });
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', function () {
+      var expand = !allExpanded();
+      document.querySelectorAll('.cat-row').forEach(function (row) {
+        var pk = row.dataset.cat;
+        var detail = document.querySelector('.cat-detail[data-cat="' + pk + '"]');
+        if (!detail) return;
+        if (expand) {
+          row.classList.add('open');
+          detail.style.display = 'table-row';
+        } else {
+          row.classList.remove('open');
+          detail.style.display = 'none';
+        }
+      });
+      updateToggleBtn();
+    });
+  }
+}());
+</script>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Activity Log — EYA{% endblock %}
+{% block breadcrumb_parent %}System{% endblock %}
+{% block breadcrumb_current %}Activity Log{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-head">
+    <div>
+      <h1 class="page-title t-display">Activity Log</h1>
+      <p class="page-subtitle">Audit trail of significant platform actions</p>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="get" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+        <div class="field" style="min-width:160px;">
+          <label class="label" for="filter-user">User</label>
+          <select name="user" id="filter-user" class="form-select">
+            <option value="">All users</option>
+            {% for u in users %}
+            <option value="{{ u.pk }}" {% if filters.user == u.pk|stringformat:"s" %}selected{% endif %}>{{ u.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field" style="min-width:180px;">
+          <label class="label" for="filter-action">Action</label>
+          <select name="action" id="filter-action" class="form-select">
+            <option value="">All actions</option>
+            {% for code, label in action_choices %}
+            <option value="{{ code }}" {% if filters.action == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field" style="min-width:180px;">
+          <label class="label" for="filter-organization">Organization</label>
+          <select name="organization" id="filter-organization" class="form-select">
+            <option value="">All organizations</option>
+            {% for org in organizations %}
+            <option value="{{ org.pk }}" {% if filters.organization == org.pk|stringformat:"s" %}selected{% endif %}>{{ org.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label class="label" for="filter-date-from">From</label>
+          <input type="date" name="date_from" id="filter-date-from" class="form-control" value="{{ filters.date_from }}">
+        </div>
+        <div class="field">
+          <label class="label" for="filter-date-to">To</label>
+          <input type="date" name="date_to" id="filter-date-to" class="form-control" value="{{ filters.date_to }}">
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end;padding-bottom:1px;">
+          <button type="submit" class="btn btn-primary">Filter</button>
+          <a href="{% url 'audit_log' %}" class="btn btn-ghost">Reset</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="card">
+    <div class="card-body tight">
+      {% if page_obj.object_list %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Organization</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in page_obj %}
+          <tr>
+            <td class="num" style="white-space:nowrap;color:var(--ink-3);">{{ entry.timestamp|date:"Y-m-d H:i" }}</td>
+            <td style="font-size:12.5px;">{{ entry.user.username|default:"—" }}</td>
+            <td>
+              {% if entry.action == 'request.approved' or entry.action == 'cycle.opened' or entry.action == 'user.created' or entry.action == 'org.created' %}
+                <span class="badge sage">{{ entry.get_action_display }}</span>
+              {% elif entry.action == 'request.rejected' or entry.action == 'user.deleted' or entry.action == 'org.deleted' %}
+                <span class="badge brick">{{ entry.get_action_display }}</span>
+              {% elif entry.action == 'questionnaire.submitted' or entry.action == 'verifier.scores_saved' %}
+                <span class="badge accent">{{ entry.get_action_display }}</span>
+              {% elif entry.action == 'cycle.closed' or entry.action == 'user.edited' %}
+                <span class="badge slate">{{ entry.get_action_display }}</span>
+              {% else %}
+                <span class="badge">{{ entry.get_action_display }}</span>
+              {% endif %}
+            </td>
+            <td style="font-size:12.5px;">{{ entry.organization.name|default:"—" }}</td>
+            <td style="color:var(--ink-2);font-size:13px;">{{ entry.description }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-title">No log entries found</div>
+        <div class="empty-body">Try adjusting your filters.</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <nav class="mt-3">
+    <ul class="pagination">
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Previous</a>
+      </li>
+      {% endif %}
+      <li class="page-item active">
+        <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      </li>
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Next</a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
+</div>
+{% endblock %}

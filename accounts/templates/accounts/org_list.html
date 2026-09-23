@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Organizations — DSE{% endblock %}
+{% block breadcrumb_parent %}DSE Admin{% endblock %}
+{% block breadcrumb_current %}Organizations{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title t-display">Organizations</h1>
+      <div class="page-subtitle">Member organizations registered in the EYA programme</div>
+    </div>
+    <a href="{% url 'org_create' %}" class="btn btn-primary">+ Add Organization</a>
+  </div>
+  <form method="get" style="margin-bottom:16px;display:flex;gap:8px;max-width:400px;">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search by organization name…" class="input" style="flex:1;">
+    <button type="submit" class="btn btn-primary">Search</button>
+    {% if q %}<a href="{% url 'org_list' %}" class="btn">Clear</a>{% endif %}
+  </form>
+  <div class="card">
+    <div class="card-body tight">
+      <table class="table">
+        <thead>
+          <tr><th>Name</th><th>Member</th><th>Secretariat</th><th>Workflow</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for org in page_obj %}
+          <tr>
+            <td style="font-weight:500;">{{ org.name }}</td>
+            <td>{{ org.member.username|default:"—" }}</td>
+            <td>
+              {% for v in org.verifiers.all %}
+                <span class="badge slate" style="margin-right:3px;">{{ v.username }}</span>
+              {% empty %}—{% endfor %}
+            </td>
+            <td>
+              {% if org.requires_judging %}
+                <span class="badge accent">Member → Secretariat → Judges → Final</span>
+              {% else %}
+                <span class="badge slate">Member → Secretariat → Final</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if org.is_active %}
+                <span class="badge sage"><span class="dot"></span>Active</span>
+              {% else %}
+                <span class="badge"><span class="dot"></span>Inactive</span>
+              {% endif %}
+            </td>
+            <td style="text-align:right;white-space:nowrap;">
+              <a href="{% url 'org_edit' org.pk %}" class="btn btn-sm">Edit</a>
+              <form method="post" action="{% url 'org_delete' org.pk %}" style="display:inline;" id="del-org-{{ org.pk }}">
+                {% csrf_token %}
+                <button type="button" class="btn btn-sm" style="border-color:var(--brick);color:var(--brick);margin-left:4px;"
+                  onclick="eya.confirm('Delete {{ org.name }}?{% if org.member %} Member user {{ org.member.username }} will also be deleted.{% endif %} This cannot be undone.', function(){ document.getElementById('del-org-{{ org.pk }}').submit(); }, {danger:true})">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" style="text-align:center;color:var(--ink-3);padding:32px 16px;">No organizations yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% if page_obj.has_other_pages %}
+    <div style="display:flex;justify-content:center;gap:4px;padding:16px 0 4px;">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}" class="btn btn-sm">← Prev</a>
+      {% endif %}
+      <span style="padding:6px 12px;font-size:13px;color:var(--ink-3);">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}" class="btn btn-sm">Next →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

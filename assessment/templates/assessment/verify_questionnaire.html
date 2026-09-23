@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% load assessment_extras %}
+{% block title %}Secretariat Review — {{ questionnaire.organization.name }} — DMA{% endblock %}
+{% block breadcrumb_parent %}Secretariat{% endblock %}
+{% block breadcrumb_current %}{{ questionnaire.organization.name }}{% endblock %}
+{% block content %}
+<div class="container">
+
+  {# Mini toolbar / header strip #}
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--line); flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <a href="{% url 'verifier_dashboard' %}" class="btn btn-sm">← Back</a>
+      <div>
+        <div style="font-size:17px; font-weight:600; color:var(--ink);">{{ questionnaire.organization.name }}</div>
+        {% if questionnaire.submitted_at %}
+        <div class="t-muted" style="font-size:12px;">Submitted {{ questionnaire.submitted_at|date:"j M Y" }}</div>
+        {% endif %}
+      </div>
+      {% if not cycle_open %}
+      <span class="badge brick"><span class="dot"></span>Cycle closed — scores locked</span>
+      {% endif %}
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <a href="{% url 'org_report' questionnaire.cycle.pk questionnaire.pk %}" class="btn btn-ghost btn-sm">View Report</a>
+      {% if cycle_open and not secretariat_submitted %}
+      <button type="submit" form="verify-form" name="action" value="save" class="btn btn-ghost">Save</button>
+      <button type="submit" form="verify-form" name="action" value="save_edit" class="btn btn-primary">Save and Edit</button>
+      <button type="submit" form="verify-form" name="action" value="submit" class="btn btn-primary">Submit</button>
+      {% elif secretariat_submitted %}
+      <span class="badge sage"><span class="dot"></span>Submitted — section locked</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" id="verify-form">
+    {% csrf_token %}
+    <input type="hidden" name="category_id" value="{{ current_category.id }}">
+
+    <div class="q-layout">
+      {# Left: Category navigation #}
+      <div class="section-nav">
+        <div class="t-uppercase" style="padding:4px 10px 10px; margin-bottom:4px;">Categories</div>
+        {% for entry in category_nav %}
+        <a href="?category={{ entry.category.id }}"
+           class="section-item {% if entry.category.id == current_category.id %}active{% endif %}{% if entry.total and entry.covered == entry.total %} done{% endif %}"
+           style="text-decoration:none;">
+          <span class="sidx">{{ forloop.counter }}</span>
+          <span>{{ entry.category.name }}</span>
+          <span class="scount">{{ entry.covered }}/{{ entry.total }}{% if entry.submitted %} ✓{% endif %}</span>
+        </a>
+        {% endfor %}
+      </div>
+
+      {# Right: Criteria indicators #}
+      <div>
+        <div style="font-size:15px; font-weight:600; color:var(--ink); margin-bottom:16px;">{{ current_category.name }}</div>
+
+        {% for item in criteria_data %}
+        <div class="indicator">
+          <div class="indicator-head">
+            <div>
+              <div class="indicator-code">{{ item.criterion.number }}</div>
+              <h3 class="indicator-title">{{ item.criterion.name }}</h3><div style="font-size:11px;color:var(--ink-3);margin-top:4px;">Area: {{ item.criterion.area_code }} — {{ item.criterion.assessment_area }} · Criteria: {{ item.criterion.assessment_criterion_code }} — {{ item.criterion.assessment_criterion }} · Weight: {{ item.criterion.weight }}</div>
+            </div>
+            <div class="row" style="gap:8px;">
+              {% if item.others %}
+              <span class="badge slate" title="Verified by {{ item.others_title }}">
+                <span class="dot"></span>&#10003; {{ item.others.0.name }}{% if item.others_extra %} +{{ item.others_extra }}{% endif %} &middot; {{ item.others.0.at|date:"j M" }}
+              </span>
+              {% endif %}
+              {% if item.verifier_response and item.verifier_response.notes %}
+              <span class="badge accent"><span class="dot"></span>Notes added</span>
+              {% else %}
+              <span class="badge"><span class="dot"></span>Pending</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="v-split">
+            {# LEFT: Member submission #}
+            <div>
+              <h4>Member submission</h4>
+              {% if item.member_response %}
+                <div class="t-uppercase" style="margin-bottom:4px;">Response</div>
+                <div style="font-size:13px;color:var(--ink-2);line-height:1.6;white-space:pre-wrap;margin-bottom:10px;">{{ item.member_response.response|default:"No response provided." }}</div>
+                {% if item.links %}
+                <div class="t-uppercase" style="margin-bottom:6px;">Evidence ({{ item.links|length }} files)</div>
+                {% for link in item.links %}
+                <div class="evidence-chip" style="margin-bottom:6px;">
+                  <div class="ficon">{{ link.document.original_filename|slice:"-3:"|upper }}</div>
+                  <div class="fname"><a href="{% url 'document_file' link.document.id %}" target="_blank" rel="noopener" style="color:var(--navy);text-decoration:none;">{{ link.document.original_filename }}</a></div>
+                  <a href="{% url 'document_file' link.document.id %}?download=1" style="color:var(--ink-3);text-decoration:none;padding:0 6px;font-size:13px;">&#8595;</a>
+                </div>
+                {% endfor %}
+                {% endif %}
+              {% else %}
+                <div class="t-muted" style="font-size:12px;">Member has not entered a response yet.</div>
+              {% endif %}
+            </div>
+
+            {# RIGHT: Secretariat notes and criterion evidence — no scoring #}
+            <div>
+              <h4>Secretariat review</h4>
+              <div style="padding:10px 12px;margin-bottom:12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-2);font-size:12px;color:var(--ink-2);">
+                <strong>Scoring is disabled for Secretariat.</strong>
+                The Secretariat can record notes and attach supporting documents to this specific criterion.
+              </div>
+
+              <div class="field">
+                <div class="label">Secretariat notes</div>
+                <textarea name="notes_{{ item.criterion.id }}" class="textarea" rows="4"
+                  {% if not cycle_open or secretariat_submitted %}disabled{% endif %}
+                  placeholder="Enter Secretariat notes for this criterion.">{{ item.verifier_response.notes|default:"" }}</textarea>
+              </div>
+
+              <div class="field" style="margin-top:12px;">
+                <div class="label">Criterion document</div>
+                <div style="font-size:11px;color:var(--ink-3);margin-bottom:6px;">
+                  Attach evidence specifically for this criterion. PDF, Word, Excel, PNG or JPG.
+                </div>
+                <input type="file" name="files_{{ item.criterion.id }}" class="input"
+                  multiple
+                  {% if not cycle_open or secretariat_submitted %}disabled{% endif %}>
+                {% if item.links %}
+                <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+                  {% for link in item.links %}
+                  <div class="evidence-chip">
+                    <div class="ficon">{{ link.document.original_filename|slice:"-3:"|upper }}</div>
+                    <div class="fname">
+                      <a href="{% url 'document_file' link.document.id %}" target="_blank" rel="noopener"
+                         style="color:var(--navy);text-decoration:none;">{{ link.document.original_filename }}</a>
+                    </div>
+                    <a href="{% url 'document_file' link.document.id %}?download=1"
+                       style="color:var(--ink-3);text-decoration:none;padding:0 6px;font-size:13px;"
+                       title="Download {{ link.document.original_filename }}" aria-label="Download">&#8595;</a>
+                  </div>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+          {% if not cycle_open %}
+          <div style="margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-2);">
+            <div class="label">Judge Results</div>
+            {% if item.judge_responses %}
+              <div style="display:grid;gap:8px;margin-top:8px;">
+                {% for jr in item.judge_responses %}
+                <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface);">
+                  <div>
+                    <strong>{{ jr.judge.get_full_name|default:jr.judge.username }}</strong>
+                    {% if jr.notes %}<div style="margin-top:5px;font-size:13px;color:var(--ink-2);white-space:pre-wrap;">{{ jr.notes }}</div>{% endif %}
+                  </div>
+                  {% if jr.score is not None %}<span class="badge sage">{{ jr.score }}/5</span>{% endif %}
+                </div>
+                {% endfor %}
+              </div>
+              <div style="margin-top:10px;font-size:13px;color:var(--ink-3);">Average: <strong>{{ item.judge_average|default:"—" }}</strong> · Judges scored: {{ item.judge_responses|length }}</div>
+            {% else %}
+              <div class="t-muted" style="margin-top:8px;">No judge scores were submitted for this criterion.</div>
+            {% endif %}
+          </div>
+          {% else %}
+          <div style="margin-top:14px;padding:12px;border:1px dashed var(--line);border-radius:var(--radius-sm);color:var(--ink-3);font-size:13px;">Judge marks and comments are hidden until the cycle is closed.</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        {% if cycle_open and not secretariat_submitted %}
+        <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
+          <button type="submit" name="action" value="save" class="btn btn-ghost">Save</button>
+          <button type="submit" name="action" value="save_edit" class="btn btn-primary">Save and Edit</button>
+          <button type="submit" name="action" value="submit" class="btn btn-primary">Submit</button>
+        </div>
+        {% elif secretariat_submitted %}
+        <div style="margin-top:16px;padding:12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-2);font-size:13px;">This section has been submitted. Secretariat notes and attachments are locked for this cycle.</div>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

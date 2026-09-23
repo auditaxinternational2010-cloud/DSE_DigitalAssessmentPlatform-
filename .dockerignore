@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env
+.env.local
+.env.production
+.claude
+media/
+staticfiles/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+README.md
+SETUP_GUIDE.md
+.do/

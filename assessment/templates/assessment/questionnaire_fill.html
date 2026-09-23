@@ -1,0 +1,550 @@
+{% extends "base.html" %}
+{% block title %}Fill Questionnaire — DMA{% endblock %}
+{% block breadcrumb_parent %}Assessment{% endblock %}
+{% block breadcrumb_current %}{{ current_category.name }}{% endblock %}
+{% block content %}
+<div class="container">
+<div class="q-layout">
+  <aside class="section-nav">
+    <div style="padding:16px 16px 8px;font-size:10px;font-weight:700;letter-spacing:0.08em;color:var(--ink-3);text-transform:uppercase;">
+      Categories · <span class="num">{{ answered_count }}/{{ total_criteria }}</span> answered
+    </div>
+    {% for cat in categories %}
+    <a href="?category={{ cat.id }}" class="section-item {% if cat.id == current_category.id %}active{% endif %} {% if cat.is_complete %}done{% endif %}" style="text-decoration:none;">
+      <span class="sidx" aria-hidden="true">{% if cat.is_complete %}✓{% else %}{{ forloop.counter }}{% endif %}</span>
+      <span>{{ cat.name }}</span>
+    </a>
+    {% endfor %}
+    <div style="padding:12px 16px;border-top:1px solid var(--line);">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;color:var(--ink-3);text-transform:uppercase;margin-bottom:6px;">Evidence Storage</div>
+      <div style="background:var(--line);border-radius:4px;height:6px;overflow:hidden;margin-bottom:4px;"><div style="background:var(--navy);height:100%;width:100%;transform-origin:left;transform:scaleX(calc({{ quota_pct }} * 0.01));"></div></div>
+      <div style="font-size:11px;color:var(--ink-3);">{{ quota_used|filesizeformat }} / {{ quota_max_display }} used</div>
+    </div>
+    <div style="padding:16px;margin-top:auto;border-top:1px solid var(--line);">
+      <form method="post" action="{% url 'questionnaire_submit' questionnaire.pk %}" id="submit-q-form">{% csrf_token %}
+        <button type="button" class="btn btn-primary btn-sm" style="width:100%;" onclick="eya.confirm('Submit questionnaire? This action cannot be undone.', function(){ document.getElementById('submit-q-form').submit(); }, {title:'Submit for review?', okLabel:'Submit'})">Submit Questionnaire</button>
+      </form>
+    </div>
+  </aside>
+
+  <main style="min-width:0;">
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:8px;color:var(--navy);padding:24px 32px 0;">{{ current_category.name }}</h2>
+    <p style="font-size:13px;color:var(--ink-2);padding:0 32px 18px;">Category weight: {{ current_category.weight }}</p>
+
+    <form method="post" enctype="multipart/form-data" id="criteria-form" data-save-url="{% url 'save_category' questionnaire.pk %}" data-upload-url="{% url 'evidence_upload_ajax' %}">
+      {% csrf_token %}
+      <input type="hidden" name="category_id" value="{{ current_category.id }}">
+      <div style="padding:0 32px 8px;display:flex;justify-content:flex-end;"><button type="button" id="toggle-all-btn" class="btn btn-ghost btn-sm">Expand All</button></div>
+      <div style="padding:0 32px;">
+      {% for item in criteria_data %}
+      <div class="indicator" data-answered="{% if item.existing_response and item.existing_response.response %}true{% else %}false{% endif %}">
+        <div class="indicator-head" role="button" tabindex="0" aria-expanded="false">
+          <div>
+            <div class="indicator-code">{{ item.criterion.number }}</div>
+            <h3 class="indicator-title">{{ item.criterion.name }}</h3>
+            <div style="font-size:11px;color:var(--ink-3);margin-top:4px;">Weight: {{ item.criterion.weight }}</div>
+          </div>
+          <div class="row" style="gap:8px;">
+            {% if item.existing_response and item.existing_response.response %}<span class="badge sage"><span class="dot"></span>Responded</span>{% else %}<span class="badge"><span class="dot"></span>Not answered</span>{% endif %}
+            <span class="indicator-chevron">&#9660;</span>
+          </div>
+        </div>
+        <div class="indicator-body collapsed">
+          <div class="field">
+            <div class="label">Assessment Area</div>
+            <div style="font-size:13px;color:var(--ink-2);">{{ item.criterion.area_code }} — {{ item.criterion.assessment_area }}</div>
+          </div>
+          <div class="field">
+            <div class="label">Assessment Criteria</div>
+            <div style="font-size:13px;color:var(--ink-2);">{{ item.criterion.assessment_criterion_code }} — {{ item.criterion.assessment_criterion }}</div>
+          </div>
+          <div class="field">
+            <div class="label">Relevant CMSA Act / Guideline / DSE Rule / Applicable Regulation</div>
+            <div style="font-size:12px;color:var(--ink-3);line-height:1.55;">{{ item.criterion.regulation|default:"—" }}</div>
+          </div>
+          <div class="field">
+            <label class="label">Response</label>
+            <textarea name="response_{{ item.criterion.id }}" class="textarea" rows="5" placeholder="Enter your response to this measurable parameter.">{{ item.existing_response.response|default:"" }}</textarea>
+          </div>
+          <div class="field">
+            <label class="label">Attachments</label>
+            <div style="font-size:11px;color:var(--ink-3);margin-bottom:4px;">{{ item.links|length }}/5 files · max 5 MB per file</div>
+            <input type="file" name="files_{{ item.criterion.id }}" class="input" multiple {% if item.links|length >= 5 %}disabled{% endif %}>
+            {% if item.links %}
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+              {% for link in item.links %}
+              <div class="evidence-chip">
+                <div class="ficon">{{ link.document.original_filename|slice:"-3:"|upper }}</div>
+                <div class="fname"><a href="{% url 'document_file' link.document.id %}" target="_blank" rel="noopener" style="color:var(--navy);text-decoration:none;">{{ link.document.original_filename }}</a></div>
+                <a href="{% url 'document_file' link.document.id %}?download=1" style="color:var(--ink-3);text-decoration:none;padding:0 6px;">&#8595;</a>
+                <button type="button" class="chip-delete" data-url="{% url 'evidence_unlink' link.id %}" style="background:none;border:none;cursor:pointer;padding:0 6px;color:var(--ink-3);font-size:18px;">×</button>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+            {% if item.links|length < 5 %}<button type="button" class="btn btn-sm btn-outline lib-picker-open" style="margin-top:8px;" data-criterion="{{ item.criterion.id }}" data-current-links="[{% for link in item.links %}{{ link.document.id }}{% if not forloop.last %},{% endif %}{% endfor %}]">Choose from library</button>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      </div>
+      <div class="q-save-bar">
+        <span style="font-size:12.5px;color:var(--ink-3);">Category {{ current_category_index }} of {{ categories|length }}</span>
+        <div style="display:flex;align-items:center;gap:10px;"><span id="save-status" style="font-size:12px;display:none;"></span><button type="submit" id="save-btn" class="btn btn-primary">Save &amp; Continue →</button></div>
+      </div>
+    </form>
+  <!-- Shared library picker dialog -->
+  <dialog id="lib-picker-dialog" class="lib-picker-dialog">
+    <div class="lib-picker-header">
+      <span style="font-weight:600;font-size:15px;">Choose from library</span>
+      <button type="button" id="lib-picker-close"
+        style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--ink-3);padding:0 4px;line-height:1;flex-shrink:0;">×</button>
+    </div>
+    <div class="lib-picker-controls">
+      <input type="text" id="lib-search-input" class="input" placeholder="Search by filename…" autocomplete="off">
+      <select id="lib-cycle-filter" class="select">
+        <option value="">All cycles</option>
+        {% for c in org_cycles %}
+        <option value="{{ c.id }}">{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div id="lib-results" style="padding:8px 20px 16px;overflow-y:auto;flex:1;min-height:100px;">
+      <p style="font-size:12px;color:var(--ink-3);">Select a criterion to see suggestions.</p>
+    </div>
+  </dialog>
+  </main>
+
+</div>
+</div>
+<script>
+(function () {
+  function getCsrfToken() {
+    var el = document.querySelector('[name=csrfmiddlewaretoken]');
+    return el ? el.value : '';
+  }
+  function showChipError(chip, message) {
+    var err = document.createElement('div');
+    err.style.cssText = 'font-size:12px;color:var(--brick);margin-top:4px;padding:4px 8px;background:var(--brick-wash);border-radius:var(--radius-sm);';
+    err.textContent = message;
+    chip.insertAdjacentElement('afterend', err);
+    setTimeout(function () { err.remove(); }, 6000);
+  }
+
+  document.querySelectorAll('.chip-delete').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var chip = btn.closest('.evidence-chip');
+      var fnameEl = chip.querySelector('.fname a');
+      var name = fnameEl ? fnameEl.textContent.trim() : 'this file';
+      eya.confirm('Remove "' + name + '"? This cannot be undone.', function () {
+        fetch(btn.dataset.url, {
+          method: 'POST',
+          headers: {'X-CSRFToken': getCsrfToken()},
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.ok) {
+            chip.remove();
+          } else {
+            showChipError(chip, data.error || 'Could not remove file.');
+          }
+        })
+        .catch(function () {
+          showChipError(chip, 'Network error — please try again.');
+        });
+      }, {title: 'Delete?', danger: true, okLabel: 'Remove'});
+    });
+  });
+}());
+
+(function () {
+  var dirty = false;
+  var pendingUploads = 0;
+
+  var form = document.getElementById('criteria-form');
+  if (!form) return;
+
+  var SAVE_URL = form.dataset.saveUrl;
+  var UPLOAD_URL = form.dataset.uploadUrl;
+  var QUESTIONNAIRE_ID = '{{ questionnaire.id }}';
+  var saveBtn = document.getElementById('save-btn');
+  var saveStatus = document.getElementById('save-status');
+  if (!saveBtn || !saveStatus) return;
+
+  function getCsrf() {
+    var el = document.querySelector('[name=csrfmiddlewaretoken]');
+    return el ? el.value : '';
+  }
+
+  // Dirty tracking — warns on unsaved score/note changes
+  form.querySelectorAll('input[type="radio"], input[type="number"], textarea').forEach(function (el) {
+    el.addEventListener('change', function () { dirty = true; });
+  });
+
+  window.addEventListener('beforeunload', function (e) {
+    if (dirty || pendingUploads > 0) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  // ── Upload chip helpers ───────────────────────────────────────────────────
+
+  function findChipContainer(criterionId) {
+    var input = form.querySelector('input[name="files_' + criterionId + '"]');
+    if (!input) return null;
+    var field = input.closest('.field');
+    if (!field) return null;
+    var container = field.querySelector('.upload-chips');
+    if (!container) {
+      container = document.createElement('div');
+      container.className = 'upload-chips';
+      container.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-top:8px;';
+      input.insertAdjacentElement('afterend', container);
+    }
+    return container;
+  }
+
+  function createProgressChip(criterionId, filename) {
+    var ext = filename.split('.').pop().toUpperCase().slice(0, 4);
+    var chip = document.createElement('div');
+    chip.className = 'evidence-chip';
+    chip.innerHTML =
+      '<div class="ficon">' + ext + '</div>' +
+      '<div class="fname" style="flex:1;">' + filename + '</div>' +
+      '<span class="chip-spinner" style="font-size:12px;color:var(--ink-3);">&#8987;</span>';
+    var container = findChipContainer(criterionId);
+    if (container) container.appendChild(chip);
+    return chip;
+  }
+
+  function resolveChip(chip, doc) {
+    var spinner = chip.querySelector('.chip-spinner');
+    if (spinner) spinner.remove();
+    var fname = chip.querySelector('.fname');
+    if (fname && doc.file_url) {
+      fname.innerHTML =
+        '<a href="' + doc.file_url +
+        '" target="_blank" rel="noopener" style="color:var(--navy);text-decoration:none;">' +
+        fname.textContent + '</a>';
+    }
+    chip.insertAdjacentHTML('beforeend',
+      '<button type="button" class="chip-delete" data-url="' + (doc.delete_url || '') + '"' +
+      ' style="background:none;border:none;cursor:pointer;padding:0 6px;color:var(--ink-3);font-size:18px;line-height:1;">×</button>');
+    var delBtn = chip.querySelector('.chip-delete');
+    if (delBtn) {
+      delBtn.addEventListener('click', function () {
+        eya.confirm('Remove "' + (fname ? fname.textContent : 'file') + '"? This cannot be undone.', function () {
+          fetch(delBtn.dataset.url, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrf() },
+          })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data.ok) chip.remove();
+          });
+        }, { title: 'Delete?', danger: true, okLabel: 'Remove' });
+      });
+    }
+  }
+
+  function errorChip(chip, message) {
+    var spinner = chip.querySelector('.chip-spinner');
+    if (spinner) spinner.textContent = '✗';
+    chip.style.borderColor = 'var(--brick)';
+    chip.insertAdjacentHTML('beforeend',
+      '<span style="font-size:11px;color:var(--brick);margin-left:6px;">' + message + '</span>');
+  }
+
+  // ── File upload ───────────────────────────────────────────────────────────
+
+  function startUpload(criterionId, file) {
+    pendingUploads++;
+    var chip = createProgressChip(criterionId, file.name);
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('questionnaire_id', QUESTIONNAIRE_ID);
+    fd.append('criterion_id', criterionId);
+    fetch(UPLOAD_URL, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCsrf() },
+      body: fd,
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      pendingUploads--;
+      if (data.success) {
+        resolveChip(chip, data.document);
+      } else {
+        errorChip(chip, data.error || 'Upload failed.');
+      }
+    })
+    .catch(function () {
+      pendingUploads--;
+      errorChip(chip, 'Upload failed — please try again.');
+    });
+  }
+
+  // ── Form submit ───────────────────────────────────────────────────────────
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    // Collect files before clearing inputs
+    var uploads = [];
+    form.querySelectorAll('input[type="file"]').forEach(function (input) {
+      var match = input.name.match(/^files_(\d+)$/);
+      var critId = match ? match[1] : null;
+      if (!critId) return;
+      Array.from(input.files || []).forEach(function (file) {
+        uploads.push({ criterionId: critId, file: file });
+      });
+      input.value = '';
+    });
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+    saveStatus.style.display = 'none';
+
+    var fd = new FormData(form);
+    fetch(SAVE_URL, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCsrf() },
+      body: fd,
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      saveBtn.disabled = false;
+      if (!data.success) {
+        saveBtn.textContent = 'Save & Continue →';
+        saveStatus.style.display = 'inline';
+        saveStatus.style.color = 'var(--brick)';
+        saveStatus.textContent = data.error || 'Save failed — please try again.';
+        return;
+      }
+
+      dirty = false;
+      saveStatus.style.display = 'inline';
+      saveStatus.style.color = 'var(--sage)';
+      saveStatus.textContent = data.message || 'Saved ✓';
+      saveBtn.textContent = data.next_url ? 'Next →' : 'Saved ✓';
+      if (data.next_url) {
+        saveBtn.disabled = false;
+        saveBtn.onclick = function () { window.location.href = data.next_url; };
+      } else {
+        saveBtn.disabled = true;
+      }
+
+      uploads.forEach(function (item) { startUpload(item.criterionId, item.file); });
+    })
+    .catch(function () {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save & Continue →';
+      saveStatus.style.display = 'inline';
+      saveStatus.style.color = 'var(--brick)';
+      saveStatus.textContent = 'Network error — please try again.';
+    });
+  });
+}());
+
+(function () {
+  var toggleBtn = document.getElementById('toggle-all-btn');
+
+  function allExpanded() {
+    return !document.querySelector('.indicator-body.collapsed');
+  }
+  function updateToggleBtn() {
+    if (toggleBtn) toggleBtn.textContent = allExpanded() ? 'Collapse All' : 'Expand All';
+  }
+
+  function toggleIndicator(head) {
+    var indicator = head.closest('.indicator');
+    var body = indicator.querySelector('.indicator-body');
+    var isOpen = indicator.classList.contains('open');
+    if (isOpen) {
+      indicator.classList.remove('open');
+      body.classList.add('collapsed');
+      head.setAttribute('aria-expanded', 'false');
+    } else {
+      indicator.classList.add('open');
+      body.classList.remove('collapsed');
+      head.setAttribute('aria-expanded', 'true');
+    }
+    updateToggleBtn();
+  }
+
+  document.querySelectorAll('.indicator-head').forEach(function (head) {
+    head.addEventListener('click', function () { toggleIndicator(head); });
+    head.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleIndicator(head); }
+    });
+  });
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', function () {
+      var expand = !allExpanded();
+      document.querySelectorAll('.indicator').forEach(function (ind) {
+        var body = ind.querySelector('.indicator-body');
+        var head = ind.querySelector('.indicator-head');
+        if (expand) {
+          ind.classList.add('open');
+          body.classList.remove('collapsed');
+          if (head) head.setAttribute('aria-expanded', 'true');
+        } else {
+          ind.classList.remove('open');
+          body.classList.add('collapsed');
+          if (head) head.setAttribute('aria-expanded', 'false');
+        }
+      });
+      updateToggleBtn();
+    });
+  }
+}());
+</script>
+<script>
+(function () {
+  var MAX_BYTES = {{ max_file_bytes }};
+  var MAX_LABEL = "{{ max_file_display }}";
+  document.querySelectorAll('input[type="file"]').forEach(function (input) {
+    input.addEventListener('change', function () {
+      var tooBig = Array.prototype.filter.call(input.files, function (f) { return f.size > MAX_BYTES; });
+      if (tooBig.length) {
+        alert('Each file must be ' + MAX_LABEL + ' or smaller. "' + tooBig[0].name + '" is too large.');
+        input.value = '';
+      }
+    });
+  });
+}());
+
+(function () {
+  var QUESTIONNAIRE_ID = "{{ questionnaire.id }}";
+  var SEARCH_URL = "{% url 'library_search' %}";
+  var LINK_URL = "{% url 'evidence_link' %}";
+  var dialog = document.getElementById('lib-picker-dialog');
+  var searchInput = document.getElementById('lib-search-input');
+  var cycleFilter = document.getElementById('lib-cycle-filter');
+  var resultsEl = document.getElementById('lib-results');
+  var currentCriterionId = null;
+  var currentLinks = [];
+  var debounceTimer = null;
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function formatBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return Math.round(b / 1024) + ' KB';
+    return (b / 1048576).toFixed(1) + ' MB';
+  }
+
+  function getCsrf() {
+    var el = document.querySelector('[name=csrfmiddlewaretoken]');
+    return el ? el.value : '';
+  }
+
+  function renderResults(results) {
+    if (!results.length) {
+      resultsEl.innerHTML = '<p style="font-size:12px;color:var(--ink-3);padding:8px 0;">No documents match. Upload a file directly above.</p>';
+      return;
+    }
+    var suggested = results.filter(function (r) { return r.is_suggested; });
+    var rest = results.filter(function (r) { return !r.is_suggested; });
+
+    function makeItem(r) {
+      var attached = currentLinks.indexOf(r.id) !== -1;
+      var detail = [r.cycle_name, r.criterion_name, formatBytes(r.file_size)].filter(Boolean).join(' · ');
+      return '<div class="lib-result-item">' +
+        '<div class="lib-result-meta">' +
+          '<div class="lib-result-name">' + escHtml(r.original_filename) + '</div>' +
+          '<div class="lib-result-detail">' + escHtml(detail) + '</div>' +
+        '</div>' +
+        (attached
+          ? '<span class="badge sage" style="flex-shrink:0;font-size:11px;">Attached</span>'
+          : '<button type="button" class="btn btn-sm lib-attach-btn" data-doc-id="' + r.id + '" style="flex-shrink:0;">Attach</button>'
+        ) +
+      '</div>';
+    }
+
+    var html = '';
+    if (suggested.length) {
+      html += '<div class="lib-group-label">Suggested</div>';
+      html += suggested.map(makeItem).join('');
+    }
+    if (rest.length) {
+      if (suggested.length) html += '<div class="lib-group-label" style="margin-top:8px;">All documents</div>';
+      html += rest.map(makeItem).join('');
+    }
+    resultsEl.innerHTML = html;
+
+    resultsEl.querySelectorAll('.lib-attach-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        btn.disabled = true;
+        fetch(LINK_URL, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCsrf(),
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            questionnaire_id: QUESTIONNAIRE_ID,
+            criterion_id: currentCriterionId,
+            document_id: btn.dataset.docId,
+          }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.ok) { dialog.close(); location.reload(); }
+          else { btn.disabled = false; alert(d.error || 'Could not attach.'); }
+        })
+        .catch(function () { btn.disabled = false; alert('Network error — please try again.'); });
+      });
+    });
+  }
+
+  function doSearch() {
+    if (!currentCriterionId) return;
+    resultsEl.innerHTML = '<p style="font-size:12px;color:var(--ink-3);padding:8px 0;">Searching…</p>';
+    var params = new URLSearchParams({ criterion_id: currentCriterionId });
+    var q = searchInput.value.trim();
+    if (q) params.set('q', q);
+    var cycle = cycleFilter.value;
+    if (cycle) params.set('cycle', cycle);
+    fetch(SEARCH_URL + '?' + params.toString())
+      .then(function (r) { return r.json(); })
+      .then(function (data) { renderResults(data.results); })
+      .catch(function () {
+        resultsEl.innerHTML = '<p style="font-size:12px;color:var(--brick);padding:8px 0;">Search failed. Try again.</p>';
+      });
+  }
+
+  document.querySelectorAll('.lib-picker-open').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      currentCriterionId = btn.dataset.criterion;
+      try { currentLinks = JSON.parse(btn.dataset.currentLinks); } catch (e) { currentLinks = []; }
+      searchInput.value = '';
+      cycleFilter.value = '';
+      dialog.showModal();
+      doSearch();
+    });
+  });
+
+  document.getElementById('lib-picker-close').addEventListener('click', function () {
+    dialog.close();
+  });
+
+  dialog.addEventListener('click', function (e) {
+    if (e.target === dialog) dialog.close();
+  });
+
+  searchInput.addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(doSearch, 300);
+  });
+
+  cycleFilter.addEventListener('change', doSearch);
+}());
+</script>
+{% endblock %}

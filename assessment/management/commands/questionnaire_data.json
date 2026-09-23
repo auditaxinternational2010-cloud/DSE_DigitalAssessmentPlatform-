@@ -1,0 +1,1292 @@
+{
+  "categories": [
+    {
+      "name": "Leadership, Governance & Strategy",
+      "weight": 15.0,
+      "order": 1,
+      "criteria": [
+        {
+          "number": 1,
+          "name": "The organization has a clearly articulated vision, mission and values understood by employees.",
+          "levels": {
+            "0": "No formal vision, mission, or values exist, or the organization is in start-up/pre-operational phase.",
+            "1": "Vision, mission, and values are documented but not communicated; less than 20% of employees can recall or explain them.",
+            "2": "Vision, mission, and values are accessible (e.g., intranet, handbook); ~40% of employees can state them but cannot explain application.",
+            "3": "Regular communication (e.g., annual meeting, posters); ~60% of employees understand and see relevance to daily work",
+            "4": "Onboarding and performance management reference vision/mission/values; ~80% of employees can give examples of applying values.",
+            "5": "Values are embedded in decision-making, recognition, and strategy reviews; >90% of employees can articulate and link behaviors to vision/mission; regular employee feedback confirms understanding."
+          }
+        },
+        {
+          "number": 2,
+          "name": "Leadership regularly communicates organizational strategy and priorities.",
+          "levels": {
+            "0": "No formal strategy exists (e.g., crisis mode, no strategic plan).",
+            "1": "Strategy is shared once a year (e.g., annual address) with no follow-up; no documented communication plan.",
+            "2": "Leaders send occasional emails or hold quarterly meetings; no consistent cadence or two-way dialogue.",
+            "3": "Monthly/quarterly leader updates occur; strategy is linked to team goals but not always personalized.",
+            "4": "Multi-channel communication (e.g., town halls, newsletters, team huddles) with clear calendar; employees can state top 3 priorities for their unit.",
+            "5": "Strategy communication is bidirectional (e.g., leader Q&A, feedback loops); priorities are adapted for each level; real-time updates via digital tools; employee surveys show high clarity on priorities."
+          }
+        },
+        {
+          "number": 3,
+          "name": "Leaders demonstrate ethical and accountable behavior.",
+          "levels": {
+            "0": "No code of conduct or ethics policy exists.",
+            "1": "Code of conduct exists but is not enforced; leaders have been observed violating rules without consequences.",
+            "2": "Code is published; occasional ethics training; some leaders model accountability but inconsistent.",
+            "3": "Leaders publicly commit to ethics (e.g., signed pledges); minor accountability lapses are addressed; whistleblower channel exists.",
+            "4": "Accountability metrics for leaders (e.g., 360\u00b0 feedback on ethics); transparent reporting of breaches; leaders model 'speak-up' culture.",
+            "5": "Ethical behavior is a key leadership competency in performance reviews; third-party audits of leader conduct; zero retaliation policy proven; organization recognized externally for ethical leadership."
+          }
+        },
+        {
+          "number": 4,
+          "name": "HR strategy is aligned with overall business strategy.",
+          "levels": {
+            "0": "HR operates purely administratively with no strategic plan.",
+            "1": "HR strategy exists but is unrelated to business goals (e.g., generic talent plan).",
+            "2": "HR participates in business planning meetings but alignment is ad hoc; some HR initiatives match business needs (e.g., hiring for new product).",
+            "3": "Annual HR plan explicitly references business strategy; key metrics (e.g., turnover in growth areas) tracked but not yet integrated.",
+            "4": "HR KPIs (e.g., critical role fill rate, succession pipeline) are directly derived from business strategy; joint business-HR goal setting.",
+            "5": "HR strategy co-created with business leaders; workforce planning scenarios align with 3\u20135 year business scenarios; HR metrics reviewed in board-level strategy meetings."
+          }
+        },
+        {
+          "number": 5,
+          "name": "Leadership succession plans exist for critical positions.",
+          "levels": {
+            "0": "No critical positions identified; no formal leadership roles defined.",
+            "1": "Ad hoc replacement thinking (e.g., 'someone could step in') but no documented plan or pool.",
+            "2": "List of critical positions exists; 1\u20132 successors named for some roles, but no development plans.",
+            "3": "Succession plan documented for top 20% of leadership roles; successors have basic development activities (e.g., training).",
+            "4": "Succession plans for all critical roles (\u226550% of leadership); development plans with timelines; annual review by CEO/board.",
+            "5": "Continuous pipeline with ready-now successors for 80%+ critical roles; simulations/rotations used to prepare successors; diverse slates; measured success rate of internal placements into critical roles (>75%)"
+          }
+        },
+        {
+          "number": 6,
+          "name": "Leaders actively promote employee engagement and inclusion.",
+          "levels": {
+            "0": "No engagement surveys or inclusion initiatives exist.",
+            "1": "Leaders acknowledge engagement surveys exist but take no action; inclusion not mentioned.",
+            "2": "Engagement survey conducted but response rate <50% or no action planning; leaders sponsor one inclusive event/year.",
+            "3": "Leaders review survey results with teams; action plans created for 1\u20132 inclusion goals (e.g., flexible work); 60%+ participation.",
+            "4": "Leaders have engagement & inclusion KPIs (e.g., team climate scores); regular focus groups; ERGs (employee resource groups) sponsored by leaders.",
+            "5": "Leaders' bonuses tied to engagement/inclusion outcomes; transparent reporting of inclusion metrics; proactive reduction of engagement gaps across demographics; external benchmarking top quartile."
+          }
+        },
+        {
+          "number": 7,
+          "name": "Decision-making structures are transparent and effective.",
+          "levels": {
+            "0": "No documented decision rights; employees cannot identify decision-makers for common topics.",
+            "1": "Decision rights exist on paper but are ignored; employees cannot say who decides what",
+            "2": "Verbal decision-making process observed but not documented; frequent escalations.",
+            "3": "Decision making matrix exists for 1\u20132 processes (e.g., budget, hiring); outdated.",
+            "4": "Decision rights documented for all major functions (strategy, ops, people); available on intranet; meeting minutes show decisions recorded.",
+            "5": "Decision logs with rationale (e.g., Confluence, SharePoint); annual review of RACI with process owners; <2 days average escalation time"
+          }
+        },
+        {
+          "number": 8,
+          "name": "The organization measures leadership effectiveness.",
+          "levels": {
+            "0": "No leadership performance assessment; no criteria defined.",
+            "1": "Generic manager appraisal form used; no 360\u00b0, no team feedback.",
+            "2": "Annual performance review for leaders uses generic manager criteria; no 360\u00b0 or team feedback.",
+            "3": "Annual self-assessment for leaders plus manager rating; no multi-rater input.",
+            "4": "360\u00b0 for all leaders (80%+ completion rate); individual development plans linked to results; team engagement scores used as input.",
+            "5": "Leadership effectiveness dashboard (retention, productivity, upward feedback, 360\u00b0 trends) reviewed quarterly; predictive model linking leader scores to business outcomes; external benchmark (e.g., Korn Ferry, DDI)."
+          }
+        },
+        {
+          "number": 9,
+          "name": "Our organization's governing or advisory Board regularly assesses the effectiveness of our relations with our stakeholders.",
+          "levels": {
+            "0": "No formal stakeholder oversight role exists",
+            "1": "Stakeholder issues are discussed only when problems arise.",
+            "2": "Stakeholder relationships are reviewed occasionally and informally.",
+            "3": "The Board reviews key stakeholder relationships periodically using basic information.",
+            "4": "The Board conducts regular structured assessments and uses findings to guide decisions.",
+            "5": "The Board uses comprehensive stakeholder performance metrics, benchmarking, and continuous improvement to strengthen strategic relationships."
+          }
+        },
+        {
+          "number": 10,
+          "name": "Our organization's governing or advisory Board has a formal process of reviewing its own performance",
+          "levels": {
+            "0": "No Board self-assessment is conducted.",
+            "1": "Informal discussions about Board effectiveness occur rarely.",
+            "2": "A basic self-review process exists but is irregular and undocumented.",
+            "3": "The Board conducts periodic documented self-assessments and identifies improvement actions.",
+            "4": "Formal annual evaluations are conducted using clear criteria, with follow-up on agreed actions.",
+            "5": "Independent and comprehensive evaluations are integrated into Board development, succession planning, and governance excellence."
+          }
+        },
+        {
+          "number": 11,
+          "name": "Our organization promotes agile leadership and management strategies",
+          "levels": {
+            "0": "Agile leadership practices are not recognized or applied.",
+            "1": "Leadership responds slowly and inconsistently to change.",
+            "2": "Some managers apply adaptive approaches in selected areas.",
+            "3": "Agile leadership principles are promoted and applied in several functions.",
+            "4": "Leadership systematically uses agile methods to respond quickly to risks and opportunities.",
+            "5": "Agile leadership is embedded organization-wide, driving innovation, rapid learning, and sustained strategic adaptability."
+          }
+        },
+        {
+          "number": 12,
+          "name": "The organization's governing or advisory Board is composed of individuals who can provide the expertise it needs and who reflect its values",
+          "levels": {
+            "0": "Board composition does not consider expertise or values alignment.",
+            "1": "Significant gaps exist in competencies and representation.",
+            "2": "Some relevant expertise is present, but important gaps remain.",
+            "3": "Board composition generally aligns with required competencies and organizational values.",
+            "4": "Board membership is systematically selected to ensure balanced expertise, diversity, and values alignment.",
+            "5": "Board composition is strategically optimized and regularly refreshed to maintain exceptional governance capability and ethical leadership."
+          }
+        },
+        {
+          "number": 13,
+          "name": "The organization's governing or advisory Board regularly evaluates the performance of the organization's chief executive officer using a clear and transparent process",
+          "levels": {
+            "0": "No CEO performance evaluation is conducted.",
+            "1": "CEO performance is discussed informally without defined criteria.",
+            "2": "A basic evaluation process exists but is irregular or lacks transparency",
+            "3": "The Board conducts periodic evaluations using agreed objectives and documented feedback.",
+            "4": "Formal annual evaluations use clear criteria linked to strategy, with development and accountability measures.",
+            "5": "The Board applies a robust, transparent, evidence-based evaluation process incorporating succession planning and leadership development."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Culture, Employee Experience & Engagement",
+      "weight": 15.0,
+      "order": 2,
+      "criteria": [
+        {
+          "number": 1,
+          "name": "Employees feel respected and valued.",
+          "levels": {
+            "0": "No evidence that employee respect and dignity are promoted.",
+            "1": "Employees frequently report unfair treatment, discrimination or lack of recognition.",
+            "2": "Some efforts to promote respect exist, but employee experiences are inconsistent across departments.",
+            "3": "Most employees feel respected and valued, supported by fair treatment and recognition practices.",
+            "4": "Respect, fairness and appreciation are consistently demonstrated across the organization.",
+            "5": "A strong culture of mutual respect and employee value is deeply embedded and consistently experienced by all employees."
+          }
+        },
+        {
+          "number": 2,
+          "name": "The organization promotes a positive workplace culture.",
+          "levels": {
+            "0": "No initiatives or policies promoting positive workplace culture.",
+            "1": "Workplace culture is characterized by low morale, conflict or poor relationships.",
+            "2": "Some culture-building initiatives exist, but implementation and impact are limited",
+            "3": "The organization promotes teamwork, professionalism and employee wellbeing through regular initiatives.",
+            "4": "Positive workplace culture is actively reinforced through leadership behavior, policies and employee programs",
+            "5": "The organization is widely recognized for an inclusive, collaborative and high-performing workplace culture."
+          }
+        },
+        {
+          "number": 3,
+          "name": "Internal communication is transparent and timely.",
+          "levels": {
+            "0": "No structured internal communication mechanisms exist.",
+            "1": "Communication is irregular, unclear or delayed, causing confusion among employees.",
+            "2": "Basic communication channels exist, but information sharing is inconsistent.",
+            "3": "Internal communication is generally timely and transparent, with employees receiving relevant updates.",
+            "4": "Communication processes are well-structured, proactive and encourage two-way interaction.",
+            "5": "Communication is highly transparent, responsive and trusted, ensuring strong employee alignment and engagement."
+          }
+        },
+        {
+          "number": 4,
+          "name": "Employees can safely provide feedback and raise concerns.",
+          "levels": {
+            "0": "No mechanisms exist for employee feedback or reporting concerns.",
+            "1": "Employees fear retaliation or lack confidence in raising concerns.",
+            "2": "Some feedback channels exist, but employees use them inconsistently due to limited trust.",
+            "3": "Employees can raise concerns through formal mechanisms and generally feel safe doing so.",
+            "4": "Feedback and grievance mechanisms are trusted, confidential and actively supported by management",
+            "5": "A strong speak-up culture exists where employees confidently share ideas and concerns without fear of retaliation."
+          }
+        },
+        {
+          "number": 5,
+          "name": "Employee engagement surveys are conducted regularly.",
+          "levels": {
+            "0": "No employee engagement surveys are conducted.",
+            "1": "Surveys are conducted rarely and without structured methodology.",
+            "2": "Surveys are conducted occasionally, but coverage or participation is limited.",
+            "3": "Employee engagement surveys are conducted periodically using defined processes.",
+            "4": "Surveys are conducted regularly with strong participation and management commitment.",
+            "5": "Engagement surveys are institutionalized, data-driven and benchmarked to support continuous organizational improvement."
+          }
+        },
+        {
+          "number": 6,
+          "name": "Survey results are analyzed and improvement actions implemented.",
+          "levels": {
+            "0": "Survey results are not analyzed or used.",
+            "1": "Limited analysis is performed and no meaningful actions are implemented.",
+            "2": "Some analysis and action planning occur, but follow-up is inconsistent.",
+            "3": "Survey findings are analyzed and improvement initiatives are implemented for key issues.",
+            "4": "Action plans are systematically developed, monitored and communicated to employees.",
+            "5": "Survey insights drive continuous improvement, strategic decisions and measurable enhancement of employee experience."
+          }
+        },
+        {
+          "number": 7,
+          "name": "Managers foster collaboration and teamwork.",
+          "levels": {
+            "0": "No emphasis on teamwork or collaboration.",
+            "1": "Managers operate in silos and teamwork is weak or discouraged.",
+            "2": "Some collaborative practices exist, but they depend on individual managers.",
+            "3": "Managers generally encourage teamwork and cross-functional cooperation.",
+            "4": "Collaboration and teamwork are actively promoted through leadership practices, structures and shared goals.",
+            "5": "Collaboration is deeply embedded in organizational culture, resulting in strong teamwork, innovation and collective accountability."
+          }
+        },
+        {
+          "number": 8,
+          "name": "Flexible and hybrid work arrangements are supported where appropriate.",
+          "levels": {
+            "0": "No flexible work arrangements exist where applicable.",
+            "1": "Flexible work arrangements are discouraged or inconsistently applied.",
+            "2": "Limited flexible work options exist for selected employees or departments.",
+            "3": "Flexible or hybrid work arrangements are moderately supported with basic guidelines.",
+            "4": "Flexible work arrangements are formally supported with clear policies, tools and management support.",
+            "5": "Flexible work is fully embedded with advanced policies, technology, and culture; outcomes measured and continuously improved."
+          }
+        },
+        {
+          "number": 9,
+          "name": "Employees feel psychologically safe at work.",
+          "levels": {
+            "0": "No initiatives, policies or practices exist to support psychological safety in the workplace.",
+            "1": "Employees frequently fear speaking up, admitting mistakes or expressing opinions due to fear of blame, retaliation or embarrassment.",
+            "2": "Some efforts to support respectful communication and employee wellbeing exist, but employees remain hesitant to openly share concerns or ideas.",
+            "3": "Employees generally feel safe expressing opinions, asking questions and reporting concerns without fear of negative consequences.",
+            "4": "The organization actively promotes trust, openness and respectful dialogue, with leaders encouraging learning from mistakes and diverse viewpoints.",
+            "5": "Psychological safety is deeply embedded in organizational culture, where employees confidently speak up, innovate, challenge ideas constructively and collaborate without fear of retaliation or exclusion"
+          }
+        },
+        {
+          "number": 10,
+          "name": "Our organization conducts Health Assessment for the development of wellness programs.",
+          "levels": {
+            "0": "No health assessments are conducted to inform wellness programs.",
+            "1": "Health assessments are conducted rarely or informally, with limited employee participation and no clear follow-up actions.",
+            "2": "Basic health assessments are conducted occasionally, and results are used minimally to guide wellness activities.",
+            "3": "Regular health assessments are conducted, and findings are used to develop and improve wellness programs.",
+            "4": "Comprehensive health assessments are systematically conducted, analyzed, and integrated into targeted wellness initiatives with measurable outcomes.",
+            "5": "Advanced, data-driven health assessment systems are embedded into organizational wellness strategy, enabling proactive, personalized, and continuously improved wellness programs with demonstrated positive impact on employee well-being and organizational performance."
+          }
+        },
+        {
+          "number": 11,
+          "name": "The management allocates sufficient budget to support wellness programmes.",
+          "levels": {
+            "0": "No budget is allocated for employee wellness programmes.",
+            "1": "Minimal or inconsistent funding is provided, limiting wellness activities and programme sustainability.",
+            "2": "A basic wellness budget exists but is insufficient to meet employee wellness needs effectively.",
+            "3": "A defined budget is allocated annually to support key wellness programmes and activities.",
+            "4": "Adequate and consistent funding supports comprehensive wellness initiatives, monitoring, and employee participation.",
+            "5": "Wellness funding is strategically prioritized and integrated into long-term organizational planning, enabling innovative, data-driven, and high-impact wellness programmes with measurable organizational benefits."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Talent Acquisition & Employer Brand",
+      "weight": 10.0,
+      "order": 3,
+      "criteria": [
+        {
+          "number": 1,
+          "name": "Recruitment processes are fair, transparent and competency-based.",
+          "levels": {
+            "0": "No formal recruitment process exists.",
+            "1": "Recruitment decisions are inconsistent and largely subjective.",
+            "2": "Basic recruitment procedures exist but are not consistently followed.",
+            "3": "Recruitment is generally competency-based with documented procedures and interview guidelines.",
+            "4": "Standardized, transparent and competency-based recruitment is consistently applied across the organization.",
+            "5": "Recruitment practices are fully competency-driven, audited regularly, technology-supported and benchmarked against best practice standards."
+          }
+        },
+        {
+          "number": 2,
+          "name": "The organization has a strong employer brand strategy.",
+          "levels": {
+            "0": "No employer branding activities exist.",
+            "1": "Employer brand is unclear and inconsistently communicated.",
+            "2": "Some branding initiatives exist but are informal or reactive.",
+            "3": "Employer branding strategy is defined and periodically implemented.",
+            "4": "Employer brand is actively promoted through multiple channels and aligned with organizational values.",
+            "5": "Employer brand is highly recognized, data-driven, continuously enhanced and attracts top talent competitively."
+          }
+        },
+        {
+          "number": 3,
+          "name": "Diversity considerations are integrated into recruitment.",
+          "levels": {
+            "0": "No diversity considerations in recruitment.",
+            "1": "Limited awareness of diversity and inclusion in hiring practices.",
+            "2": "Diversity goals exist but implementation is inconsistent.",
+            "3": "Recruitment processes include some diversity-focused practices and monitoring.",
+            "4": "Diversity and inclusion are systematically integrated into sourcing, selection and hiring decisions.",
+            "5": "Recruitment strategy demonstrates measurable diversity outcomes, inclusive practices and industry-leading DEI initiatives."
+          }
+        },
+        {
+          "number": 4,
+          "name": "Candidate experience is measured and improved.",
+          "levels": {
+            "0": "Candidate experience is not considered or measured.",
+            "1": "Feedback from candidates is rarely collected.",
+            "2": "Basic candidate feedback mechanisms exist but are irregular.",
+            "3": "Candidate experience is periodically measured and improvements are implemented.",
+            "4": "Structured candidate experience surveys and improvement actions are consistently applied.",
+            "5": "Candidate experience is continuously optimized using analytics, benchmarking and proactive engagement strategies."
+          }
+        },
+        {
+          "number": 5,
+          "name": "Digital recruitment platforms are effectively utilized.",
+          "levels": {
+            "0": "No digital recruitment platforms are used.",
+            "1": "Minimal use of digital tools with poor integration.",
+            "2": "Basic recruitment platforms are used for job postings and applications.",
+            "3": "Multiple digital recruitment tools are utilized with moderate effectiveness.",
+            "4": "Integrated digital recruitment systems support sourcing, tracking and communication effectively.",
+            "5": "Advanced recruitment technologies, automation and analytics are fully optimized to enhance recruitment outcomes."
+          }
+        },
+        {
+          "number": 6,
+          "name": "Time-to-hire and quality-of-hire metrics are monitored.",
+          "levels": {
+            "0": "No recruitment metrics are tracked.",
+            "1": "Metrics are tracked informally or inconsistently.",
+            "2": "Basic recruitment metrics are monitored occasionally.",
+            "3": "Time-to-hire and quality-of-hire metrics are regularly tracked and reviewed.",
+            "4": "Recruitment metrics are analyzed to improve hiring efficiency and effectiveness.",
+            "5": "Advanced workforce analytics and predictive insights drive continuous recruitment optimization and strategic decision-making."
+          }
+        },
+        {
+          "number": 7,
+          "name": "Graduate, internship or talent pipeline programs exist.",
+          "levels": {
+            "0": "No talent pipeline programs exist.",
+            "1": "Informal or ad hoc internship opportunities exist.",
+            "2": "Basic graduate or internship programs are established but limited in scope.",
+            "3": "Structured talent pipeline programs exist with periodic intake and development activities.",
+            "4": "Well-managed graduate, internship and succession pipeline programs support future workforce needs.",
+            "5": "Comprehensive talent pipeline strategy is fully integrated with workforce planning, partnerships and long-term talent development objectives."
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Recruitment policy",
+          "description": "Documented recruitment procedures and policies"
+        },
+        {
+          "name": "Employer branding strategy",
+          "description": "Strategic approach to employer branding"
+        },
+        {
+          "name": "Recruitment KPIs",
+          "description": "Key performance indicators for recruitment"
+        },
+        {
+          "name": "Candidate surveys",
+          "description": "Feedback from candidates on recruitment experience"
+        }
+      ]
+    },
+    {
+      "name": "Learning, Development & Performance",
+      "weight": 15.0,
+      "order": 4,
+      "criteria": [
+        {
+          "number": 1,
+          "name": "Employees have documented development plans.",
+          "levels": {
+            "0": "No development plan template found on intranet or HR system.",
+            "1": "Sample of 10 personnel files \u2013 1 or fewer contain a development plan; no update dates.",
+            "2": "Template available (e.g., Word/SharePoint); HR records show 20% of staff have completed plans; no completion dates.",
+            "3": "HR system report shows 50% of staff have plans with last review date within 12 months; quality audit shows 70% of those have at least 2 action items.",
+            "4": "Report shows 80% of staff have plans; manager survey confirms quarterly reviews; sample plans include measurable outcomes (e.g., 'complete certification by Q3').",
+            "5": "System screenshot shows real-time dashboards; >90% compliance; employee survey confirms plans are useful (e.g., >80% agree 'my plan helps my growth')."
+          }
+        },
+        {
+          "number": 2,
+          "name": "Learning programs align with organizational strategy.",
+          "levels": {
+            "0": "No learning catalog or training calendar",
+            "1": "Training catalog available (e.g., safety, harassment) but no link to business plan in documentation.",
+            "2": "Needs analysis report (dated) shows skill gaps; 1\u20132 programs (e.g., leadership, CRM) explicitly reference strategic goal.",
+            "3": "Curriculum map matrix (strategic goal vs. program); 50%+ programs have alignment statement; business leader interviewed confirms connection.",
+            "4": "L&D budget document shows allocation by strategic pillar (e.g., 40% to innovation upskilling); business strategy document references learning initiatives.",
+            "5": "Quarterly business review includes L&D impact section; skills taxonomy linked to strategic roadmap; external benchmarking confirms best practice."
+          }
+        },
+        {
+          "number": 3,
+          "name": "Training effectiveness is measured.",
+          "levels": {
+            "0": "No evaluation forms, no reports, no post-training data.",
+            "1": "Sample of reaction forms (e.g., 'rate the instructor') on file; no knowledge or behavior data.",
+            "2": "Pre/post test scores for 1\u20132 programs (e.g., compliance, software); no follow-up.",
+            "3": "30-day manager survey results for 50%+ of courses; documented behavior change examples.",
+            "4": "Business result data (e.g., sales lift, error reduction) linked to training cohort vs control group; quarterly effectiveness report presented to HR leadership.",
+            "5": "ROI calculation sheet (benefit/cost ratio) for 3+ major programs; dashboard tracking Level 1\u20135 by program type; external validation (e.g., ATD Best Award)."
+          }
+        },
+        {
+          "number": 4,
+          "name": "Digital learning platforms are utilized.",
+          "levels": {
+            "0": "No digital learning platform (LMS or LXP) exists.",
+            "1": "LMS exists but is used only for compliance training tracking; <10% of employees log in annually.",
+            "2": "LMS contains some on-demand content; 10\u201330% of employees use it; no social or mobile features leveraged.",
+            "3": "LMS/LXP offers curated learning paths; 30\u201360% active users (log in quarterly); basic reporting available.",
+            "4": "Platform integrates with performance management and career development; 60\u201380% active users; personalized recommendations based on role.",
+            "5": "AI-driven platform with adaptive learning; gamification, social learning, and mobile offline access; >80% active monthly users; learning analytics used to close skills gaps."
+          }
+        },
+        {
+          "number": 5,
+          "name": "Performance appraisals are conducted consistently.",
+          "levels": {
+            "0": "No formal performance appraisal process.",
+            "1": "Appraisals occur for <30% of employees annually; no standardized form or deadlines.",
+            "2": "Standard form exists; 30\u201360% completion rate; deadlines frequently missed.",
+            "3": "60\u201380% completion rate within 45 days of deadline; two-way review process documented.",
+            "4": "80\u201395% completion rate within 30 days of deadline; calibration sessions held for consistency across managers.",
+            "5": ">95% completion within 15 days; real-time performance documentation (not just annual); automated reminders and manager accountability dashboards."
+          }
+        },
+        {
+          "number": 6,
+          "name": "Employees receive regular feedback and coaching.",
+          "levels": {
+            "0": "No feedback or coaching processes.",
+            "1": "Feedback occurs only during annual appraisals; no coaching.",
+            "2": "Managers provide ad hoc feedback (e.g., after projects); <30% of employees report receiving quarterly feedback.",
+            "3": "Quarterly check-ins expected; 30\u201360% of employees report feedback at least quarterly; some managers trained in coaching.",
+            "4": "60\u201380% of employees report feedback at least monthly; coaching training for all managers; upward feedback on coaching quality.",
+            "5": ">80% of employees report weekly/biweekly meaningful feedback; coaching culture measured via survey; coaching certifications or external coaches for leaders."
+          }
+        },
+        {
+          "number": 7,
+          "name": "High-potential employees are identified and developed.",
+          "levels": {
+            "0": "No HiPo identification process.",
+            "1": "Informal HiPo list held by senior leader (subjective); no development.",
+            "2": "Criteria defined (e.g., performance + potential matrix); HiPos identified (<10% of population); minimal development (e.g., one-off mentoring).",
+            "3": "Formal HiPo pool (10\u201315% of employees); annual development plan; exposure to senior leaders (e.g., projects, shadowing).",
+            "4": "HiPo program with curriculum, sponsorship, and rotations; retention tracking; 50%+ of open leadership roles filled from HiPo pool.",
+            "5": "Differentiated HiPo tracks (e.g., early career, mid-level, executive); predictive assessment tools; 80% retention of HiPos; external benchmark for HiPo development."
+          }
+        },
+        {
+          "number": 8,
+          "name": "Internal promotion and career mobility are encouraged.",
+          "levels": {
+            "0": "No internal job posting or mobility policy.",
+            "1": "Internal candidates rarely considered (<10% of vacancies filled internally).",
+            "2": "Internal job board exists; 10\u201325% of vacancies filled internally; no formal career paths.",
+            "3": "25\u201340% internal fill rate; career path documentation for key roles; employees encouraged to apply.",
+            "4": "40\u201360% internal fill rate; rotational assignments or cross-functional moves; internal mobility metrics tracked.",
+            "5": ">60% internal fill rate; 'internal first' policy (post internally 2 weeks before external); career mobility part of manager KPIs; alumni rehire program."
+          }
+        },
+        {
+          "number": 9,
+          "name": "Leadership development programs exist.",
+          "levels": {
+            "0": "No leadership development offering.",
+            "1": "One-off training for new managers (e.g., 1-day course); no follow-up.",
+            "2": "Program for frontline leaders exists; <30% of leaders attend annually; no evaluation.",
+            "3": "Multi-module program (e.g., 6 sessions) for mid-level leaders; 30\u201360% participation; basic feedback collected.",
+            "4": "Differentiated programs (emerging, mid, executive); 60\u201380% participation; 360\u00b0 pre/post; business impact measured.",
+            "5": "Leadership academy with certification; executive coaching embedded; 80%+ participation; succession pipeline feed from program; external accreditation."
+          }
+        },
+        {
+          "number": 10,
+          "name": "A system is developed to support and reward employees who take initiatives to develop their skills and professions (skills-based incentives).",
+          "levels": {
+            "0": "No system exists to recognize or reward employee skills development initiatives.",
+            "1": "Informal encouragement for skills development exists, but no structured incentives or recognition mechanisms are in place.",
+            "2": "Basic incentives or recognition programs are introduced for selected training or certifications, with limited participation and monitoring.",
+            "3": "A formal skills-based incentive system exists, linking employee learning initiatives to recognition, rewards, or career development opportunities.",
+            "4": "Skills development incentives are consistently implemented, monitored, and aligned with organizational competency and performance goals. Employees are actively encouraged to pursue professional growth.",
+            "5": "A comprehensive and innovative skills-based incentive system is embedded into organizational culture, integrating continuous learning, career progression, succession planning, and measurable business impact. Employees are proactively rewarded for upskilling, innovation, and professional excellence."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reward, Well-being & Retention",
+      "weight": 10.0,
+      "order": 5,
+      "criteria": [
+        {
+          "number": 1,
+          "name": "Compensation structures are fair and competitive.",
+          "levels": {
+            "0": "No compensation structure exists.",
+            "1": "Pay decisions are inconsistent and non-transparent.",
+            "2": "Basic salary structures exist but are rarely benchmarked.",
+            "3": "Compensation structures are standardized and periodically reviewed.",
+            "4": "Compensation is benchmarked regularly against market data and applied fairly.",
+            "5": "Compensation strategy is highly competitive, transparent, data-driven, and linked to retention and performance outcomes."
+          }
+        },
+        {
+          "number": 2,
+          "name": "Employee benefits support well-being and work-life balance.",
+          "levels": {
+            "0": "No employee benefits provided beyond legal minimums.",
+            "1": "Limited benefits with little relevance to employee well-being.",
+            "2": "Some benefits exist but are inconsistently applied or poorly communicated.",
+            "3": "Benefits support basic work-life balance needs and are accessible to most employees.",
+            "4": "Comprehensive benefits programs support physical, social, and family well-being.",
+            "5": "Innovative and flexible benefits programs are regularly improved based on employee feedback and industry best practice."
+          }
+        },
+        {
+          "number": 3,
+          "name": "Wellness initiatives are implemented and monitored.",
+          "levels": {
+            "0": "No wellness initiatives exist.",
+            "1": "Ad hoc wellness activities occur without structure or monitoring.",
+            "2": "Basic wellness initiatives exist but participation and impact are not tracked.",
+            "3": "Wellness programs are implemented and periodically monitored.",
+            "4": "Wellness initiatives are structured, regularly evaluated, and aligned with employee needs.",
+            "5": "Wellness strategy is embedded in organizational culture with measurable positive outcomes and continuous improvement."
+          }
+        },
+        {
+          "number": 4,
+          "name": "Employee turnover is analyzed and addressed.",
+          "levels": {
+            "0": "Turnover data is not collected.",
+            "1": "Turnover is noticed only when problems arise.",
+            "2": "Basic turnover statistics are collected with limited analysis.",
+            "3": "Turnover trends are analyzed periodically and corrective actions are sometimes taken.",
+            "4": "Turnover drivers are systematically analyzed and mitigation strategies implemented",
+            "5": "Predictive workforce analytics and proactive retention strategies significantly reduce avoidable turnover."
+          }
+        },
+        {
+          "number": 5,
+          "name": "Recognition programs reward strong performance.",
+          "levels": {
+            "0": "No recognition programs exist.",
+            "1": "Recognition is informal, inconsistent, or biased.",
+            "2": "Some recognition mechanisms exist but are limited in reach or impact.",
+            "3": "Formal recognition programs exist and are applied periodically.",
+            "4": "Recognition programs are structured, transparent, and linked to performance outcomes.",
+            "5": "Recognition culture is embedded organization-wide with innovative, inclusive, and highly valued reward systems."
+          }
+        },
+        {
+          "number": 6,
+          "name": "Mental health support programs exist.",
+          "levels": {
+            "0": "No mental health support is available.",
+            "1": "Minimal awareness of mental health issues with no formal support.",
+            "2": "Limited mental health support services or awareness initiatives exist.",
+            "3": "Mental health programs and support channels are available to employees.",
+            "4": "Comprehensive mental health support services are accessible, promoted, and monitored.",
+            "5": "Mental health and psychological safety are strategically prioritized with measurable impact on employee well-being."
+          }
+        },
+        {
+          "number": 7,
+          "name": "Absenteeism and retention metrics are monitored.",
+          "levels": {
+            "0": "No absenteeism or retention data is tracked.",
+            "1": "Data is tracked inconsistently and rarely analyzed.",
+            "2": "Basic absenteeism and retention reports are produced occasionally.",
+            "3": "Metrics are monitored regularly and trends reviewed by management.",
+            "4": "Data is analyzed systematically with interventions developed to address issues.",
+            "5": "Advanced workforce analytics are used proactively to predict and improve attendance and retention outcomes."
+          }
+        },
+        {
+          "number": 8,
+          "name": "Employees perceive rewards as equitable.",
+          "levels": {
+            "0": "No assessment of employee perceptions exists.",
+            "1": "Employees frequently express concerns about unfair rewards.",
+            "2": "Limited feedback mechanisms exist regarding reward fairness.",
+            "3": "Employee perceptions are periodically assessed and some improvements made.",
+            "4": "Most employees perceive rewards as fair, transparent, and performance-based.",
+            "5": "Reward systems are widely trusted, evidence-based, and continuously refined through employee engagement and benchmarking."
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Compensation policy",
+          "description": "Compensation structure and policies"
+        },
+        {
+          "name": "Wellness programs",
+          "description": "Wellness program documentation"
+        },
+        {
+          "name": "Retention reports",
+          "description": "Employee retention analysis reports"
+        },
+        {
+          "name": "Exit interview analysis",
+          "description": "Exit interview data and analysis"
+        }
+      ]
+    },
+    {
+      "name": "Diversity, Equity & Inclusion (DEI)",
+      "weight": 10.0,
+      "order": 6,
+      "criteria": [
+        {
+          "number": 1,
+          "name": "The organization has a formal DEI strategy.",
+          "levels": {
+            "0": "No DEI strategy or recognition of DEI priorities.",
+            "1": "Informal or ad hoc DEI efforts with no documented strategy.",
+            "2": "Draft DEI strategy exists but lacks clear objectives, ownership, or implementation plans.",
+            "3": "Formal DEI strategy approved with defined objectives and some implementation activities.",
+            "4": "Comprehensive DEI strategy aligned with organizational goals, monitored regularly.",
+            "5": "DEI strategy is fully embedded into organizational culture, operations, and long-term planning with measurable impact demonstrated."
+          }
+        },
+        {
+          "number": 2,
+          "name": "Leadership demonstrates commitment to DEI.",
+          "levels": {
+            "0": "Leadership shows no visible support for DEI.",
+            "1": "DEI commitment is rarely communicated or demonstrated by leadership.",
+            "2": "Some leaders advocate for DEI, but commitment is inconsistent.",
+            "3": "Leadership communicates support for DEI and participates in selected initiatives.",
+            "4": "Leadership actively champions DEI through decisions, accountability, and resource allocation.",
+            "5": "Leadership models inclusive behavior consistently and drives DEI as a strategic organizational priority."
+          }
+        },
+        {
+          "number": 3,
+          "name": "Gender equity targets and metrics are monitored.",
+          "levels": {
+            "0": "No gender equity targets or metrics exist.",
+            "1": "Limited awareness of gender disparities with no monitoring system.",
+            "2": "Basic gender data is collected occasionally but not analyzed systematically.",
+            "3": "Gender equity targets are established and monitored periodically.",
+            "4": "Gender representation, pay equity, and advancement metrics are tracked and acted upon regularly.",
+            "5": "Advanced gender equity analytics drive strategic decisions, with continuous improvement and transparent reporting."
+          }
+        },
+        {
+          "number": 4,
+          "name": "Persons with disabilities are supported and accommodated.",
+          "levels": {
+            "0": "No disability support or accommodations provided.",
+            "1": "Accommodations are only provided reactively and inconsistently.",
+            "2": "Some accessibility measures exist but are limited in scope.",
+            "3": "Standard accommodation procedures and accessibility measures are implemented.",
+            "4": "Workplace systems, facilities, and processes are inclusive and accessible for persons with disabilities.",
+            "5": "Disability inclusion is proactively integrated into organizational design, culture, recruitment, and career development."
+          }
+        },
+        {
+          "number": 5,
+          "name": "Equal opportunity policies are implemented effectively.",
+          "levels": {
+            "0": "No equal opportunity policies exist.",
+            "1": "Policies exist but are poorly communicated or inconsistently applied.",
+            "2": "Policies are communicated but enforcement is limited.",
+            "3": "Equal opportunity policies are implemented with basic monitoring mechanisms.",
+            "4": "Policies are consistently applied, monitored, and supported through training and accountability.",
+            "5": "Equal opportunity principles are fully embedded, regularly reviewed, and recognized as best practice."
+          }
+        },
+        {
+          "number": 6,
+          "name": "Diversity metrics are reported regularly.",
+          "levels": {
+            "0": "No diversity data is collected or reported.",
+            "1": "Diversity data collection is irregular and incomplete.",
+            "2": "Basic diversity metrics are gathered but reporting is limited.",
+            "3": "Diversity metrics are reported periodically to management.",
+            "4": "Comprehensive diversity reporting is conducted regularly with trend analysis and action plans.",
+            "5": "Real-time or advanced diversity analytics inform strategic decisions and are transparently shared across stakeholders."
+          }
+        },
+        {
+          "number": 7,
+          "name": "Bias mitigation training is conducted.",
+          "levels": {
+            "0": "No bias awareness or mitigation training provided.",
+            "1": "Training occurs rarely or only after incidents.",
+            "2": "Basic bias awareness sessions are conducted for limited groups.",
+            "3": "Regular bias mitigation training is provided for employees and managers.",
+            "4": "Comprehensive, role-specific training programs are implemented and evaluated for effectiveness.",
+            "5": "Continuous bias mitigation learning is embedded into organizational development, leadership, and decision-making processes."
+          }
+        },
+        {
+          "number": 8,
+          "name": "Employees feel included regardless of background.",
+          "levels": {
+            "0": "Employees frequently report exclusion or discrimination.",
+            "1": "Inclusion concerns are common and rarely addressed.",
+            "2": "Some inclusion initiatives exist, but employee experience is inconsistent.",
+            "3": "Most employees report a generally inclusive work environment.",
+            "4": "Employees across diverse backgrounds consistently feel respected, valued, and included.",
+            "5": "Inclusion is deeply embedded in organizational culture, with high belonging, engagement, and psychological safety across all groups."
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "name": "DEI policy",
+          "description": "Diversity, Equity and Inclusion policy"
+        },
+        {
+          "name": "Diversity dashboards",
+          "description": "Diversity metrics dashboards"
+        },
+        {
+          "name": "Gender reports",
+          "description": "Gender equity reports"
+        },
+        {
+          "name": "Inclusion training records",
+          "description": "Records of inclusion training sessions"
+        }
+      ]
+    },
+    {
+      "name": "ESG & Corporate Sustainability",
+      "weight": 10.0,
+      "order": 7,
+      "criteria": [
+        {
+          "number": 1,
+          "name": "The organization measures environmental impact.",
+          "levels": {
+            "0": "No environmental impact measurement exists.",
+            "1": "Environmental impacts are rarely measured and data is incomplete or unreliable.",
+            "2": "Basic environmental measurements exist for selected activities, but monitoring is inconsistent.",
+            "3": "Environmental impacts such as energy use, waste or emissions are periodically measured and reported.",
+            "4": "Comprehensive environmental measurement systems exist with regular monitoring and management review.",
+            "5": "Environmental impact measurement is fully integrated, data-driven and benchmarked against international best practices and standards."
+          }
+        },
+        {
+          "number": 2,
+          "name": "Sustainability targets exist and are monitored.",
+          "levels": {
+            "0": "No sustainability targets exist.",
+            "1": "Sustainability goals are informal, unclear or not monitored.",
+            "2": "Some sustainability targets exist, but monitoring and accountability are limited.",
+            "3": "Defined sustainability targets are monitored periodically with management oversight.",
+            "4": "Sustainability targets are measurable, regularly reviewed and linked to operational performance.",
+            "5": "Ambitious science-based sustainability targets are integrated into strategy, continuously monitored and publicly reported."
+          }
+        },
+        {
+          "number": 3,
+          "name": "Energy, waste and resource efficiency initiatives are implemented.",
+          "levels": {
+            "0": "No efficiency initiatives exist.",
+            "1": "Limited or ad hoc initiatives exist with minimal impact.",
+            "2": "Basic initiatives exist for energy saving, waste reduction or resource efficiency.",
+            "3": "Several efficiency programs are implemented with moderate measurable improvements.",
+            "4": "Organization-wide efficiency initiatives are actively managed and produce significant measurable outcomes.",
+            "5": "Resource efficiency and circular economy principles are embedded across operations, innovation and supply chains"
+          }
+        },
+        {
+          "number": 4,
+          "name": "Greenhouse gas emissions and Climate-related risks are assessed.",
+          "levels": {
+            "0": "No assessment of greenhouse gas emissions or climate-related risks exists.",
+            "1": "Green house gas emission or Climate risks are recognized informally but not assessed systematically.",
+            "2": "Initial greenhouse gas emission or climate risk assessments are conducted for selected operations or projects.",
+            "3": "greenhouse gas emission or Climate-related risks are periodically assessed and considered in planning processes.",
+            "4": "greenhouse gas emission or Climate risks are systematically assessed, monitored and integrated into risk management frameworks.",
+            "5": "Advanced greenhouse gas emission or climate resilience and adaptation strategies are fully integrated into organizational strategy and decision-making."
+          }
+        },
+        {
+          "number": 5,
+          "name": "Community investment and CSR programs exist.",
+          "levels": {
+            "0": "No community investment or CSR initiatives exist.",
+            "1": "CSR activities are occasional and unstructured.",
+            "2": "Some community or CSR programs exist, but impact measurement is limited.",
+            "3": "Structured CSR and community investment programs are implemented with defined objectives.",
+            "4": "CSR initiatives are aligned with community needs and organizational strategy, with measurable outcomes.",
+            "5": "Community investment and social impact programs create sustainable long-term value and strong stakeholder partnerships."
+          }
+        },
+        {
+          "number": 6,
+          "name": "Human rights and labor standards are respected across operations.",
+          "levels": {
+            "0": "No policies or practices addressing human rights and labor standards exist.",
+            "1": "Frequent concerns or violations relating to labor rights or working conditions exist.",
+            "2": "Basic compliance with labor laws exists, but implementation is inconsistent.",
+            "3": "Human rights and labor standards are generally respected with supporting policies and procedures.",
+            "4": "Strong systems exist to protect labor rights, promote fair treatment and monitor compliance across operations.",
+            "5": "Human rights and labor standards are embedded throughout operations and value chains, exceeding regulatory expectations and reflecting global best practices."
+          }
+        },
+        {
+          "number": 7,
+          "name": "Supplier sustainability expectations exist.",
+          "levels": {
+            "0": "No sustainability expectations for suppliers exist.",
+            "1": "Supplier sustainability issues are rarely considered.",
+            "2": "Basic sustainability requirements exist for selected suppliers.",
+            "3": "Supplier sustainability expectations are documented and communicated to suppliers.",
+            "4": "Supplier sustainability performance is monitored and incorporated into procurement decisions.",
+            "5": "Suppliers are actively engaged on ESG improvement, with strong sustainability standards integrated throughout the supply chain."
+          }
+        },
+        {
+          "number": 8,
+          "name": "ESG oversight exists at leadership or board level.",
+          "levels": {
+            "0": "No ESG oversight exists.",
+            "1": "ESG responsibilities are unclear or informal.",
+            "2": "ESG oversight exists at management level but is limited in scope.",
+            "3": "Leadership or board committees periodically review ESG matters.",
+            "4": "ESG oversight is formally integrated into leadership and board governance structures.",
+            "5": "ESG governance is fully embedded at board and executive level with clear accountability, expertise and strategic integration."
+          }
+        },
+        {
+          "number": 9,
+          "name": "ESG reporting and disclosure practices are implemented.",
+          "levels": {
+            "0": "No ESG reporting or disclosure exists.",
+            "1": "ESG disclosures are minimal, inconsistent or reactive.",
+            "2": "Basic ESG information is reported internally or externally on a limited basis.",
+            "3": "ESG reporting is conducted periodically using defined frameworks or indicators.",
+            "4": "Comprehensive ESG reporting and disclosure practices are implemented and regularly reviewed.",
+            "5": "ESG reporting is transparent, externally benchmarked and aligned with recognized international reporting standards."
+          }
+        },
+        {
+          "number": 10,
+          "name": "Ethical conduct and anti-corruption controls are effective",
+          "levels": {
+            "0": "No ethics or anti-corruption controls exist.",
+            "1": "Weak ethics culture and ineffective anti-corruption controls are evident.",
+            "2": "Basic ethics policies and controls exist, but enforcement is inconsistent.",
+            "3": "Ethical conduct standards and anti-corruption controls are implemented and generally effective.",
+            "4": "Strong ethics programs, whistleblowing mechanisms and anti-corruption controls are actively monitored and enforced.",
+            "5": "Ethical leadership and anti-corruption practices are deeply embedded in organizational culture and recognized as leading practice within the sector."
+          }
+        },
+        {
+          "number": 11,
+          "name": "Our organisation conducts materiality assessment and integrated material ESG risks and opportunities and link them into strategy, risk management and decision making",
+          "levels": {
+            "0": "ESG materiality assessment is not conducted by the organisation, or no ESG considerations are incorporated into management processes.",
+            "1": "ESG issues are recognized in an ad hoc manner, but no formal materiality assessment is conducted and ESG factors are rarely considered in strategic decisions.",
+            "2": "A preliminary materiality assessment has been undertaken, and some significant ESG risks and opportunities are identified, but integration into strategy and risk management is limited and inconsistent",
+            "3": "The organisation conducts periodic materiality assessments and incorporates key ESG risks and opportunities into selected strategic plans, risk registers, and management decisions.",
+            "4": "Formal and systematic materiality assessments are conducted using stakeholder input and evidence-based analysis. Material ESG issues are consistently integrated into corporate strategy, enterprise risk management, capital allocation, and operational decision-making.",
+            "5": "Materiality assessment is fully embedded in governance and strategic planning. Dynamic ESG risk and opportunity analysis informs all major decisions, performance targets, innovation, and long-term value creation, with benchmarking against recognized leading practices and continuous improvement."
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "name": "ESG reports",
+          "description": "Environmental, Social and Governance reports"
+        },
+        {
+          "name": "Sustainability policies",
+          "description": "Sustainability and environmental policies"
+        },
+        {
+          "name": "CSR reports",
+          "description": "Corporate Social Responsibility reports"
+        },
+        {
+          "name": "Environmental metrics",
+          "description": "Environmental performance metrics"
+        }
+      ]
+    },
+    {
+      "name": "HR Innovation & Digital Transformation",
+      "weight": 10.0,
+      "order": 8,
+      "criteria": [
+        {
+          "number": 1,
+          "name": "HR processes are digitized through HRIS platforms.",
+          "levels": {
+            "0": "No HRIS exists; all HR processes are manual (paper files, spreadsheets).",
+            "1": "Basic HRIS used only for employee database and payroll; <20% of HR processes digitized",
+            "2": "HRIS covers core processes (recruitment, leave, attendance) for 20\u201340% of modules; some manual workarounds remain.",
+            "3": "40\u201370% of HR processes digitized (e.g., onboarding, performance, offboarding); integration between modules limited.",
+            "4": "70\u201390% of HR processes digitized and integrated (core HR, talent, time, payroll); minimal manual intervention.",
+            "5": ">90% of HR processes fully digitized and automated; HRIS integrates with finance, IT, and operations; mobile access for all employees."
+          }
+        },
+        {
+          "number": 2,
+          "name": "Data analytics are used in HR decision-making.",
+          "levels": {
+            "0": "No HR data analytics capability; no reporting beyond headcount.",
+            "1": "Basic descriptive reports (e.g., turnover, headcount) generated manually (Excel); used only for compliance.",
+            "2": "Standardized HR dashboards exist (e.g., turnover, time-to-hire); used quarterly; no predictive or diagnostic analysis.",
+            "3": "Monthly HR metrics reviewed by leadership; root-cause analysis performed (e.g., exit interview themes linked to turnover).",
+            "4": "Predictive analytics used (e.g., attrition risk, hiring success probability); data-driven decisions documented (e.g., retention actions).",
+            "5": "Prescriptive analytics (e.g., 'what if' scenarios) and AI-driven insights; HR analytics integrated with business strategy; dedicated people analytics team."
+          }
+        },
+        {
+          "number": 3,
+          "name": "AI or automation tools support HR operations.",
+          "levels": {
+            "0": "No AI or automation in HR.",
+            "1": "Basic automation for 1\u20132 repetitive tasks (e.g., auto-email reminders); no AI.",
+            "2": "Rule-based RPA (robotic process automation) for payroll data entry or onboarding docs; <10% of HR tasks automated",
+            "3": "AI used in one area (e.g., resume screening, chatbot for FAQs); 10\u201330% of HR tasks automated.",
+            "4": "Multiple AI tools (e.g., candidate matching, sentiment analysis, learning recommendations); 30\u201360% of HR tasks automated.",
+            "5": "AI integrated across talent lifecycle (sourcing, assessment, development, retention); >60% of HR tasks automated; continuous learning AI models."
+          }
+        },
+        {
+          "number": 4,
+          "name": "Employees receive digital skills training.",
+          "levels": {
+            "0": "No digital skills training offered.",
+            "1": "<10% of employees complete basic digital literacy training (e.g., MS Office) annually.",
+            "2": "10\u201330% of employees complete role-specific digital training (e.g., CRM, collaboration tools).",
+            "3": "30\u201360% of employees complete digital skills training annually; curriculum includes data literacy, automation basics.",
+            "4": "60\u201380% of employees complete training; personalized learning paths based on digital skill gaps; certification options.",
+            "5": ">80% of employees complete advanced digital training (e.g., AI literacy, low-code, data analytics); digital skills tied to career progression; external benchmark (e.g., Digital Skills Award)."
+          }
+        },
+        {
+          "number": 5,
+          "name": "The organization supports innovation and experimentation.",
+          "levels": {
+            "0": "No innovation program or experimentation culture.",
+            "1": "Innovation mentioned in values but no budget, time, or process; risk aversion high.",
+            "2": "Occasional hackathons or idea boxes; <10% of employees participate; no funding for experiments.",
+            "3": "Formal innovation program (e.g., innovation challenges, small pilot budget); 10\u201330% employee participation; 'fail fast' tolerated in low-risk areas.",
+            "4": "Dedicated innovation budget and time (e.g., 5% time); 30\u201360% participation; experiments tracked in portfolio; successes scaled.",
+            "5": "Innovation KPIs (e.g., % revenue from new ideas, experiment success rate); psychological safety scores high; external innovation recognition."
+          }
+        },
+        {
+          "number": 6,
+          "name": "Digital collaboration tools are effectively utilized.",
+          "levels": {
+            "0": "No digital collaboration tools (e.g., no Teams, Slack, Zoom, SharePoint).",
+            "1": "Tools exist but <20% of employees use them regularly; heavy reliance on email.",
+            "2": "20\u201340% of employees use collaboration tools; basic usage (e.g., chat, file sharing).",
+            "3": "40\u201370% adoption; tools used for meetings, document co-authoring, project tracking; governance exists.",
+            "4": "70\u201390% adoption; integrated with workflows (e.g., approvals, task assignments); collaboration metrics tracked (e.g., response time).",
+            "5": ">90% adoption; AI-enhanced collaboration (e.g., meeting summaries, automated workflows); employee satisfaction >85%; benchmarking against digital-first organizations."
+          }
+        },
+        {
+          "number": 7,
+          "name": "Cybersecurity awareness training exists.",
+          "levels": {
+            "0": "No cybersecurity awareness training.",
+            "1": "<20% of employees complete basic security training (e.g., password hygiene) annually.",
+            "2": "20\u201350% complete annual training; compliance-based only.",
+            "3": "50\u201380% complete training; includes phishing simulations quarterly.",
+            "4": "80\u201395% complete training; role-specific modules (e.g., finance, HR); click-through rates <10% in phishing tests.",
+            "5": ">95% completion; continuous micro-learning; gamification; measured reduction in security incidents (>50% year-on-year)."
+          }
+        },
+        {
+          "number": 8,
+          "name": "Workforce digital readiness is assessed.",
+          "levels": {
+            "0": "No digital readiness assessment.",
+            "1": "Informal manager observation only; no structured assessment.",
+            "2": "Self-assessment survey conducted once; no action planning.",
+            "3": "Annual digital skills assessment (self or manager-rated) for 30\u201360% of workforce; results aggregated.",
+            "4": "Assessment for 60\u201390% of workforce; includes technical and behavioral digital competencies; gap analysis drives training.",
+            "5": "Continuous assessment (e.g., project-based evaluation, digital footprints); predictive readiness scores; individual development plans linked to results."
+          }
+        },
+        {
+          "number": 9,
+          "name": "Employee self-service systems exist.",
+          "levels": {
+            "0": "No employee self-service (ESS) portal.",
+            "1": "ESS exists but <20% of employees use it; only view-only access (e.g., pay stubs).",
+            "2": "20\u201350% of employees use ESS for basic transactions (e.g., leave requests, address changes).",
+            "3": "50\u201380% use ESS for multiple functions (e.g., benefits enrollment, time tracking, training registration).",
+            "4": "80\u201395% use ESS; mobile app available; employees can update personal data, access payslips, request approvals.",
+            "5": ">95% use ESS; AI chatbot for HR queries; employees can initiate promotions, transfers, or manager changes via workflow; zero paper HR forms."
+          }
+        },
+        {
+          "number": 10,
+          "name": "HR innovation outcomes are measured.",
+          "levels": {
+            "0": "No HR innovation metrics tracked.",
+            "1": "Informal tracking only; no defined innovation KPIs for HR.",
+            "2": "Basic metrics tracked (e.g., number of ideas submitted); no outcome measurement.",
+            "3": "Innovation outcomes measured periodically (e.g., process improvements, cost savings from HR tech).",
+            "4": "Systematic measurement of HR innovation impact on business outcomes; regular reporting to leadership.",
+            "5": "Advanced analytics linking HR innovation to organizational performance; continuous improvement framework; external benchmarking and recognition."
+          }
+        }
+      ]
+    },
+    {
+      "name": "HIV/AIDS and NCD Sustainability",
+      "weight": null,
+      "order": 9,
+      "criteria": [
+        {
+          "number": 1,
+          "name": "Our organization has a comprehensive HIV/AIDS/NCD workplace policy,",
+          "levels": {
+            "0": "No HIV/AIDS/NCD workplace policy exists.",
+            "1": "HIV/AIDS/NCD issues are addressed informally with no documented policy framework.",
+            "2": "A basic HIV/AIDS/NCD policy exists but lacks comprehensiveness or effective implementation.",
+            "3": "A formal HIV/AIDS/NCD workplace policy exists and is communicated to employees.",
+            "4": "The policy is comprehensive, regularly reviewed and integrated into HR and wellness practices.",
+            "5": "The organization demonstrates leading practice through a comprehensive, well-implemented and continuously improved HIV/AIDS/NCD workplace policy aligned with national and international standards."
+          }
+        },
+        {
+          "number": 2,
+          "name": "Employees have been sensitized and trained on HIV/AIDS/NCD and reproductive health issues, including workplace rights, responsibilities, prevention, and support mechanisms.",
+          "levels": {
+            "0": "No sensitization or training is conducted.",
+            "1": "Awareness activities are rare and reach few employees.",
+            "2": "Basic sensitization programs are conducted occasionally, but coverage is inconsistent.",
+            "3": "Regular HIV/AIDS/NCD and reproductive health awareness training is provided to most employees.",
+            "4": "Comprehensive and structured training programs are implemented organization-wide with high participation levels.",
+            "5": "Continuous, inclusive and impactful education programmes are embedded in organizational culture, promoting awareness, prevention and non-discrimination"
+          }
+        },
+        {
+          "number": 3,
+          "name": "Our organization provides or facilitates access to HIV/AIDS/NCD prevention initiatives, testing, counseling, treatment, and related clinical services for employees and their dependents.",
+          "levels": {
+            "0": "No HIV/AIDS/NCD-related support services are available.",
+            "1": "Limited support exists and access to services is difficult or inconsistent.",
+            "2": "Some prevention or referral services are available but with limited employee coverage.",
+            "3": "The organization facilitates access to HIV/AIDS/NCD prevention, testing and counseling services for employees.",
+            "4": "Comprehensive support services including treatment referrals and wellness support are accessible to employees and dependents.",
+            "5": "The organization provides or partners to deliver integrated, accessible and high-quality HIV/AIDS/NCD healthcare and support services with strong employee utilization and trust."
+          }
+        },
+        {
+          "number": 4,
+          "name": "Our organization actively involves employees in workplace HIV/AIDS/NCD responses",
+          "levels": {
+            "0": "Employees are not involved in HIV/AIDS/NCD initiatives.",
+            "1": "Employee involvement is minimal and largely management-driven.",
+            "2": "Some employees participate in awareness activities or committees.",
+            "3": "Employees are moderately involved through peer educators, committees or awareness campaigns.",
+            "4": "Employee participation is active and supported through structured engagement mechanisms.",
+            "5": "Employees play a leading role in designing, implementing and championing workplace HIV/AIDS/NCD programmes and awareness initiatives."
+          }
+        },
+        {
+          "number": 5,
+          "name": "Our organization equips managers and supervisors with the skills to appropriately address HIV/AIDS/NCD-related issues and concerns in the workplace.",
+          "levels": {
+            "0": "Managers receive no training on HIV/AIDS/NCD workplace issues.",
+            "1": "Managers have limited awareness and lack confidence in handling HIV/AIDS/NCD-related matters.",
+            "2": "Some managers receive basic sensitization training.",
+            "3": "Managers are periodically trained on HIV/AIDS/NCD workplace rights, support and confidentiality issues.",
+            "4": "Most managers are equipped to effectively address HIV/AIDS/NCD-related workplace concerns and support employees appropriately.",
+            "5": "Leadership capability on HIV/AIDS/NCD management is highly developed, with managers consistently demonstrating empathy, compliance and supportive leadership practices."
+          }
+        },
+        {
+          "number": 6,
+          "name": "Our organization offers HIV/AIDS/NCD support and wellness programmes for employees and, where applicable, their families (spouses/partners and children).",
+          "levels": {
+            "0": "No HIV/AIDS/NCD support or wellness programmes exist.",
+            "1": "Limited support initiatives exist with low accessibility or awareness.",
+            "2": "Basic wellness programmes are available but coverage is limited.",
+            "3": "Structured HIV/AIDS/NCD support and wellness programmes are available to employees.",
+            "4": "Comprehensive wellness programmes extend to families and include counseling, support and awareness services.",
+            "5": "Holistic HIV/AIDS/NCD wellness programmes are fully integrated into employee wellbeing strategies and are recognized as best practice within the sector."
+          }
+        },
+        {
+          "number": 7,
+          "name": "Our organization allocates adequate financial, human, and logistical resources to ensure HIV/AIDS/NCD programmes are implemented effectively and sustainably.",
+          "levels": {
+            "0": "No resources are allocated to HIV/AIDS/NCD programmes.",
+            "1": "Resources are inadequate and programmes are poorly supported.",
+            "2": "Some resources are allocated, but implementation capacity remains limited.",
+            "3": "Adequate resources are allocated to support key HIV/AIDS/NCD activities and programmes.",
+            "4": "Dedicated budgets, personnel and logistical support ensure consistent programme implementation.",
+            "5": "HIV/AIDS/NCD programmes are sustainably resourced, strategically prioritized and continuously strengthened through long-term investment and partnerships."
+          }
+        },
+        {
+          "number": 8,
+          "name": "Our organization formally monitors, evaluates, and reviews the effectiveness and impact of workplace HIV/AIDS/NCD programmes and initiatives.",
+          "levels": {
+            "0": "No monitoring or evaluation of HIV/AIDS/NCD programmes exists.",
+            "1": "Monitoring is informal and inconsistent.",
+            "2": "Some programme reviews occur, but data collection and analysis are limited.",
+            "3": "HIV/AIDS/NCD programme performance is periodically monitored and reviewed using defined indicators.",
+            "4": "Monitoring and evaluation systems are structured, data-driven and support programme improvement.",
+            "5": "Advanced monitoring, evaluation and learning systems are embedded, demonstrating measurable programme impact and continuous improvement."
+          }
+        },
+        {
+          "number": 9,
+          "name": "Our organization participates in HIV/AIDS/NCD-related community outreach, awareness, or support programmes as part of its corporate social responsibility initiatives.",
+          "levels": {
+            "0": "No community HIV/AIDS/NCD outreach or CSR involvement exists.",
+            "1": "Community support activities are rare or symbolic.",
+            "2": "The organization occasionally participates in HIV/AIDS/NCD awareness or support initiatives.",
+            "3": "Structured HIV/AIDS/NCD community outreach programmes are implemented periodically.",
+            "4": "The organization actively supports community HIV/AIDS/NCD initiatives through partnerships, awareness and resource contributions.",
+            "5": "The organization demonstrates sector leadership in HIV/AIDS/NCD community engagement and social impact through sustained, innovative and collaborative CSR programmes."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health, Safety & Ethics",
+      "weight": 5.0,
+      "order": 10,
+      "criteria": [
+        {
+          "number": 1,
+          "name": "Occupational health and safety policies are implemented.",
+          "levels": {
+            "0": "No occupational health and safety (OHS) policies .",
+            "1": "OHS policies are outdated, or poorly communicated.",
+            "2": "Basic OHS policies exist but implementation is inconsistent.",
+            "3": "OHS policies are implemented across most departments with periodic monitoring.",
+            "4": "OHS policies are fully implemented, regularly reviewed, and compliance is monitored.",
+            "5": "OHS management is proactive, continuously improved, benchmarked against best practice, and embedded in organizational culture."
+          }
+        },
+        {
+          "number": 2,
+          "name": "Workplace incidents are monitored and addressed.",
+          "levels": {
+            "0": "Incident monitoring is not done at all.",
+            "1": "Incidents are rarely documented or addressed.",
+            "2": "Some incidents are recorded, but follow-up actions are inconsistent.",
+            "3": "Incident reporting and corrective actions are implemented for most cases.",
+            "4": "Comprehensive incident monitoring, investigation, and corrective action systems are in place.",
+            "5": "Real-time monitoring, trend analysis, preventive action, and continuous improvement systems are embedded organization-wide."
+          }
+        },
+        {
+          "number": 3,
+          "name": "Employees receive regular safety training.",
+          "levels": {
+            "0": "Safety training is not conducted",
+            "1": "Little safety training is provided.",
+            "2": "Safety training is conducted occasionally for limited staff.",
+            "3": "Regular safety training is provided to most employees.",
+            "4": "Comprehensive and role-specific safety training is conducted consistently and tracked.",
+            "5": "Continuous, innovative, and scenario-based safety learning is embedded into employee development and culture."
+          }
+        },
+        {
+          "number": 4,
+          "name": "Anti-harassment policies are enforced.",
+          "levels": {
+            "0": "Anti-harassment measures are not in place.",
+            "1": "No formal anti-harassment policy or enforcement exists.",
+            "2": "Policies exist but enforcement mechanisms are weak or inconsistent.",
+            "3": "Anti-harassment policies are communicated and generally enforced.",
+            "4": "Policies are strongly enforced with clear reporting and disciplinary procedures.",
+            "5": "Organization demonstrates zero-tolerance culture, high trust, proactive awareness programs, and regular policy reviews."
+          }
+        },
+        {
+          "number": 5,
+          "name": "Whistleblowing mechanisms exist and are trusted.",
+          "levels": {
+            "0": "Whistleblowing mechanisms are not available .",
+            "1": "No formal whistleblowing mechanism exists.",
+            "2": "Basic reporting channels exist but employees have low trust in them.",
+            "3": "Reporting mechanisms are functional and confidentiality is moderately assured.",
+            "4": "Secure, confidential, and well-communicated whistleblowing systems are widely trusted.",
+            "5": "Independent, transparent, and highly trusted whistleblowing systems drive ethical accountability and continuous improvement."
+          }
+        },
+        {
+          "number": 6,
+          "name": "Ethical breaches are investigated appropriately.",
+          "levels": {
+            "0": "Ethical investigations are not conducted.",
+            "1": "Ethical breaches are rarely investigated or handled inconsistently.",
+            "2": "Investigations occur occasionally but lack structure or timeliness.",
+            "3": "Ethical breaches are investigated using standard procedures in most cases.",
+            "4": "Investigations are timely, fair, documented, and corrective actions are implemented.",
+            "5": "Robust ethics governance ensures transparent, independent, and preventive investigation practices aligned with global best standards."
+          }
+        },
+        {
+          "number": 7,
+          "name": "Emergency preparedness plans exist",
+          "levels": {
+            "0": "Emergency preparedness is not done.",
+            "1": "No emergency preparedness plans exist.",
+            "2": "Basic emergency procedures exist but are incomplete or untested.",
+            "3": "Emergency preparedness plans are documented and occasionally tested.",
+            "4": "Comprehensive emergency plans are regularly updated, communicated, and tested through drills.",
+            "5": "Advanced preparedness systems, simulations, business continuity integration, and continuous improvement practices are fully embedded."
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "name": "Safety reports",
+          "description": "Occupational health and safety reports"
+        },
+        {
+          "name": "Ethics hotline records",
+          "description": "Ethics hotline usage records"
+        },
+        {
+          "name": "Training logs",
+          "description": "Safety and ethics training records"
+        },
+        {
+          "name": "Incident reports",
+          "description": "Workplace incident documentation"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+A new participation request has been submitted on the EYA Platform.
+
+ORGANIZATION
+  Name:       {{ pr.org_name }}
+  Type:       {{ pr.get_org_type_display }}
+  Subtype:    {{ pr.get_org_subtype_display|default:"—" }}
+  Region:     {{ pr.region }}
+  Employees:  {{ pr.get_num_employees_display }}
+  Capital:    {{ pr.get_investment_capital_display }}
+
+RESPONDENT
+  Name:       {{ pr.first_name }} {{ pr.last_name }}
+  Position:   {{ pr.position|default:"—" }}
+  Phone:      {{ pr.phone_number }}
+  Email:      {{ pr.email }}
+
+Submitted: {{ pr.submitted_at }}
+
+Review and approve this request:
+{{ review_url }}
+
+Regards,
+The EYA Platform

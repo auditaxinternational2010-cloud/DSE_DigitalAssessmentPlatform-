@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Users — DSE{% endblock %}
+{% block breadcrumb_parent %}DSE Admin{% endblock %}
+{% block breadcrumb_current %}Users{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title t-display">Users</h1>
+      <div class="page-subtitle">All user accounts on the platform</div>
+    </div>
+    <a href="{% url 'user_create' %}" class="btn btn-primary">+ Add User</a>
+  </div>
+  <form method="get" style="margin-bottom:16px;display:flex;gap:8px;max-width:400px;">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search by username…" class="input" style="flex:1;">
+    <button type="submit" class="btn btn-primary">Search</button>
+    {% if q %}<a href="{% url 'user_list' %}" class="btn">Clear</a>{% endif %}
+  </form>
+  <div class="card">
+    <div class="card-body tight">
+      <table class="table">
+        <thead>
+          <tr><th>Username</th><th>Name</th><th>Role</th><th>Organization</th><th>Email</th><th>Last Login</th><th>Welcome Email</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for u in page_obj %}
+          <tr>
+            <td>
+              {{ u.username }}
+              {% if u == request.user %}<span class="badge solid" style="margin-left:6px;">you</span>{% endif %}
+            </td>
+            <td>{{ u.get_full_name }}</td>
+            <td><span class="badge slate">{{ u.userprofile.get_role_display }}</span></td>
+            <td>{{ u.userprofile.organization.name|default:"—" }}</td>
+            <td style="font-size:13px;">{{ u.email|default:"—" }}</td>
+            <td style="font-size:13px;color:var(--ink-3);">{{ u.last_login|date:"d M Y"|default:"Never" }}</td>
+            <td style="font-size:12.5px;white-space:nowrap;">
+              {% if u.welcome_email_log %}
+                {% if u.welcome_email_log.status == 'sent' %}
+                  <span class="badge sage">Sent</span>
+                  <span style="color:var(--ink-3);">{{ u.welcome_email_log.created_at|date:"d M H:i" }}</span>
+                {% else %}
+                  <span class="badge brick" title="{{ u.welcome_email_log.error }}">Failed</span>
+                  <span style="color:var(--ink-3);">{{ u.welcome_email_log.created_at|date:"d M H:i" }}</span>
+                {% endif %}
+              {% elif u.userprofile.role == 'member' %}
+                <span style="color:var(--ink-3);">Never sent</span>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td style="text-align:right;white-space:nowrap;">
+              <a href="{% url 'user_edit' u.pk %}" class="btn btn-sm">Edit</a>
+              {% if u.userprofile.role == 'member' %}
+              <form method="post" action="{% url 'resend_welcome_email' u.pk %}" style="display:inline;" id="resend-{{ u.pk }}">
+                {% csrf_token %}
+                <button type="button" class="btn btn-sm" style="margin-left:4px;"
+                  onclick="eya.confirm('Resend the welcome email to {{ u.username }}? This issues a NEW password and invalidates their current one.', function(){ document.getElementById('resend-{{ u.pk }}').submit(); })">Resend</button>
+              </form>
+              {% endif %}
+              {% if u != request.user %}
+              <form method="post" action="{% url 'user_delete' u.pk %}" style="display:inline;" id="del-user-{{ u.pk }}">
+                {% csrf_token %}
+                <button type="button" class="btn btn-sm" style="border-color:var(--brick);color:var(--brick);margin-left:4px;"
+                  onclick="eya.confirm('Delete user {{ u.username }}? This cannot be undone.', function(){ document.getElementById('del-user-{{ u.pk }}').submit(); }, {danger:true})">Delete</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" style="text-align:center;color:var(--ink-3);padding:32px 16px;">No users yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% if page_obj.has_other_pages %}
+    <div style="display:flex;justify-content:center;gap:4px;padding:16px 0 4px;">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}" class="btn btn-sm">← Prev</a>
+      {% endif %}
+      <span style="padding:6px 12px;font-size:13px;color:var(--ink-3);">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}" class="btn btn-sm">Next →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

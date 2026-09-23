@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 11pt; color: #0b1929; margin: 24pt; }
+  h1 { font-size: 18pt; margin: 0 0 4pt; }
+  h2 { font-size: 12pt; margin: 20pt 0 6pt; border-bottom: 1pt solid #ccc; padding-bottom: 3pt; }
+  h3 { margin: 0 0 6pt; font-size: 10pt; }
+  .subtitle { font-size: 10pt; color: #555; margin-bottom: 16pt; }
+
+  .headline { background: #0b2545; color: #fff; padding: 12pt 14pt; margin-bottom: 10pt; }
+  .headline-label { font-size: 8pt; letter-spacing: 1pt; color: #e8c06a; text-transform: uppercase; }
+  .headline-val { font-size: 28pt; font-weight: bold; }
+  .headline-of { font-size: 11pt; color: #b9c6d6; }
+  .headline-rank { font-size: 9.5pt; color: #d5dee9; margin-top: 4pt; }
+
+  .facts { width: 100%; border-collapse: collapse; margin-bottom: 12pt; }
+  .facts td { border: 1pt solid #dee2e6; padding: 7pt 9pt; width: 33%; }
+  .fact-label { font-size: 8pt; color: #666; text-transform: uppercase; letter-spacing: 0.6pt; }
+  .fact-val { font-size: 15pt; font-weight: bold; color: #2c3e55; }
+  .fact-note { font-size: 8pt; color: #93a4b4; }
+
+  .gap { padding: 8pt 10pt; margin-bottom: 12pt; font-size: 10pt; }
+  .gap-over  { background: #fde8e6; border-left: 3pt solid #c0392b; }
+  .gap-under { background: #ddf0e7; border-left: 3pt solid #2e7d52; }
+  .gap-match { background: #e8eef6; border-left: 3pt solid #1e4f8c; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 10pt; font-size: 10pt; }
+  th { background: #0b2545; color: #fff; padding: 5pt 7pt; text-align: left; font-size: 9pt; }
+  td { padding: 4pt 7pt; border-bottom: 1pt solid #eee; }
+
+  .badge { display: inline-block; padding: 1pt 5pt; border-radius: 2pt; font-size: 9pt; font-weight: bold; }
+  .badge-sage { background: #d4edda; color: #2e7d52; }
+  .badge-brick { background: #f8d7da; color: #c0392b; }
+  .badge-accent { background: #fff3cd; color: #856404; }
+  .badge-neutral { background: #e9ecef; color: #555; }
+
+  .item { border: 1pt solid #dee2e6; padding: 8pt 10pt; margin-bottom: 7pt; }
+  .item-cat { font-size: 8pt; color: #93a4b4; text-transform: uppercase; letter-spacing: 0.6pt; }
+  .item-name { font-weight: bold; font-size: 10.5pt; margin-bottom: 5pt; }
+  .because, .next {
+    font-size: 9.5pt; padding: 5pt 8pt; margin-top: 4pt; line-height: 1.45;
+  }
+  .because { background: #f9fafc; border-left: 3pt solid #93a4b4; }
+  .next { background: #faf1dc; border-left: 3pt solid #c4922a; }
+  .tag { display: block; font-size: 7.5pt; font-weight: bold; text-transform: uppercase;
+         letter-spacing: 0.6pt; color: #5a6e82; margin-bottom: 2pt; }
+  .tag-next { color: #9a6e18; }
+  .vnote { font-size: 9.5pt; background: #e8eef6; padding: 5pt 8pt; margin-top: 4pt; line-height: 1.45; }
+  .vname { font-weight: bold; color: #0b2545; }
+  .muted { color: #93a4b4; font-size: 9pt; }
+</style>
+</head>
+<body>
+
+<h1>{{ questionnaire.organization.name }}</h1>
+<div class="subtitle">{{ cycle.name }} &mdash; Submitted {{ questionnaire.submitted_at|date:"j M Y" }}</div>
+
+{% comment %} The verified score is the score. The self-assessment is a claim, and is
+   ranked below it here for exactly that reason. {% endcomment %}
+<div class="headline">
+  <div class="headline-label">Verified Score</div>
+  <div class="headline-val">
+    {{ analytics.overall_verified_score|default:"—" }}<span class="headline-of"> / 5</span>
+  </div>
+  {% if benchmark and benchmark.rank %}
+  <div class="headline-rank">
+    Ranked {{ benchmark.rank }} of {{ benchmark.league_size }} in the {{ benchmark.league_label }}
+  </div>
+  {% endif %}
+</div>
+
+<table class="facts">
+  <tr>
+    <td>
+      <div class="fact-label">Self-assessed</div>
+      <div class="fact-val">{{ analytics.overall_claimed_score|default:"—" }}</div>
+      <div class="fact-note">what the organisation scored itself</div>
+    </td>
+    <td>
+      <div class="fact-label">Cohort average</div>
+      <div class="fact-val">{{ benchmark.cohort_avg|default:"—" }}</div>
+      <div class="fact-note">across comparable organisations</div>
+    </td>
+    <td>
+      <div class="fact-label">Questionnaire completed</div>
+      <div class="fact-val">{{ analytics.completeness }}%</div>
+      <div class="fact-note">{{ analytics.answered_count }} of {{ analytics.criteria_count }} criteria</div>
+    </td>
+  </tr>
+</table>
+
+{% if analytics.gap_phrase %}
+<div class="gap gap-{{ analytics.gap_direction }}">
+  <strong>{{ analytics.gap_phrase }}.</strong>
+  {% if analytics.gap_direction == 'over' %}
+  The organisation rated itself higher than the judges could evidence.
+  {% elif analytics.gap_direction == 'under' %}
+  The organisation rated itself lower than the judges found.
+  {% else %}
+  The self-assessment closely tracked the verified result.
+  {% endif %}
+</div>
+{% endif %}
+
+{% if analytics.completeness < 100 %}
+<div class="muted" style="margin-bottom:12pt;">
+  Unanswered criteria are excluded from the score rather than counted as zero,
+  so this result reflects the {{ analytics.answered_count }} criteria that were answered.
+</div>
+{% endif %}
+
+<h2>Category Scores</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Verified</th>
+      <th>Rank</th>
+      <th>vs cohort</th>
+      <th>Self-assessed</th>
+      <th>Answered</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for cat_entry in analytics.categories %}
+    <tr>
+      <td>{{ cat_entry.category.name }}</td>
+      <td>
+        {% if cat_entry.verified_avg is not None %}
+        <span class="badge {% if cat_entry.verified_avg >= 3 %}badge-sage{% elif cat_entry.verified_avg >= 2 %}badge-accent{% else %}badge-brick{% endif %}">
+          {{ cat_entry.verified_avg }}
+        </span>
+        {% else %}&mdash;{% endif %}
+      </td>
+      <td>{% if cat_entry.rank %}{{ cat_entry.rank }} of {{ cat_entry.rank_of }}{% else %}&mdash;{% endif %}</td>
+      <td>
+        {% if cat_entry.vs_cohort is not None %}
+        {% if cat_entry.vs_cohort >= 0 %}+{% endif %}{{ cat_entry.vs_cohort }}
+        {% else %}&mdash;{% endif %}
+      </td>
+      <td>{{ cat_entry.claimed_avg|default:"—" }}</td>
+      <td>{{ cat_entry.answered }} / {{ cat_entry.total }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if analytics.priority_criteria %}
+<h2>Priorities for Improvement</h2>
+{% for e in analytics.priority_criteria %}
+<div class="item">
+  <div class="item-cat">{{ e.category.name }} &middot; Criterion {{ e.criterion.number }}</div>
+  <div class="item-name">
+    {{ e.criterion.name }}
+    <span class="badge {% if e.verified_score >= 3 %}badge-sage{% elif e.verified_score >= 2 %}badge-accent{% else %}badge-brick{% endif %}">
+      Verified {{ e.verified_score }}
+    </span>
+  </div>
+  {% if e.level_now_text %}
+  <div class="because">
+    <span class="tag">At level {{ e.level_now }} because</span>{{ e.level_now_text }}
+  </div>
+  {% endif %}
+  {% if e.level_next_text %}
+  <div class="next">
+    <span class="tag tag-next">To reach level {{ e.level_next }}</span>{{ e.level_next_text }}
+  </div>
+  {% endif %}
+  {% for v in e.judge_notes %}
+  <div class="vnote">
+    <span class="vname">{{ v.name }}{% if v.score is not None %} (scored {{ v.score }}){% endif %}:</span>
+    {{ v.notes }}
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+{% endif %}
+
+{% if analytics.strength_criteria %}
+<h2>Verified Strengths</h2>
+{% for e in analytics.strength_criteria %}
+<div class="item">
+  <div class="item-cat">{{ e.category.name }} &middot; Criterion {{ e.criterion.number }}</div>
+  <div class="item-name">
+    {{ e.criterion.name }}
+    <span class="badge badge-sage">Verified {{ e.verified_score }}</span>
+  </div>
+  {% if e.level_now_text %}
+  <div class="because">
+    <span class="tag">At level {{ e.level_now }} because</span>{{ e.level_now_text }}
+  </div>
+  {% endif %}
+  {% for v in e.judge_notes %}
+  <div class="vnote"><span class="vname">{{ v.name }}:</span> {{ v.notes }}</div>
+  {% endfor %}
+</div>
+{% endfor %}
+{% endif %}
+
+<h2>Criterion Detail</h2>
+{% for cat_entry in analytics.categories %}
+<div style="font-weight:bold;font-size:11pt;margin:10pt 0 4pt;">{{ cat_entry.category.name }}</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width:46%;">Criterion</th>
+      <th>Verified</th>
+      <th>Level</th>
+      <th>Self</th>
+      <th style="width:30%;">Judge comment</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for e in cat_entry.criteria %}
+    <tr>
+      <td>{{ e.criterion.number }}. {{ e.criterion.name }}</td>
+      <td>
+        {% if e.verified_score is not None %}
+        <span class="badge badge-neutral">{{ e.verified_score }}</span>
+        {% else %}&mdash;{% endif %}
+      </td>
+      <td>{{ e.level_now|default_if_none:"—" }}</td>
+      <td>{{ e.claimed_score|default_if_none:"—" }}</td>
+      <td>
+        {% for v in e.judge_notes %}
+        <div><span class="vname">{{ v.name }}:</span> {{ v.notes }}</div>
+        {% empty %}
+        <span class="muted">&mdash;</span>
+        {% endfor %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endfor %}
+
+</body>
+</html>

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Share Links — EYA{% endblock %}
+{% block breadcrumb_parent %}EYA{% endblock %}
+{% block breadcrumb_current %}Share Links{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-head">
+    <div class="page-title">Share Links</div>
+    <a href="{% url 'sharelink_create' %}" class="btn btn-primary">New share link</a>
+  </div>
+
+  <p class="muted" style="margin-bottom:16px;">
+    Public read-only dashboards. Anyone holding the link can view it without an account —
+    treat a link like a password.
+  </p>
+
+  <div class="card">
+    <div class="card-body tight">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Label</th>
+            <th>Contacts</th>
+            <th>Status</th>
+            <th>Views</th>
+            <th>Last viewed</th>
+            <th>Link</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for link in links %}
+          <tr>
+            <td>{{ link.label }}</td>
+            <td>{% if link.include_contacts %}Included{% else %}Hidden{% endif %}</td>
+            <td>
+              {% if link.is_valid %}
+                <span class="badge sage">Active</span>
+              {% elif not link.is_active %}
+                <span class="badge" style="background:var(--brick);color:#fff;">Revoked</span>
+              {% else %}
+                <span class="badge" style="background:var(--ink-2);color:#fff;">Expired</span>
+              {% endif %}
+            </td>
+            <td>{{ link.view_count }}</td>
+            <td>{{ link.last_viewed_at|default:"—" }}</td>
+            <td>
+              {% if link.is_valid %}
+                <input type="text" readonly class="input"
+                       style="min-width:280px;font-size:12px;"
+                       value="{{ base_url }}/share/{{ link.token }}/"
+                       onclick="this.select();navigator.clipboard.writeText(this.value);">
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              {% if link.is_active %}
+              <form method="post" action="{% url 'sharelink_revoke' link.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm"
+                        style="background:var(--brick);color:#fff;"
+                        onclick="event.preventDefault();eya.confirm('Revoke this link? Anyone holding it will immediately lose access.', () => this.form.submit());">
+                  Revoke
+                </button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7">No share links yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

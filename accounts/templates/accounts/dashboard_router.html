@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — DSE{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Dashboard</h2>
+  <p>Welcome, {{ request.user.get_full_name|default:request.user.username }}.</p>
+  {% if role == 'admin' %}
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-primary">Go to Admin Dashboard</a>
+  {% elif role == 'member' %}
+    <a href="{% url 'member_dashboard' %}" class="btn btn-primary">Go to Member Dashboard</a>
+  {% elif role == 'verifier' %}
+    <a href="{% url 'verifier_dashboard' %}" class="btn btn-primary">Go to Secretariat Dashboard</a>
+  {% elif role == 'judge' %}
+    <a href="{% url 'judge_dashboard' %}" class="btn btn-primary">Go to Judge Dashboard</a>
+  {% endif %}
+</div>
+{% endblock %}

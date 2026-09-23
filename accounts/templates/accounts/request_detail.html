@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Request — {{ pr.org_name }} — DSE{% endblock %}
+{% block breadcrumb_parent %}Requests{% endblock %}
+{% block breadcrumb_current %}{{ pr.org_name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title t-display">{{ pr.org_name }}</h1>
+      <div class="page-subtitle">Submitted {{ pr.submitted_at|date:"d M Y, H:i" }}</div>
+    </div>
+    <a href="{% url 'request_list' %}" class="btn btn-ghost">← Back to Requests</a>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:860px;">
+
+    <!-- Organization Details -->
+    <div class="card">
+      <div class="card-head"><h3 class="card-title">Organization Details</h3></div>
+      <div class="card-body">
+        <dl style="margin:0;">
+          <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;">Name</dt>
+          <dd style="font-weight:500;margin:2px 0 0;">{{ pr.org_name }}</dd>
+
+          <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;">Type</dt>
+          <dd style="margin:2px 0 0;">{{ pr.get_org_type_display }}</dd>
+
+          {% if pr.org_subtype %}
+          <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;">Subtype</dt>
+          <dd style="margin:2px 0 0;">{{ pr.get_org_subtype_display }}</dd>
+          {% endif %}
+
+          {% if pr.org_subtype_other %}
+          <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;">Subtype Description</dt>
+          <dd style="margin:2px 0 0;">{{ pr.org_subtype_other }}</dd>
+          {% endif %}
+
+          <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;">Region</dt>
+          <dd style="margin:2px 0 0;">{{ pr.region }}</dd>
+
+          <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;">Physical Address</dt>
+          <dd style="margin:2px 0 0;">{{ pr.physical_address }}</dd>
+
+          <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;">Postal Address</dt>
+          <dd style="margin:2px 0 0;">{{ pr.postal_address }}</dd>
+
+          <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;">Number of Employees</dt>
+          <dd style="margin:2px 0 0;">{{ pr.get_num_employees_display }}</dd>
+
+          <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;">Total Investment Capital</dt>
+          <dd style="margin:2px 0 0;">{{ pr.get_investment_capital_display }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- Respondent + Status -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="card">
+        <div class="card-head"><h3 class="card-title">Respondent</h3></div>
+        <div class="card-body">
+          <dl style="margin:0;">
+            <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;">Name</dt>
+            <dd style="font-weight:500;margin:2px 0 0;">{{ pr.first_name }} {{ pr.last_name }}</dd>
+
+            <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;">Position</dt>
+            <dd style="margin:2px 0 0;">{{ pr.position }}</dd>
+
+            <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;">Phone</dt>
+            <dd style="margin:2px 0 0;">{{ pr.phone_number }}</dd>
+
+            <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;">Email</dt>
+            <dd style="margin:2px 0 0;"><a href="mailto:{{ pr.email }}" style="color:var(--gold-2);">{{ pr.email }}</a></dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3 class="card-title">Status</h3></div>
+        <div class="card-body">
+          {% if pr.status == 'pending' %}
+            <p style="font-size:13.5px;color:var(--ink-2);margin-bottom:16px;">This request is awaiting review. Approve to create the organization and member account, or reject to decline.</p>
+            <div style="display:flex;gap:8px;">
+              <form method="post" action="{% url 'request_approve' pr.pk %}" id="approve-form-{{ pr.pk }}">
+                {% csrf_token %}
+                <button type="button" class="btn btn-primary"
+                  onclick="eya.confirm('Approve this request and create the organization and user account?', function(){ document.getElementById('approve-form-{{ pr.pk }}').submit(); })">Approve</button>
+              </form>
+              <form method="post" action="{% url 'request_reject' pr.pk %}" id="reject-form-{{ pr.pk }}">
+                {% csrf_token %}
+                <button type="button" class="btn btn-sm" style="border-color:var(--brick);color:var(--brick);"
+                  onclick="eya.confirm('Reject this request?', function(){ document.getElementById('reject-form-{{ pr.pk }}').submit(); }, {danger:true})">Reject</button>
+              </form>
+            </div>
+          {% elif pr.status == 'approved' %}
+            <span class="badge sage" style="margin-bottom:8px;"><span class="dot"></span>Approved</span>
+            <p style="font-size:12.5px;color:var(--ink-3);margin:8px 0 0;">Reviewed by {{ pr.reviewed_by.get_full_name|default:pr.reviewed_by.username }} on {{ pr.reviewed_at|date:"d M Y, H:i" }}</p>
+          {% elif pr.status == 'rejected' %}
+            <span class="badge brick" style="margin-bottom:8px;">Rejected</span>
+            <p style="font-size:12.5px;color:var(--ink-3);margin:8px 0 0;">Reviewed by {{ pr.reviewed_by.get_full_name|default:pr.reviewed_by.username }} on {{ pr.reviewed_at|date:"d M Y, H:i" }}</p>
+            <div style="margin-top:16px;">
+              <form method="post" action="{% url 'request_reopen' pr.pk %}" id="reopen-form-{{ pr.pk }}">
+                {% csrf_token %}
+                <button type="button" class="btn btn-sm btn-ghost"
+                  onclick="eya.confirm('Reopen this request and set it back to pending for review?', function(){ document.getElementById('reopen-form-{{ pr.pk }}').submit(); })">Reopen to Pending</button>
+              </form>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

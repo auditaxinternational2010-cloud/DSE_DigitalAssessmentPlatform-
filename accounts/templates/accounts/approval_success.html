@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Request Approved — DSE{% endblock %}
+{% block breadcrumb_parent %}DSE Admin{% endblock %}
+{% block breadcrumb_current %}Approval Success{% endblock %}
+{% block content %}
+<div class="container" style="max-width:640px;">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title t-display">Request Approved</h1>
+      <div class="page-subtitle">Organization and member account created successfully.</div>
+    </div>
+  </div>
+
+  <div class="card" style="background:var(--sage-wash);border:1px solid #c8d3bd;border-radius:var(--radius);">
+    <div class="card-body">
+      <p style="margin-bottom:16px;">Copy these credentials and send them to the respondent at <strong>{{ credentials.email }}</strong>. This page is shown once — it will not be accessible after you leave.</p>
+
+      <table class="table" style="margin-bottom:0;">
+        <tbody>
+          <tr>
+            <th style="width:160px;">Organization</th>
+            <td><strong>{{ credentials.org_name }}</strong></td>
+          </tr>
+          <tr>
+            <th>Username</th>
+            <td><code>{{ credentials.username }}</code></td>
+          </tr>
+          <tr>
+            <th>Temporary Password</th>
+            <td><code>{{ credentials.password }}</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:16px;font-size:13px;color:var(--ink-3);">
+        Ask the member to change their password after first login.
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;">
+    <a href="{% url 'request_list' %}" class="btn btn-primary">Back to Requests</a>
+  </div>
+</div>
+{% endblock %}

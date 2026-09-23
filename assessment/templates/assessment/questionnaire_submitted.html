@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Submitted — DMA{% endblock %}
+{% block content %}
+<div class="container">
+
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">
+        {{ questionnaire }}
+        <span class="badge sage" style="vertical-align:middle;margin-left:10px;">Submitted</span>
+      </h1>
+      <p class="page-subtitle">Submitted {{ questionnaire.submitted_at|date:"Y-m-d H:i" }} — read-only view of your assessment.</p>
+    </div>
+    <a href="{% url 'member_dashboard' %}" class="btn btn-ghost btn-sm">← Dashboard</a>
+  </div>
+
+  <div class="card" style="margin-bottom:1.5rem;background:var(--navy-wash);border-color:var(--line-2);">
+    <div class="card-body">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;">What happens next</div>
+      <p style="font-size:13px;color:var(--ink-2);margin:0;line-height:1.6;">
+        The Secretariat will review your submission and prepare it for independent judging. Judges work independently and cannot see one another's marks or comments. Judge marks and final results are hidden from your organization until the award cycle closes.
+      </p>
+    </div>
+  </div>
+
+  {% for cat in cat_data %}
+  <div class="card" style="margin-bottom:1.25rem;">
+    <div class="card-head">
+      <h2 class="card-title">{{ cat.category.name }}</h2>
+    </div>
+    <div class="card-body tight">
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:60px;">#</th>
+            <th>Criterion</th>
+            <th>Response</th>
+            <th>Evidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in cat.rows %}
+          <tr>
+            <td style="color:var(--ink-4);font-size:12px;">{{ row.criterion.number }}</td>
+            <td>{{ row.criterion.name }}</td>
+            <td style="font-size:12.5px;color:var(--ink-2);white-space:pre-wrap;">{{ row.response.response|default:"—"|truncatechars:180 }}</td>
+            <td style="font-size:12.5px;color:var(--ink-3);">{% if row.response %}Submitted{% else %}—{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+{% endblock %}

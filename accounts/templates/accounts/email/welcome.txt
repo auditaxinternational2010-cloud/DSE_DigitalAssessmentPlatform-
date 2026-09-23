@@ -1,0 +1,20 @@
+Dear {{ user.first_name }},
+
+Your registration on the EYA Platform has been approved.
+
+Your login credentials are:
+
+  Username: {{ user.username }}
+  Password: {{ password }}
+
+Please log in at: {{ login_url }}
+
+You will be required to change your password immediately after your first login.
+
+Any password issued to you before this email is no longer valid — please use the
+credentials above.
+
+If you have any questions, contact us at it@auditaxinternational.co.tz.
+
+Regards,
+The Auditax International Team

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Participation Requests — EYA{% endblock %}
+{% block breadcrumb_parent %}DSE Admin{% endblock %}
+{% block breadcrumb_current %}Requests{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title t-display">Participation Requests</h1>
+      <div class="page-subtitle">Organizations requesting to join the DSE programme</div>
+    </div>
+  </div>
+
+  <!-- Status filter tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:16px;">
+    <a href="{% url 'request_list' %}" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-ghost{% endif %}">All</a>
+    <a href="{% url 'request_list' %}?status=pending" class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-ghost{% endif %}">Pending</a>
+    <a href="{% url 'request_list' %}?status=approved" class="btn btn-sm {% if status_filter == 'approved' %}btn-primary{% else %}btn-ghost{% endif %}">Approved</a>
+    <a href="{% url 'request_list' %}?status=rejected" class="btn btn-sm {% if status_filter == 'rejected' %}btn-primary{% else %}btn-ghost{% endif %}">Rejected</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body tight">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Organization</th>
+            <th>Type</th>
+            <th>Region</th>
+            <th>Respondent</th>
+            <th>Email</th>
+            <th>Submitted</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in page_obj %}
+          <tr>
+            <td style="font-weight:500;">{{ req.org_name }}</td>
+            <td>{{ req.get_org_type_display }}</td>
+            <td>{{ req.region }}</td>
+            <td>{{ req.first_name }} {{ req.last_name }}</td>
+            <td style="font-size:12.5px;">{{ req.email }}</td>
+            <td style="font-size:12px;color:var(--ink-3);">{{ req.submitted_at|date:"d M Y" }}</td>
+            <td>
+              {% if req.status == 'pending' %}
+                <span class="badge accent">Pending</span>
+              {% elif req.status == 'approved' %}
+                <span class="badge sage"><span class="dot"></span>Approved</span>
+              {% else %}
+                <span class="badge brick">Rejected</span>
+              {% endif %}
+            </td>
+            <td style="text-align:right;">
+              <a href="{% url 'request_detail' req.pk %}" class="btn btn-sm">Review</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" style="text-align:center;color:var(--ink-3);padding:32px 16px;">No requests found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% if page_obj.has_other_pages %}
+    <div style="display:flex;justify-content:center;gap:4px;padding:16px 0 4px;">
+      {% if page_obj.has_previous %}
+        <a href="?status={{ status_filter }}&page={{ page_obj.previous_page_number }}" class="btn btn-sm">← Prev</a>
+      {% endif %}
+      <span style="padding:6px 12px;font-size:13px;color:var(--ink-3);">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+      {% if page_obj.has_next %}
+        <a href="?status={{ status_filter }}&page={{ page_obj.next_page_number }}" class="btn btn-sm">Next →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

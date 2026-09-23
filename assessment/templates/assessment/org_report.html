@@ -1,0 +1,518 @@
+{% extends "base.html" %}
+{% load assessment_extras %}
+{% block title %}{{ questionnaire.organization.name }} — Report — DMA{% endblock %}
+{% block breadcrumb_parent %}{% if is_admin %}Results{% elif is_member %}Reports{% else %}Secretariat{% endif %}{% endblock %}
+{% block breadcrumb_current %}{{ questionnaire.organization.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-head" style="flex-wrap:wrap;gap:12px;">
+    <div>
+      <div class="page-title">{{ questionnaire.organization.name }}</div>
+      <div class="page-subtitle">{{ cycle.name }} — Submitted {{ questionnaire.submitted_at|date:"j M Y" }}</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      {% if not is_member %}
+      <a href="{% url 'export_org_excel' cycle.pk questionnaire.pk %}" class="btn btn-ghost btn-sm">↓ Excel</a>
+      <a href="{% url 'export_org_pdf' cycle.pk questionnaire.pk %}" class="btn btn-ghost btn-sm">↓ PDF</a>
+      {% endif %}
+      {% if is_admin %}
+      <a href="{% url 'cycle_results' cycle.pk %}" class="btn btn-ghost btn-sm">← Back to Results</a>
+      {% elif is_member %}
+      <a href="{% url 'reports_list' %}" class="btn btn-ghost btn-sm">← Back to Reports</a>
+      {% else %}
+      <a href="{% url 'verifier_dashboard' %}" class="btn btn-ghost btn-sm">← Back</a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% comment %} Verified score leads. The self-assessment is a claim, not a score, and is
+     deliberately ranked below it so the two are never read as equivalent. {% endcomment %}
+  <div class="rpt-headline">
+    <div class="rpt-verified">
+      <div class="rpt-verified-label">Verified Score</div>
+      <div class="rpt-verified-value">
+        {{ analytics.overall_verified_score|default:"—" }}<span class="rpt-of">/ 5</span>
+      </div>
+      {% if benchmark and benchmark.rank %}
+      <div class="rpt-rank">
+        Ranked <strong>{{ benchmark.rank }}</strong> of {{ benchmark.league_size }}
+        in the {{ benchmark.league_label }}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="rpt-facts">
+      <div class="rpt-fact">
+        <div class="rpt-fact-label">Self-assessed</div>
+        <div class="rpt-fact-value">{{ analytics.overall_claimed_score|default:"—" }}</div>
+        <div class="rpt-fact-note">what you scored yourself</div>
+      </div>
+      <div class="rpt-fact">
+        <div class="rpt-fact-label">Cohort average</div>
+        <div class="rpt-fact-value">{{ benchmark.cohort_avg|default:"—" }}</div>
+        <div class="rpt-fact-note">across comparable organisations</div>
+      </div>
+      <div class="rpt-fact">
+        <div class="rpt-fact-label">Questionnaire completed</div>
+        <div class="rpt-fact-value">{{ analytics.completeness }}%</div>
+        <div class="rpt-fact-note">{{ analytics.answered_count }} of {{ analytics.criteria_count }} criteria answered</div>
+      </div>
+    </div>
+  </div>
+
+  {% comment %} The gap is not a score. It measures self-knowledge, so it is stated in
+     words rather than left as a signed number for the reader to decode. {% endcomment %}
+  {% if analytics.gap_phrase %}
+  <div class="rpt-gap rpt-gap-{{ analytics.gap_direction }}">
+    <strong>{{ analytics.gap_phrase }}.</strong>
+    {% if analytics.gap_direction == 'over' %}
+    Your organisation rated itself higher than the judges could evidence. The criteria below show where.
+    {% elif analytics.gap_direction == 'under' %}
+    Your organisation rated itself lower than the judges found. You are stronger than you gave yourself credit for.
+    {% else %}
+    Your self-assessment closely tracked the verified result — a sign of accurate self-knowledge.
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if analytics.completeness < 100 %}
+  <div class="rpt-note">
+    Unanswered criteria are excluded from the score rather than counted as zero,
+    so this result reflects the {{ analytics.answered_count }} criteria that were answered.
+  </div>
+  {% endif %}
+
+  {# Category scorecard #}
+  <div class="card" style="margin-bottom:24px;">
+    <div class="card-head"><div class="card-title">Category Scores</div></div>
+    <div class="card-body tight">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th style="text-align:center;">Judge Average</th>
+            <th style="width:150px;">Against the scale</th>
+            <th style="text-align:center;">Rank</th>
+            <th style="text-align:center;">vs cohort</th>
+            <th style="text-align:center;">Self-assessed</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cat_entry in analytics.categories %}
+          <tr>
+            <td>
+              <div>{{ cat_entry.category.name }}</div>
+              {% if cat_entry.completeness < 100 %}
+              <div class="rpt-sub">{{ cat_entry.answered }} of {{ cat_entry.total }} answered</div>
+              {% endif %}
+            </td>
+            <td style="text-align:center;">
+              {% if cat_entry.verified_avg is not None %}
+              <span class="badge {% if cat_entry.verified_avg >= 3 %}sage{% elif cat_entry.verified_avg >= 2 %}accent{% else %}brick{% endif %}">
+                {{ cat_entry.verified_avg }}
+              </span>
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              {% if cat_entry.verified_avg is not None %}
+              <div class="rpt-bar">
+                <div class="rpt-bar-fill" style="width:{% widthratio cat_entry.verified_avg 5 100 %}%;"></div>
+                {% if cat_entry.cohort_avg is not None %}
+                <div class="rpt-bar-mark" style="left:{% widthratio cat_entry.cohort_avg 5 100 %}%;"
+                     title="Cohort average {{ cat_entry.cohort_avg }}"></div>
+                {% endif %}
+              </div>
+              {% endif %}
+            </td>
+            <td style="text-align:center;">
+              {% if cat_entry.rank %}
+              <strong>{{ cat_entry.rank }}</strong><span class="rpt-sub"> / {{ cat_entry.rank_of }}</span>
+              {% else %}—{% endif %}
+            </td>
+            <td style="text-align:center;">
+              {% if cat_entry.vs_cohort is not None %}
+              <span class="rpt-delta rpt-delta-{% if cat_entry.vs_cohort >= 0 %}up{% else %}down{% endif %}">
+                {% if cat_entry.vs_cohort >= 0 %}+{% endif %}{{ cat_entry.vs_cohort }}
+              </span>
+              {% else %}—{% endif %}
+            </td>
+            <td style="text-align:center;" class="rpt-muted-cell">
+              {{ cat_entry.claimed_avg|default:"—" }}
+              {% if cat_entry.gap_direction == 'over' %}
+              <div class="rpt-sub">over-stated</div>
+              {% elif cat_entry.gap_direction == 'under' %}
+              <div class="rpt-sub">under-stated</div>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if analytics.categories|length >= 3 %}
+    <div class="card-body" style="padding:16px;">
+      <canvas id="radarChart" style="max-height:380px;"></canvas>
+    </div>
+    {% endif %}
+  </div>
+
+  {% comment %} Where to improve — the level indicators turn a score into an instruction.
+     "You are at 2 because X. To reach 3 you need Y." {% endcomment %}
+  {% if analytics.priority_criteria %}
+  <div class="card" style="margin-bottom:24px;">
+    <div class="card-head">
+      <div class="card-title" style="color:var(--brick);">Priorities for Improvement</div>
+      <div class="rpt-sub">The lowest-scoring criteria, with what the next level requires</div>
+    </div>
+    <div class="card-body tight">
+      {% for e in analytics.priority_criteria %}
+      <div class="rpt-item">
+        <div class="rpt-item-head">
+          <div>
+            <div class="rpt-item-cat">{{ e.category.name }} · Criterion {{ e.criterion.number }}</div>
+            <div class="rpt-item-name">{{ e.criterion.name }}</div>
+          </div>
+          <div class="rpt-item-scores">
+            <span class="badge {% if e.verified_score >= 3 %}sage{% elif e.verified_score >= 2 %}accent{% else %}brick{% endif %}">
+              Judge average {{ e.verified_score }}
+            </span>
+            {% if e.claimed_score is not None %}
+            <span class="rpt-claimed">you scored {{ e.claimed_score }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if e.level_now_text %}
+        <div class="rpt-because">
+          <span class="rpt-because-tag">At level {{ e.level_now }} because</span>
+          {{ e.level_now_text }}
+        </div>
+        {% endif %}
+
+        {% if e.level_next_text %}
+        <div class="rpt-next">
+          <span class="rpt-next-tag">To reach level {{ e.level_next }}</span>
+          {{ e.level_next_text }}
+        </div>
+        {% endif %}
+
+        {% for v in e.verifier_notes %}
+        <div class="rpt-verifier-note">
+          <span class="rpt-verifier-name">{{ v.name }}{% if v.score is not None %} (scored {{ v.score }}){% endif %}:</span>
+          {{ v.notes }}
+        </div>
+        {% endfor %}
+
+        {% if e.is_disputed %}
+        <div class="rpt-disputed">
+          Judges differed by {{ e.spread }} levels on this criterion.
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# Strengths — named criteria, not just a category average #}
+  {% if analytics.strength_criteria %}
+  <div class="card" style="margin-bottom:24px;">
+    <div class="card-head">
+      <div class="card-title" style="color:var(--sage);">Judge Strengths</div>
+      <div class="rpt-sub">Criteria independently verified at level 4 or above</div>
+    </div>
+    <div class="card-body tight">
+      {% for e in analytics.strength_criteria %}
+      <div class="rpt-item">
+        <div class="rpt-item-head">
+          <div>
+            <div class="rpt-item-cat">{{ e.category.name }} · Criterion {{ e.criterion.number }}</div>
+            <div class="rpt-item-name">{{ e.criterion.name }}</div>
+          </div>
+          <div class="rpt-item-scores">
+            <span class="badge sage">Judge average {{ e.verified_score }}</span>
+          </div>
+        </div>
+        {% if e.level_now_text %}
+        <div class="rpt-because rpt-because-good">
+          <span class="rpt-because-tag">At level {{ e.level_now }} because</span>
+          {{ e.level_now_text }}
+        </div>
+        {% endif %}
+        {% for v in e.verifier_notes %}
+        <div class="rpt-verifier-note">
+          <span class="rpt-verifier-name">{{ v.name }}:</span> {{ v.notes }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% comment %} Disagreements are a data-quality signal for the awarding panel, not for
+     the organisation being assessed. {% endcomment %}
+  {% if analytics.disputed_criteria and not is_member %}
+  <div class="card" style="margin-bottom:24px;">
+    <div class="card-head">
+      <div class="card-title" style="color:var(--gold);">Judge Disagreements</div>
+      <div class="rpt-sub">Criteria where judges differed by 2 levels or more — review before award</div>
+    </div>
+    <div class="card-body tight">
+      {% for e in analytics.disputed_criteria %}
+      <div class="rpt-item">
+        <div class="rpt-item-head">
+          <div>
+            <div class="rpt-item-cat">{{ e.category.name }} · Criterion {{ e.criterion.number }}</div>
+            <div class="rpt-item-name">{{ e.criterion.name }}</div>
+          </div>
+          <div class="rpt-item-scores">
+            <span class="badge accent">Mean {{ e.verified_score }}</span>
+            <span class="rpt-claimed">spread {{ e.spread }}</span>
+          </div>
+        </div>
+        {% for v in e.verifier_entries %}
+        <div class="rpt-verifier-note">
+          <span class="rpt-verifier-name">{{ v.name }}{% if v.score is not None %} — {{ v.score }}{% endif %}{% if v.notes %}:{% endif %}</span>
+          {{ v.notes }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% comment %} Criterion detail. Previously toggled a class the stylesheet never defined,
+     so this section could not be opened at all. Now driven by JS that sets
+     display directly, matching the working accordion on cycle_detail. {% endcomment %}
+  <div class="card" style="margin-bottom:24px;">
+    <div class="card-head">
+      <div class="card-title">Criterion Detail</div>
+      <button type="button" class="btn btn-ghost btn-sm" id="critToggleAll">Expand All</button>
+    </div>
+
+    {% for cat_entry in analytics.categories %}
+    <div class="crit-group" data-group="{{ cat_entry.category.pk }}">
+      <div class="crit-group-head" data-toggle="{{ cat_entry.category.pk }}"
+           {% if cat_entry.is_weakest %}data-weakest="1"{% endif %}>
+        <div>
+          <span class="crit-group-name">{{ cat_entry.category.name }}</span>
+          <span class="rpt-sub">{{ cat_entry.criteria|length }} criteria</span>
+        </div>
+        <div class="crit-group-meta">
+          {% if cat_entry.verified_avg is not None %}
+          <span class="badge {% if cat_entry.verified_avg >= 3 %}sage{% elif cat_entry.verified_avg >= 2 %}accent{% else %}brick{% endif %}">
+            {{ cat_entry.verified_avg }}
+          </span>
+          {% endif %}
+          <svg class="crit-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="crit-group-body" data-body="{{ cat_entry.category.pk }}">
+        {% for e in cat_entry.criteria %}
+        <div class="crit-row">
+          <div class="crit-row-head">
+            <div class="crit-row-name">
+              <span class="rpt-item-cat">Criterion {{ e.criterion.number }}</span>
+              <div>{{ e.criterion.name }}</div>
+            </div>
+            <div class="crit-row-scores">
+              {% if e.is_numeric %}
+              <span class="badge">Data</span>
+              {% else %}
+              <div class="crit-score-pair">
+                <span class="crit-score-label">Judge Average</span>
+                {% if e.verified_score is not None %}
+                <span class="badge {% if e.verified_score >= 3 %}sage{% elif e.verified_score >= 2 %}accent{% else %}brick{% endif %}">
+                  {{ e.verified_score }}
+                </span>
+                {% else %}<span class="rpt-sub">not scored</span>{% endif %}
+              </div>
+              <div class="crit-score-pair">
+                <span class="crit-score-label">Self</span>
+                <span class="rpt-claimed">{{ e.claimed_score|default:"—" }}</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if e.is_numeric %}
+          {% if e.claimed_numeric_data %}
+          <table class="crit-numeric">
+            {% for field in e.criterion.numeric_fields %}
+            <tr>
+              <td>{{ field.name }}</td>
+              <td>{{ e.claimed_numeric_data|get_numeric_value:field.name|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+          </table>
+          {% else %}
+          <div class="rpt-sub">No data entered.</div>
+          {% endif %}
+          {% else %}
+
+          {% if e.level_now_text %}
+          <div class="rpt-because">
+            <span class="rpt-because-tag">At level {{ e.level_now }} because</span>
+            {{ e.level_now_text }}
+          </div>
+          {% endif %}
+          {% if e.level_next_text %}
+          <div class="rpt-next">
+            <span class="rpt-next-tag">To reach level {{ e.level_next }}</span>
+            {{ e.level_next_text }}
+          </div>
+          {% endif %}
+          {% endif %}
+
+          {% if e.claimed_notes %}
+          <div class="crit-claimed-notes">
+            <span class="rpt-verifier-name">Your submission:</span> {{ e.claimed_notes }}
+          </div>
+          {% endif %}
+
+          {% for v in e.verifier_notes %}
+          <div class="rpt-verifier-note">
+            <span class="rpt-verifier-name">{{ v.name }}{% if v.score is not None %} (scored {{ v.score }}){% endif %}:</span>
+            {{ v.notes }}
+          </div>
+          {% endfor %}
+
+          {% if e.is_disputed %}
+          <div class="rpt-disputed">Judges differed by {{ e.spread }} levels.</div>
+          {% endif %}
+
+          {% if e.evidence %}
+          <div class="crit-evidence">
+            {% for doc in e.evidence %}
+            <a class="evidence-chip" href="{% url 'document_file' doc.pk %}">{{ doc.title }}</a>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% empty %}
+        <div class="rpt-sub" style="padding:12px 18px;">No criteria in this category.</div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Criterion detail accordion. Sets display directly rather than toggling a
+// class, because the previous class-toggle approach depended on a CSS rule
+// that did not exist and left this whole section permanently invisible.
+(function () {
+  var groups = document.querySelectorAll('.crit-group-head');
+  var toggleAll = document.getElementById('critToggleAll');
+
+  function bodyFor(key) {
+    return document.querySelector('.crit-group-body[data-body="' + key + '"]');
+  }
+
+  function setOpen(head, open) {
+    var body = bodyFor(head.dataset.toggle);
+    if (!body) return;
+    head.classList.toggle('open', open);
+    body.style.display = open ? 'block' : 'none';
+  }
+
+  function allOpen() {
+    return Array.prototype.every.call(groups, function (h) {
+      return h.classList.contains('open');
+    });
+  }
+
+  function syncButton() {
+    if (toggleAll) toggleAll.textContent = allOpen() ? 'Collapse All' : 'Expand All';
+  }
+
+  Array.prototype.forEach.call(groups, function (head) {
+    head.addEventListener('click', function () {
+      setOpen(head, !head.classList.contains('open'));
+      syncButton();
+    });
+  });
+
+  if (toggleAll) {
+    toggleAll.addEventListener('click', function () {
+      var open = !allOpen();
+      Array.prototype.forEach.call(groups, function (h) { setOpen(h, open); });
+      syncButton();
+    });
+  }
+
+  // Weakest category opens on load, so the detail is not merely reachable —
+  // the thing most worth reading is already on screen.
+  var weakest = document.querySelector('.crit-group-head[data-weakest="1"]');
+  setOpen(weakest || groups[0], true);
+  syncButton();
+})();
+</script>
+
+{% if analytics.categories|length >= 3 %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  var labels = [{% for c in analytics.categories %}'{{ c.category.name|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+  var claimedData = [{% for c in analytics.categories %}{{ c.claimed_avg|default:'null' }}{% if not forloop.last %},{% endif %}{% endfor %}];
+  var verifiedData = [{% for c in analytics.categories %}{{ c.verified_avg|default:'null' }}{% if not forloop.last %},{% endif %}{% endfor %}];
+  var cohortData = [{% for c in analytics.categories %}{{ c.cohort_avg|default:'null' }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+  var datasets = [
+    {
+      // Verified first so it draws as the primary reading of the chart.
+      label: 'Judge average',
+      data: verifiedData,
+      backgroundColor: 'rgba(11,37,69,0.12)',
+      borderColor: 'rgba(11,37,69,0.9)',
+      pointBackgroundColor: 'rgba(11,37,69,0.9)',
+      borderWidth: 2,
+    },
+    {
+      label: 'Self-assessed',
+      data: claimedData,
+      backgroundColor: 'rgba(196,146,42,0.08)',
+      borderColor: 'rgba(196,146,42,0.75)',
+      pointBackgroundColor: 'rgba(196,146,42,0.75)',
+      borderDash: [4, 3],
+      borderWidth: 1.5,
+    },
+  ];
+
+  if (cohortData.some(function (v) { return v !== null; })) {
+    datasets.push({
+      label: 'Cohort average',
+      data: cohortData,
+      backgroundColor: 'rgba(0,0,0,0)',
+      borderColor: 'rgba(120,132,148,0.75)',
+      pointBackgroundColor: 'rgba(120,132,148,0.75)',
+      borderDash: [2, 3],
+      borderWidth: 1,
+    });
+  }
+
+  new Chart(document.getElementById('radarChart'), {
+    type: 'radar',
+    data: { labels: labels, datasets: datasets },
+    options: {
+      scales: { r: { min: 0, max: 5, ticks: { stepSize: 1 } } },
+      plugins: { legend: { position: 'bottom' } },
+      responsive: true,
+    }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}{{ cycle.name }} — Reports — DMA{% endblock %}
+{% block breadcrumb_parent %}Reports{% endblock %}
+{% block breadcrumb_current %}{{ cycle.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-head" style="flex-wrap:wrap;gap:12px;">
+    <div>
+      <a href="{% url 'reports_list' %}" class="btn btn-ghost btn-sm" style="margin-bottom:6px;">← All Reports</a>
+      <div class="page-title">{{ cycle.name }}</div>
+    </div>
+  </div>
+
+  {% if role == 'member' %}
+    <div class="card" style="max-width:520px;margin:40px auto;text-align:center;padding:48px 40px;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"
+        stroke-linecap="round" stroke-linejoin="round"
+        style="margin:0 auto 16px;display:block;color:var(--navy);opacity:0.3;">
+        <rect x="3" y="11" width="18" height="11" rx="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <p style="font-size:15px;font-weight:500;margin-bottom:6px;">Report not yet available</p>
+      <p class="text-muted" style="font-size:13px;margin-bottom:0;">
+        Your report for <strong>{{ cycle.name }}</strong> is not yet available.
+        It will appear here once the cycle closes and your report has been released.
+      </p>
+    </div>
+
+  {% else %}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div style="font-size:13px;color:var(--brick);">
+        {% if cycle.is_open %}Cycle is open — distribution is unavailable until the cycle closes.{% endif %}
+      </div>
+      {% if not cycle.is_open %}
+        <form method="post" action="{% url 'report_distribute_all' cycle.pk %}" id="form-dist-all">
+          {% csrf_token %}
+          <button type="button" class="btn btn-primary btn-sm"
+            onclick="var f=document.getElementById('form-dist-all');eya.confirm('Distribute all undistributed submitted reports for this cycle?',function(){f.submit();},{okLabel:'Distribute All'})">
+            Distribute All
+          </button>
+        </form>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="card-body tight">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Organisation</th>
+              <th>Submitted</th>
+              <th>Judging</th>
+              <th>Distributed</th>
+              <th>Distributed By</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for q in questionnaires %}
+            <tr>
+              <td>{{ q.organization.name }}</td>
+              <td>
+                {% if q.is_submitted %}<span class="badge sage">Yes</span>
+                {% else %}<span class="badge" style="background:var(--ink-2);color:#fff;">No</span>{% endif %}
+              </td>
+              <td>
+                {% if q.organization.requires_judging %}
+                  {% if q.judging_completed %}
+                    <span class="badge sage">Completed</span>
+                  {% else %}
+                    <span class="badge slate">Pending</span>
+                  {% endif %}
+                {% else %}
+                  <span class="badge">Not required</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if q.is_distributed %}<span class="badge sage">Yes</span>
+                {% else %}<span class="badge" style="background:var(--ink-2);color:#fff;">No</span>{% endif %}
+              </td>
+              <td style="font-size:13px;">{% if q.distributed_by %}{{ q.distributed_by.get_full_name|default:q.distributed_by.username }}{% else %}—{% endif %}</td>
+              <td>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                  {% if q.is_submitted %}
+                    <a href="{% url 'org_report' cycle.pk q.pk %}" class="btn btn-sm btn-ghost">View</a>
+                  {% endif %}
+                  {% if not cycle.is_open and q.is_submitted and not q.is_distributed %}
+                    {% if not q.organization.requires_judging or q.judging_completed %}
+                      <form method="post" action="{% url 'report_distribute' cycle.pk q.pk %}" id="form-dist-{{ q.pk }}">
+                        {% csrf_token %}
+                        <button type="button" class="btn btn-sm btn-primary"
+                          onclick="var f=document.getElementById('form-dist-{{ q.pk }}');eya.confirm('Distribute report for {{ q.organization.name }}?',function(){f.submit();},{okLabel:'Distribute'})">
+                          Distribute
+                        </button>
+                      </form>
+                    {% else %}
+                      <span class="t-muted" style="font-size:12px;">Waiting for judging</span>
+                    {% endif %}
+                  {% endif %}
+                  {% if role == 'admin' and q.is_distributed %}
+                    <form method="post" action="{% url 'report_revoke' cycle.pk q.pk %}" id="form-rev-{{ q.pk }}">
+                      {% csrf_token %}
+                      <button type="button" class="btn btn-sm btn-danger"
+                        onclick="var f=document.getElementById('form-rev-{{ q.pk }}');eya.confirm('Revoke report access for {{ q.organization.name }}?',function(){f.submit();},{danger:true,okLabel:'Revoke'})">
+                        Revoke
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-muted" style="padding:24px;text-align:center;">No organisations in this cycle.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Cycle — DMA{% endblock %}
+{% block breadcrumb_parent %}ATE Admin{% endblock %}
+{% block breadcrumb_current %}{{ action }} Cycle{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-head">
+    <div>
+      <div class="page-title">{{ action }} Award Cycle</div>
+      <div class="page-subtitle">Configure cycle details and upload questionnaire</div>
+    </div>
+  </div>
+
+  <div class="row" style="justify-content:center;">
+    <div style="max-width:560px;width:100%;">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">{{ action }} Cycle</div>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="field" style="margin-bottom:14px;">
+              <div class="label">{{ field.label }}</div>
+              {{ field }}
+              {% if field.help_text %}<div style="font-size:12px;color:var(--ink-4);margin-top:4px;">{{ field.help_text }}</div>{% endif %}
+              {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
+            {% endfor %}
+            <div style="display:flex;gap:8px;margin-top:20px;">
+              <button type="submit" class="btn btn-primary">{{ action }}</button>
+              <a href="{% url 'cycle_list' %}" class="btn btn-ghost">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

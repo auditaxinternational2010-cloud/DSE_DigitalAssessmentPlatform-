@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Document Library — DMA{% endblock %}
+{% block breadcrumb_parent %}Assessment{% endblock %}
+{% block breadcrumb_current %}Document Library{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-head">
+    <div>
+      <h1>Document Library</h1>
+      {% if org %}<p class="t-muted" style="margin:4px 0 0;">{{ org.name }}</p>{% endif %}
+    </div>
+    {% if org %}
+    <div style="min-width:220px;">
+      <div class="t-uppercase" style="margin-bottom:6px;">Storage used</div>
+      <div style="background:var(--line);border-radius:4px;height:6px;overflow:hidden;margin-bottom:4px;">
+        {% widthratio quota_used quota_max 100 as quota_pct %}
+        <div style="background:var(--navy);height:100%;width:{{ quota_pct }}%;max-width:100%;"></div>
+      </div>
+      <div class="num" style="font-size:11.5px;color:var(--ink-3);">{{ quota_used|filesizeformat }} / {{ quota_max|filesizeformat }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if all_orgs %}
+  <form method="get" style="margin-bottom:18px;max-width:360px;">
+    <label class="label" for="org-select" style="display:block;margin-bottom:6px;">Organization</label>
+    <select id="org-select" name="org" class="select" onchange="this.form.submit()">
+      <option value="">— choose organization —</option>
+      {% for o in all_orgs %}<option value="{{ o.id }}" {% if org and o.id == org.id %}selected{% endif %}>{{ o.name }}</option>{% endfor %}
+    </select>
+  </form>
+  {% endif %}
+
+  {% if org %}
+  {% if documents %}
+  <div class="card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>First uploaded in</th>
+          <th>Criterion</th>
+          <th>Size</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in documents %}
+        {% with first=doc.all_links.0 %}
+        <tr>
+          <td style="font-weight:500;">{{ doc.original_filename }}</td>
+          <td class="num">{% if first %}{{ first.response.questionnaire.cycle.name }}{% else %}—{% endif %}</td>
+          <td>{% if first %}{{ first.response.criterion.number }} · {{ first.response.criterion.name|truncatechars:40 }}{% else %}—{% endif %}</td>
+          <td class="num">{{ doc.file_size|filesizeformat }}</td>
+          <td class="num">{{ doc.uploaded_at|date:"M j, Y" }}</td>
+          <td style="text-align:right;white-space:nowrap;">
+            <a class="btn btn-sm" href="{% url 'document_file' doc.id %}" target="_blank" rel="noopener">Open</a>
+            <a class="btn btn-sm btn-ghost" href="{% url 'document_file' doc.id %}?download=1">Download</a>
+          </td>
+        </tr>
+        {% endwith %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </div>
+      <p class="empty-title">No documents yet</p>
+      <p class="empty-body">Evidence is uploaded while filling a questionnaire and accumulates here across cycles.</p>
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="card">
+    <div class="empty-state">
+      <p class="empty-title">Select an organization</p>
+      <p class="empty-body">Choose an organization above to view its document library.</p>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

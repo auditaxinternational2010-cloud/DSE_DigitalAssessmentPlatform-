@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Edit Category — DMA{% endblock %}
+{% block breadcrumb_parent %}{{ category.cycle.name }}{% endblock %}
+{% block breadcrumb_current %}Edit Category{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:540px;">
+
+  <div class="page-head">
+    <div class="page-title">Edit Category</div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">{{ category.cycle.name }}</div>
+      <span class="badge">{{ category.criteria.count }} criteria</span>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="field" style="margin-bottom:16px;">
+          <div class="label" style="margin-bottom:5px;">Category Name <span style="color:var(--brick);">*</span></div>
+          <input type="text" name="name" value="{{ category.name }}" class="input" required autofocus style="width:100%;">
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button type="submit" class="btn btn-primary">Save</button>
+          <a href="{% url 'cycle_detail' category.cycle_id %}" class="btn btn-ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}My Assignments — DMA{% endblock %}
+{% block breadcrumb_parent %}Secretariat{% endblock %}
+{% block breadcrumb_current %}My Assignments{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title t-display">My Assignments</h1>
+      {% if open_cycle %}
+      <div class="page-subtitle">{{ open_cycle.name }}</div>
+      {% else %}
+      <div class="page-subtitle t-muted">No award cycle is currently open.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if open_cycle %}
+
+  <div class="stat-row" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
+    <div class="stat">
+      <div class="stat-label">Assigned Orgs</div>
+      <div class="stat-value">{{ org_data|length }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Submitted</div>
+      <div class="stat-value">{{ submitted_count }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Pending</div>
+      <div class="stat-value">{{ pending_count }}</div>
+    </div>
+  </div>
+
+  {% if org_data %}
+  <div class="card">
+    <div class="card-body tight">
+      <table class="table" id="orgs-table">
+        <thead>
+          <tr>
+            <th>Organization</th>
+            <th>Status</th>
+            <th>Coverage</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in org_data %}
+          <tr>
+            <td>{{ item.org.name }}</td>
+            <td>
+              {% if item.questionnaire %}
+                {% if item.questionnaire.is_submitted %}
+                  <span class="badge sage"><span class="dot"></span>Submitted</span>
+                {% else %}
+                  <span class="badge slate"><span class="dot"></span>Not yet submitted</span>
+                {% endif %}
+              {% else %}
+                <span class="badge"><span class="dot"></span>No questionnaire</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if item.coverage %}
+                <span class="badge {% if item.coverage.1 and item.coverage.0 == item.coverage.1 %}sage{% else %}slate{% endif %}">
+                  {{ item.coverage.0 }}/{{ item.coverage.1 }}
+                </span>
+              {% else %}
+                <span class="t-muted">&mdash;</span>
+              {% endif %}
+            </td>
+            <td style="display:flex;gap:6px;align-items:center;">
+              {% if item.questionnaire and item.questionnaire.is_submitted %}
+                <a href="{% url 'verify_questionnaire' item.questionnaire.pk %}" class="btn btn-primary btn-sm">Review / Assess</a>
+                <a href="{% url 'org_report' item.questionnaire.cycle.pk item.questionnaire.pk %}" class="btn btn-ghost btn-sm">View Report</a>
+              {% else %}
+                <button class="btn btn-ghost btn-sm" disabled>Review / Assess</button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="card-body">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M1 21c0-4 3.5-7 8-7s8 3 8 7"/><path d="M17 3a4 4 0 0 1 0 8"/><path d="M21 21c0-3-2-5.5-5-6.5"/></svg>
+        </div>
+        <div class="empty-title">No assignments yet</div>
+        <div class="empty-body">You'll see organizations here once ATE assigns them to you.</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="stat-row" style="grid-template-columns:repeat(1,1fr);margin-bottom:24px;">
+    <div class="stat">
+      <div class="stat-label">Assigned Organizations</div>
+      <div class="stat-value">{{ assigned_orgs|length }}</div>
+    </div>
+  </div>
+
+  {% if assigned_orgs %}
+  <div class="card">
+    <div class="card-head">
+      <h3 class="card-title">Your Assignments</h3>
+      <span style="font-size:12px;color:var(--ink-3);">Scoring is unavailable until a new award cycle opens.</span>
+    </div>
+    <div class="card-body tight">
+      <table class="table">
+        <thead>
+          <tr><th>Organization</th><th>Type</th></tr>
+        </thead>
+        <tbody>
+          {% for a in assigned_orgs %}
+          <tr>
+            <td>{{ a.organization.name }}</td>
+            <td><span class="badge slate">{{ a.organization.get_org_type_display|default:"—" }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="card-body">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M1 21c0-4 3.5-7 8-7s8 3 8 7"/><path d="M17 3a4 4 0 0 1 0 8"/><path d="M21 21c0-3-2-5.5-5-6.5"/></svg>
+        </div>
+        <div class="empty-title">No assignments yet</div>
+        <div class="empty-body">You'll see organizations here once ATE assigns them to you.</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}
