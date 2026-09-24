@@ -1,0 +1,399 @@
+[
+{
+  "model": "accounts.organization",
+  "pk": 1,
+  "fields": {
+    "name": "TEST - Organization Requiring Judging",
+    "description": "Test organization for Judge workflow.",
+    "org_type": "professional_services",
+    "org_subtype": "",
+    "org_subtype_other": "",
+    "region": "Dar es Salaam",
+    "physical_address": "Test Address",
+    "postal_address": "00000",
+    "num_employees": "5_49",
+    "investment_capital": "5m_to_200m",
+    "is_active": true,
+    "assessment_profile": "",
+    "requires_judging": true,
+    "created_at": "2026-09-21T05:23:28.962Z",
+    "updated_at": "2026-09-21T05:23:28.964Z"
+  }
+},
+{
+  "model": "accounts.organization",
+  "pk": 2,
+  "fields": {
+    "name": "TEST - Normal Organization",
+    "description": "Test organization for normal workflow.",
+    "org_type": "professional_services",
+    "org_subtype": "",
+    "org_subtype_other": "",
+    "region": "Dar es Salaam",
+    "physical_address": "Test Address",
+    "postal_address": "00000",
+    "num_employees": "5_49",
+    "investment_capital": "5m_to_200m",
+    "is_active": true,
+    "assessment_profile": "",
+    "requires_judging": false,
+    "created_at": "2026-09-21T05:23:28.967Z",
+    "updated_at": "2026-09-21T05:23:28.968Z"
+  }
+},
+{
+  "model": "accounts.organization",
+  "pk": 3,
+  "fields": {
+    "name": "Bond Issuer",
+    "description": "Bond Issuer",
+    "org_type": "financial_services",
+    "org_subtype": "",
+    "org_subtype_other": "",
+    "region": "",
+    "physical_address": "",
+    "postal_address": "",
+    "num_employees": "5_49",
+    "investment_capital": "above_800m",
+    "is_active": true,
+    "assessment_profile": "bond_issuer",
+    "requires_judging": true,
+    "created_at": "2026-09-22T15:31:19.833Z",
+    "updated_at": "2026-09-23T04:12:39.942Z"
+  }
+},
+{
+  "model": "accounts.organization",
+  "pk": 4,
+  "fields": {
+    "name": "Bond Trader",
+    "description": "Bond Trader",
+    "org_type": "financial_services",
+    "org_subtype": "",
+    "org_subtype_other": "",
+    "region": "",
+    "physical_address": "",
+    "postal_address": "",
+    "num_employees": "5_49",
+    "investment_capital": "above_800m",
+    "is_active": true,
+    "assessment_profile": "",
+    "requires_judging": false,
+    "created_at": "2026-09-22T15:33:02.143Z",
+    "updated_at": "2026-09-22T15:33:02.143Z"
+  }
+},
+{
+  "model": "accounts.organization",
+  "pk": 5,
+  "fields": {
+    "name": "Custodian",
+    "description": "Custodian",
+    "org_type": "financial_services",
+    "org_subtype": "",
+    "org_subtype_other": "",
+    "region": "",
+    "physical_address": "",
+    "postal_address": "",
+    "num_employees": "5_49",
+    "investment_capital": "above_800m",
+    "is_active": true,
+    "assessment_profile": "",
+    "requires_judging": false,
+    "created_at": "2026-09-22T15:33:54.547Z",
+    "updated_at": "2026-09-22T15:33:54.547Z"
+  }
+},
+{
+  "model": "accounts.organization",
+  "pk": 6,
+  "fields": {
+    "name": "EGM",
+    "description": "EGM",
+    "org_type": "financial_services",
+    "org_subtype": "",
+    "org_subtype_other": "",
+    "region": "",
+    "physical_address": "",
+    "postal_address": "",
+    "num_employees": "5_49",
+    "investment_capital": "above_800m",
+    "is_active": true,
+    "assessment_profile": "",
+    "requires_judging": true,
+    "created_at": "2026-09-22T15:34:32.675Z",
+    "updated_at": "2026-09-22T15:34:32.675Z"
+  }
+},
+{
+  "model": "accounts.organization",
+  "pk": 7,
+  "fields": {
+    "name": "MIMS",
+    "description": "MIMS",
+    "org_type": "financial_services",
+    "org_subtype": "",
+    "org_subtype_other": "",
+    "region": "",
+    "physical_address": "",
+    "postal_address": "",
+    "num_employees": "5_49",
+    "investment_capital": "above_800m",
+    "is_active": true,
+    "assessment_profile": "",
+    "requires_judging": true,
+    "created_at": "2026-09-22T15:35:13.891Z",
+    "updated_at": "2026-09-22T15:35:13.891Z"
+  }
+},
+{
+  "model": "accounts.organization",
+  "pk": 8,
+  "fields": {
+    "name": "NOMADS",
+    "description": "NOMADS",
+    "org_type": "financial_services",
+    "org_subtype": "",
+    "org_subtype_other": "",
+    "region": "",
+    "physical_address": "",
+    "postal_address": "",
+    "num_employees": "5_49",
+    "investment_capital": "above_800m",
+    "is_active": true,
+    "assessment_profile": "",
+    "requires_judging": true,
+    "created_at": "2026-09-22T15:35:52.138Z",
+    "updated_at": "2026-09-22T15:35:52.138Z"
+  }
+},
+{
+  "model": "accounts.organization",
+  "pk": 9,
+  "fields": {
+    "name": "LDMs",
+    "description": "LDMs",
+    "org_type": "financial_services",
+    "org_subtype": "",
+    "org_subtype_other": "",
+    "region": "",
+    "physical_address": "",
+    "postal_address": "",
+    "num_employees": "5_49",
+    "investment_capital": "above_800m",
+    "is_active": true,
+    "assessment_profile": "",
+    "requires_judging": true,
+    "created_at": "2026-09-22T15:36:31.733Z",
+    "updated_at": "2026-09-22T15:36:31.733Z"
+  }
+},
+{
+  "model": "accounts.userprofile",
+  "pk": 1,
+  "fields": {
+    "user": 1,
+    "role": "admin",
+    "organization": null,
+    "must_change_password": false,
+    "phone_number": ""
+  }
+},
+{
+  "model": "accounts.userprofile",
+  "pk": 2,
+  "fields": {
+    "user": 2,
+    "role": "verifier",
+    "organization": null,
+    "must_change_password": false,
+    "phone_number": ""
+  }
+},
+{
+  "model": "accounts.userprofile",
+  "pk": 3,
+  "fields": {
+    "user": 3,
+    "role": "judge",
+    "organization": null,
+    "must_change_password": false,
+    "phone_number": ""
+  }
+},
+{
+  "model": "accounts.userprofile",
+  "pk": 4,
+  "fields": {
+    "user": 4,
+    "role": "member",
+    "organization": 1,
+    "must_change_password": false,
+    "phone_number": ""
+  }
+},
+{
+  "model": "accounts.userprofile",
+  "pk": 5,
+  "fields": {
+    "user": 5,
+    "role": "member",
+    "organization": 2,
+    "must_change_password": false,
+    "phone_number": ""
+  }
+},
+{
+  "model": "accounts.userprofile",
+  "pk": 6,
+  "fields": {
+    "user": 7,
+    "role": "member",
+    "organization": 3,
+    "must_change_password": false,
+    "phone_number": ""
+  }
+},
+{
+  "model": "accounts.verifierassignment",
+  "pk": 1,
+  "fields": {
+    "verifier": 2,
+    "organization": 1
+  }
+},
+{
+  "model": "accounts.verifierassignment",
+  "pk": 2,
+  "fields": {
+    "verifier": 2,
+    "organization": 2
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$870000$4ClymXDgVCjMfSpRHCaQ0E$vXWuRiZ3VQmcISXCDVLAVpdO3vIMRABEu1EXPU/38n8=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "test_admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "testadmin@example.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-09-21T05:23:26.502Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 2,
+  "fields": {
+    "password": "pbkdf2_sha256$870000$Q7R401BTLpwACFhprRCWjm$nv3L0O0HY5eQY79RCt8f1lhPS9OaUXeszFD+Il2vnkw=",
+    "last_login": "2026-09-21T05:53:12.284Z",
+    "is_superuser": false,
+    "username": "test_verifier",
+    "first_name": "",
+    "last_name": "",
+    "email": "testverifier@example.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-09-21T05:23:26.991Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 3,
+  "fields": {
+    "password": "pbkdf2_sha256$870000$WwNWMo4JqYUYeRVkT2qzjv$qvK0llLYR9kVm+AkXNt3bIvEA3yVdkvu1eajWq+BHyA=",
+    "last_login": "2026-09-21T05:54:04.367Z",
+    "is_superuser": false,
+    "username": "test_judge",
+    "first_name": "",
+    "last_name": "",
+    "email": "testjudge@example.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-09-21T05:23:27.516Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 4,
+  "fields": {
+    "password": "pbkdf2_sha256$870000$8cHlwkFHWL0rgMQwEA5JaP$s79ptD/P80ziSpisUFZntaTLFctmQ+ebgK7covtvSiM=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "test_member_judged",
+    "first_name": "",
+    "last_name": "",
+    "email": "member.judged@example.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-09-21T05:23:28.004Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 5,
+  "fields": {
+    "password": "pbkdf2_sha256$870000$rtsuoNlmbDH9ZhDJjrtHCz$mNUnQ86EjxztwpdS06O8WYqzZ1ugbBvcM2trSLi36Oc=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "test_member_normal",
+    "first_name": "",
+    "last_name": "",
+    "email": "member.normal@example.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-09-21T05:23:28.477Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 6,
+  "fields": {
+    "password": "pbkdf2_sha256$870000$uxxvIp5CQHnOLIZ3slgTUT$a+WdVIh3e/2FUzQ+SL4M1Lp59w6UMrpQMhQDsmFBBOc=",
+    "last_login": "2026-09-24T07:18:53.320Z",
+    "is_superuser": true,
+    "username": "superuser",
+    "first_name": "",
+    "last_name": "",
+    "email": "user@dse.co.tz",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-09-22T15:20:58.297Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 7,
+  "fields": {
+    "password": "pbkdf2_sha256$870000$bLKMXmmErW7rhatqTMMgFl$XKoOChHaWqlbJtLb0oAACytOGO+XjAFjwU0vZiumc0Q=",
+    "last_login": "2026-09-23T04:10:42.925Z",
+    "is_superuser": false,
+    "username": "bond_member",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-09-23T04:05:42.449Z",
+    "groups": [],
+    "user_permissions": []
+  }
+}
+]

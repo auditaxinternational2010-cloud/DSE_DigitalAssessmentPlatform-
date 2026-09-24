@@ -1,5 +1,4 @@
-/* EYA Questionnaire Custom Styles — DSE Logo Palette */
-
+/* EYA Questionnaire Custom Styles */
 .level-option {
     cursor: pointer;
     padding: 12px;
@@ -7,20 +6,20 @@
     border-radius: 8px;
     margin-bottom: 8px;
     transition: all 0.2s;
-    background: #FFFFFF;
+    background: white;
 }
 
 .level-option:hover {
     border-color: #159FDA;
-    background: #E6F5FB;
+    background: #F4FAFD;
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(21, 159, 218, 0.14);
+    box-shadow: 0 2px 8px rgba(21,159,218,0.10);
 }
 
 .level-option.selected {
-    border-color: #159FDA;
+    border-color: #1290C8;
     background: #E6F5FB;
-    box-shadow: 0 0 0 3px rgba(21, 159, 218, 0.12);
+    box-shadow: 0 0 0 3px rgba(21,159,218,0.12);
 }
 
 .score-badge {
@@ -34,9 +33,8 @@
     font-size: 0.9rem;
 }
 
-/* Score scale */
-.score-0 { background: #C0392B; color: white; }
-.score-1 { background: #E67E22; color: white; }
+.score-0 { background: #e74c3c; color: white; }
+.score-1 { background: #e67e22; color: white; }
 .score-2 { background: #F8D113; color: #1F1D1D; }
 .score-3 { background: #FFE46A; color: #1F1D1D; }
 .score-4 { background: #33B14A; color: white; }
@@ -45,13 +43,12 @@
 
 .table th {
     font-weight: 600;
-    background: #E6F5FB;
-    color: #1F1D1D;
+    background: #F4FAFD;
 }
 
 .card {
     border: none;
-    box-shadow: 0 2px 12px rgba(21, 159, 218, 0.10);
+    box-shadow: 0 2px 12px rgba(21,159,218,0.10);
     border-radius: 12px;
     overflow: hidden;
 }
