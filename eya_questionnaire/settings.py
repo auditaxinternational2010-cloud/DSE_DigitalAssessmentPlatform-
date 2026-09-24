@@ -506,25 +506,25 @@ CSRF_TRUSTED_ORIGINS = config(
 # DIGITALOCEAN / PROXY
 # ============================================================
 
-# Tell Django the real scheme when behind DigitalOcean's proxy.
+# DigitalOcean terminates HTTPS before forwarding the request to Django.
+# This tells Django that a request is secure when the proxy says the
+# original client connection used HTTPS.
 
-SECURE_PROXY_SSL_HEADER = (
-    'HTTP_X_FORWARDED_PROTO',
-    'https'
-)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # ============================================================
 # PRODUCTION SECURITY
 # ============================================================
 
-# Production security hardening — applied automatically
-# when DEBUG is off.
+# DigitalOcean App Platform terminates HTTPS at its proxy/load balancer.
+# Therefore Django must trust the forwarded HTTPS scheme, but should NOT
+# perform its own HTTP -> HTTPS redirect. The platform handles that redirect.
 #
-# But never during the test suite, whose client speaks plain HTTP.
+# This avoids redirect loops such as:
+# ERR_TOO_MANY_REDIRECTS
 #
-# Each is overridable via .env for environments that need
-# to opt out.
+# Do not set SECURE_SSL_REDIRECT=True in the DigitalOcean environment.
 
 if not DEBUG and not TESTING:
 
@@ -540,11 +540,9 @@ if not DEBUG and not TESTING:
         cast=bool
     )
 
-    SECURE_SSL_REDIRECT = config(
-        'SECURE_SSL_REDIRECT',
-        default=False,
-        cast=bool
-    )
+    # DigitalOcean handles HTTPS redirection at the platform/proxy level.
+    # Keep Django's redirect disabled to prevent redirect loops.
+    SECURE_SSL_REDIRECT = False
 
     SECURE_HSTS_SECONDS = config(
         'SECURE_HSTS_SECONDS',
