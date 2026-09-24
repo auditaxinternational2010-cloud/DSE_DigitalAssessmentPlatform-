@@ -1,25 +1,26 @@
-/* EYA Questionnaire Custom Styles */
+/* EYA Questionnaire Custom Styles — DSE Logo Palette */
+
 .level-option {
     cursor: pointer;
     padding: 12px;
-    border: 2px solid #e9ecef;
+    border: 2px solid #E1E5E8;
     border-radius: 8px;
     margin-bottom: 8px;
     transition: all 0.2s;
-    background: white;
+    background: #FFFFFF;
 }
 
 .level-option:hover {
-    border-color: #2874a6;
-    background: #f8f9fa;
+    border-color: #159FDA;
+    background: #E6F5FB;
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(21, 159, 218, 0.14);
 }
 
 .level-option.selected {
-    border-color: #1a5276;
-    background: #e8f4f8;
-    box-shadow: 0 0 0 3px rgba(26, 82, 118, 0.1);
+    border-color: #159FDA;
+    background: #E6F5FB;
+    box-shadow: 0 0 0 3px rgba(21, 159, 218, 0.12);
 }
 
 .score-badge {
@@ -33,37 +34,39 @@
     font-size: 0.9rem;
 }
 
-.score-0 { background: #e74c3c; color: white; }
-.score-1 { background: #e67e22; color: white; }
-.score-2 { background: #f39c12; color: white; }
-.score-3 { background: #f1c40f; color: #333; }
-.score-4 { background: #2ecc71; color: white; }
-.score-5 { background: #27ae60; color: white; }
-.score-null { background: #bdc3c7; color: #666; }
+/* Score scale */
+.score-0 { background: #C0392B; color: white; }
+.score-1 { background: #E67E22; color: white; }
+.score-2 { background: #F8D113; color: #1F1D1D; }
+.score-3 { background: #FFE46A; color: #1F1D1D; }
+.score-4 { background: #33B14A; color: white; }
+.score-5 { background: #23963A; color: white; }
+.score-null { background: #D5D9DC; color: #666364; }
 
 .table th {
     font-weight: 600;
-    background: #f8f9fa;
+    background: #E6F5FB;
+    color: #1F1D1D;
 }
 
 .card {
     border: none;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 12px rgba(21, 159, 218, 0.10);
     border-radius: 12px;
     overflow: hidden;
 }
 
 .card-header {
-    background: linear-gradient(135deg, #1a5276, #2874a6);
+    background: linear-gradient(135deg, #159FDA, #1290C8);
     color: white;
     font-weight: 600;
 }
 
 .progress {
     border-radius: 10px;
-    background: #e9ecef;
+    background: #E1E5E8;
 }
 
 .progress-bar {
-    background: linear-gradient(90deg, #2874a6, #1a5276);
+    background: linear-gradient(90deg, #159FDA, #1290C8);
 }
