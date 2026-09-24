@@ -514,18 +514,28 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # ============================================================
-# PRODUCTION SECURITY
+# PRODUCTION SECURITY / DIGITALOCEAN
 # ============================================================
 
 # DigitalOcean App Platform terminates HTTPS at its proxy/load balancer.
-# Therefore Django must trust the forwarded HTTPS scheme, but should NOT
-# perform its own HTTP -> HTTPS redirect. The platform handles that redirect.
+# Django receives the forwarded request and must trust the original
+# HTTPS scheme reported by the proxy.
 #
-# This avoids redirect loops such as:
-# ERR_TOO_MANY_REDIRECTS
+# IMPORTANT:
+# DigitalOcean handles HTTP -> HTTPS redirection at the platform level.
+# Django MUST NOT perform its own HTTPS redirect here, otherwise a
+# redirect loop can occur:
 #
-# Do not set SECURE_SSL_REDIRECT=True in the DigitalOcean environment.
+#     ERR_TOO_MANY_REDIRECTS
+#
+# Keep this explicitly disabled in ALL environments. This also prevents
+# an environment variable or DEBUG setting from accidentally enabling
+# Django's own redirect.
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = False
+
+# Secure cookies in production.
 if not DEBUG and not TESTING:
 
     SESSION_COOKIE_SECURE = config(
@@ -539,10 +549,6 @@ if not DEBUG and not TESTING:
         default=True,
         cast=bool
     )
-
-    # DigitalOcean handles HTTPS redirection at the platform/proxy level.
-    # Keep Django's redirect disabled to prevent redirect loops.
-    SECURE_SSL_REDIRECT = False
 
     SECURE_HSTS_SECONDS = config(
         'SECURE_HSTS_SECONDS',
