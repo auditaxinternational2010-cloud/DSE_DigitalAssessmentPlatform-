@@ -24,6 +24,7 @@ def create_templates_and_attach(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
+    atomic = False
     dependencies = [
         ('assessment', '0016_dse_workbook_format'),
         ('accounts', '0014_assessment_profile'),
