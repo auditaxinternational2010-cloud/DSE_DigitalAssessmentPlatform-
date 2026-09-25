@@ -691,6 +691,43 @@ def questionnaire_fill(request, pk):
             'numeric_values': [],
         })
 
+    # Build the hierarchy used by the member entry page:
+    # Assessment Category (current_category) -> Assessment Area ->
+    # Assessment Criteria -> measurable parameters (Criterion records).
+    from collections import OrderedDict
+    area_groups_map = OrderedDict()
+    for item in criteria_data:
+        criterion = item['criterion']
+        area_code = (criterion.area_code or '').strip()
+        area_name = (criterion.assessment_area or '').strip() or 'Other / Unclassified Area'
+        area_key = (area_code, area_name)
+        if area_key not in area_groups_map:
+            area_groups_map[area_key] = {
+                'code': area_code,
+                'name': area_name,
+                'criteria_groups': OrderedDict(),
+            }
+        assessment_criterion_code = (criterion.assessment_criterion_code or '').strip()
+        assessment_criterion_name = (criterion.assessment_criterion or '').strip() or 'Other / Unclassified Criterion'
+        criterion_key = (assessment_criterion_code, assessment_criterion_name)
+        criterion_groups = area_groups_map[area_key]['criteria_groups']
+        if criterion_key not in criterion_groups:
+            criterion_groups[criterion_key] = {
+                'code': assessment_criterion_code,
+                'name': assessment_criterion_name,
+                'items': [],
+            }
+        criterion_groups[criterion_key]['items'].append(item)
+
+    area_groups = [
+        {
+            'code': area['code'],
+            'name': area['name'],
+            'criteria_groups': list(area['criteria_groups'].values()),
+        }
+        for area in area_groups_map.values()
+    ]
+
     from django.conf import settings
     from django.template.defaultfilters import filesizeformat as _filesizeformat
     quota_used = (
@@ -707,6 +744,7 @@ def questionnaire_fill(request, pk):
         'current_category': current_category,
         'form': form,
         'criteria_data': criteria_data,
+        'area_groups': area_groups,
         'current_category_index': current_category_index,
         'answered_count': answered_count,
         'total_criteria': total_criteria,

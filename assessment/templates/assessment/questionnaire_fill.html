@@ -3,6 +3,24 @@
 {% block breadcrumb_parent %}Assessment{% endblock %}
 {% block breadcrumb_current %}{{ current_category.name }}{% endblock %}
 {% block content %}
+<style>
+  .cascade-area { margin: 0 0 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface, #fff); overflow: hidden; }
+  .cascade-area-summary, .cascade-criterion-summary { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 16px 20px; }
+  .cascade-area-summary::-webkit-details-marker, .cascade-criterion-summary::-webkit-details-marker { display: none; }
+  .cascade-area-summary::after, .cascade-criterion-summary::after { content: "▾"; margin-left: auto; color: var(--ink-3); }
+  .cascade-area:not([open]) > .cascade-area-summary::after, .cascade-criterion:not([open]) > .cascade-criterion-summary::after { content: "▸"; }
+  .cascade-area-summary { background: var(--surface-2, #f7f9fc); border-bottom: 1px solid var(--line); }
+  .cascade-level { flex: 0 0 100%; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+  .cascade-heading { font-size: 15px; font-weight: 650; color: var(--ink, #172033); }
+  .cascade-count { margin-left: auto; font-size: 11px; color: var(--ink-3); }
+  .cascade-area-content { padding: 12px; }
+  .cascade-criterion { margin: 0 0 10px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .cascade-criterion:last-child { margin-bottom: 0; }
+  .cascade-criterion-summary { padding: 13px 16px; background: var(--surface, #fff); }
+  .cascade-criterion-content { padding: 0 12px 12px; }
+  .cascade-criterion-content .indicator { margin-top: 10px; }
+  @media (max-width: 700px) { .cascade-area-summary, .cascade-criterion-summary { padding: 12px; } .cascade-count { margin-left: 0; } }
+</style>
 <div class="container">
 <div class="q-layout">
   <aside class="section-nav">
@@ -36,56 +54,70 @@
       <input type="hidden" name="category_id" value="{{ current_category.id }}">
       <div style="padding:0 32px 8px;display:flex;justify-content:flex-end;"><button type="button" id="toggle-all-btn" class="btn btn-ghost btn-sm">Expand All</button></div>
       <div style="padding:0 32px;">
-      {% for item in criteria_data %}
-      <div class="indicator" data-answered="{% if item.existing_response and item.existing_response.response %}true{% else %}false{% endif %}">
-        <div class="indicator-head" role="button" tabindex="0" aria-expanded="false">
-          <div>
-            <div class="indicator-code">{{ item.criterion.number }}</div>
-            <h3 class="indicator-title">{{ item.criterion.name }}</h3>
-            <div style="font-size:11px;color:var(--ink-3);margin-top:4px;">Weight: {{ item.criterion.weight }}</div>
-          </div>
-          <div class="row" style="gap:8px;">
-            {% if item.existing_response and item.existing_response.response %}<span class="badge sage"><span class="dot"></span>Responded</span>{% else %}<span class="badge"><span class="dot"></span>Not answered</span>{% endif %}
-            <span class="indicator-chevron">&#9660;</span>
-          </div>
-        </div>
-        <div class="indicator-body collapsed">
-          <div class="field">
-            <div class="label">Assessment Area</div>
-            <div style="font-size:13px;color:var(--ink-2);">{{ item.criterion.area_code }} — {{ item.criterion.assessment_area }}</div>
-          </div>
-          <div class="field">
-            <div class="label">Assessment Criteria</div>
-            <div style="font-size:13px;color:var(--ink-2);">{{ item.criterion.assessment_criterion_code }} — {{ item.criterion.assessment_criterion }}</div>
-          </div>
-          <div class="field">
-            <div class="label">Relevant CMSA Act / Guideline / DSE Rule / Applicable Regulation</div>
-            <div style="font-size:12px;color:var(--ink-3);line-height:1.55;">{{ item.criterion.regulation|default:"—" }}</div>
-          </div>
-          <div class="field">
-            <label class="label">Response</label>
-            <textarea name="response_{{ item.criterion.id }}" class="textarea" rows="5" placeholder="Enter your response to this measurable parameter.">{{ item.existing_response.response|default:"" }}</textarea>
-          </div>
-          <div class="field">
-            <label class="label">Attachments</label>
-            <div style="font-size:11px;color:var(--ink-3);margin-bottom:4px;">{{ item.links|length }}/5 files · max 5 MB per file</div>
-            <input type="file" name="files_{{ item.criterion.id }}" class="input" multiple {% if item.links|length >= 5 %}disabled{% endif %}>
-            {% if item.links %}
-            <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
-              {% for link in item.links %}
-              <div class="evidence-chip">
-                <div class="ficon">{{ link.document.original_filename|slice:"-3:"|upper }}</div>
-                <div class="fname"><a href="{% url 'document_file' link.document.id %}" target="_blank" rel="noopener" style="color:var(--navy);text-decoration:none;">{{ link.document.original_filename }}</a></div>
-                <a href="{% url 'document_file' link.document.id %}?download=1" style="color:var(--ink-3);text-decoration:none;padding:0 6px;">&#8595;</a>
-                <button type="button" class="chip-delete" data-url="{% url 'evidence_unlink' link.id %}" style="background:none;border:none;cursor:pointer;padding:0 6px;color:var(--ink-3);font-size:18px;">×</button>
+      {% for area in area_groups %}
+      <details class="cascade-area" open>
+        <summary class="cascade-area-summary">
+          <span class="cascade-level">Assessment Area</span>
+          <span class="cascade-heading">{% if area.code %}{{ area.code }} — {% endif %}{{ area.name }}</span>
+          <span class="cascade-count">{{ area.criteria_groups|length }} assessment criteria</span>
+        </summary>
+        <div class="cascade-area-content">
+          {% for assessment_criterion in area.criteria_groups %}
+          <details class="cascade-criterion" open>
+            <summary class="cascade-criterion-summary">
+              <span class="cascade-level">Assessment Criteria</span>
+              <span class="cascade-heading">{% if assessment_criterion.code %}{{ assessment_criterion.code }} — {% endif %}{{ assessment_criterion.name }}</span>
+              <span class="cascade-count">{{ assessment_criterion.items|length }} parameter{{ assessment_criterion.items|length|pluralize }}</span>
+            </summary>
+            <div class="cascade-criterion-content">
+              {% for item in assessment_criterion.items %}
+              <div class="indicator" data-answered="{% if item.existing_response and item.existing_response.response %}true{% else %}false{% endif %}">
+                <div class="indicator-head" role="button" tabindex="0" aria-expanded="false">
+                  <div>
+                    <div class="indicator-code">{{ item.criterion.number }}</div>
+                    <h3 class="indicator-title">{{ item.criterion.name }}</h3>
+                    <div style="font-size:11px;color:var(--ink-3);margin-top:4px;">Weight: {{ item.criterion.weight }}</div>
+                  </div>
+                  <div class="row" style="gap:8px;">
+                    {% if item.existing_response and item.existing_response.response %}<span class="badge sage"><span class="dot"></span>Responded</span>{% else %}<span class="badge"><span class="dot"></span>Not answered</span>{% endif %}
+                    <span class="indicator-chevron">&#9660;</span>
+                  </div>
+                </div>
+                <div class="indicator-body collapsed">
+                  <div class="field">
+                    <div class="label">Relevant CMSA Act / Guideline / DSE Rule / Applicable Regulation</div>
+                    <div style="font-size:12px;color:var(--ink-3);line-height:1.55;">{{ item.criterion.regulation|default:"—" }}</div>
+                  </div>
+                  <div class="field">
+                    <label class="label">Response</label>
+                    <textarea name="response_{{ item.criterion.id }}" class="textarea" rows="5" placeholder="Enter your response to this measurable parameter.">{{ item.existing_response.response|default:"" }}</textarea>
+                  </div>
+                  <div class="field">
+                    <label class="label">Attachments</label>
+                    <div style="font-size:11px;color:var(--ink-3);margin-bottom:4px;">{{ item.links|length }}/5 files · max 5 MB per file</div>
+                    <input type="file" name="files_{{ item.criterion.id }}" class="input" multiple {% if item.links|length >= 5 %}disabled{% endif %}>
+                    {% if item.links %}
+                    <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+                      {% for link in item.links %}
+                      <div class="evidence-chip">
+                        <div class="ficon">{{ link.document.original_filename|slice:"-3:"|upper }}</div>
+                        <div class="fname"><a href="{% url 'document_file' link.document.id %}" target="_blank" rel="noopener" style="color:var(--navy);text-decoration:none;">{{ link.document.original_filename }}</a></div>
+                        <a href="{% url 'document_file' link.document.id %}?download=1" style="color:var(--ink-3);text-decoration:none;padding:0 6px;">&#8595;</a>
+                        <button type="button" class="chip-delete" data-url="{% url 'evidence_unlink' link.id %}" style="background:none;border:none;cursor:pointer;padding:0 6px;color:var(--ink-3);font-size:18px;">×</button>
+                      </div>
+                      {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if item.links|length < 5 %}<button type="button" class="btn btn-sm btn-outline lib-picker-open" style="margin-top:8px;" data-criterion="{{ item.criterion.id }}" data-current-links="[{% for link in item.links %}{{ link.document.id }}{% if not forloop.last %},{% endif %}{% endfor %}]">Choose from library</button>{% endif %}
+                  </div>
+                </div>
               </div>
               {% endfor %}
             </div>
-            {% endif %}
-            {% if item.links|length < 5 %}<button type="button" class="btn btn-sm btn-outline lib-picker-open" style="margin-top:8px;" data-criterion="{{ item.criterion.id }}" data-current-links="[{% for link in item.links %}{{ link.document.id }}{% if not forloop.last %},{% endif %}{% endfor %}]">Choose from library</button>{% endif %}
-          </div>
+          </details>
+          {% endfor %}
         </div>
-      </div>
+      </details>
       {% endfor %}
       </div>
       <div class="q-save-bar">
