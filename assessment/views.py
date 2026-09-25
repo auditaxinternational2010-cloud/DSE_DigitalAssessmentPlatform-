@@ -12,10 +12,9 @@ from django.db.models import Prefetch, Count, Sum, Max, Q
 from accounts.decorators import role_required
 from accounts.models import Organization
 from .models import (
-    AwardCycle, AssessmentCategory, Criterion, LevelIndicator,
+    AwardCycle, QuestionnaireTemplate, AssessmentCategory, Criterion, LevelIndicator,
     Questionnaire, Response, VerifierResponse, JudgeResponse,
     EvidenceDocument, EvidenceLink, StageSubmission,
-    categories_for_org,
 )
 from .forms import CycleForm, BulkResponseForm, VerifierScoreForm, JudgeExcelForm
 from .excel_parser import parse_excel_questionnaire
@@ -29,6 +28,28 @@ import uuid as _uuid
 _ALLOWED_EXCEL_EXT = {'.xlsx', '.xls'}
 _ALLOWED_EVIDENCE_EXT = {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg'}
 _MAX_EXCEL_BYTES = 20 * 1024 * 1024   # 20 MB
+
+
+def _categories_for_questionnaire(questionnaire, *, active_only=True):
+    """Return only categories assigned to this questionnaire's template.
+
+    A questionnaire without a template must not fall back to cycle-wide
+    categories, because that can expose another organization's assessment.
+    """
+    if not questionnaire.template_id:
+        return AssessmentCategory.objects.none()
+
+    filters = {
+        'cycle_id': questionnaire.cycle_id,
+        'template_id': questionnaire.template_id,
+        'is_informal_sector_only': (
+            questionnaire.organization.org_type == 'informal_sector'
+        ),
+    }
+    if active_only:
+        filters['is_active'] = True
+
+    return AssessmentCategory.objects.filter(**filters).order_by('order', 'name')
 
 # Magic-byte signatures keyed by extension. Upload content must start with one of
 # these for the claimed extension, so a renamed file (e.g. evil.html -> evil.png) is rejected.
@@ -232,6 +253,7 @@ def cycle_detail(request, pk):
         'questionnaires': questionnaires,
         'categories': categories,
         'missing_orgs': missing_orgs,
+        'templates': cycle.templates.filter(is_active=True).order_by('name'),
     })
 
 
@@ -259,7 +281,21 @@ def cycle_add_org_questionnaire(request, pk):
             messages.error(request, 'Invalid organization selected.')
             return redirect('cycle_detail', pk=pk)
         org = get_object_or_404(Organization, pk=int(org_id), is_active=True)
-        _, created = Questionnaire.objects.get_or_create(cycle=cycle, organization=org)
+        template_id = request.POST.get('template_id', '').strip()
+        template = None
+        if template_id:
+            template = get_object_or_404(QuestionnaireTemplate, pk=template_id, cycle=cycle, is_active=True)
+        elif org.assessment_profile:
+            template = QuestionnaireTemplate.objects.filter(cycle=cycle, assessment_profile=org.assessment_profile, is_active=True).first()
+        if not template:
+            messages.error(request, 'Select a questionnaire template for this organization before assigning it.')
+            return redirect('cycle_detail', pk=pk)
+        _, created = Questionnaire.objects.get_or_create(
+            cycle=cycle, organization=org, defaults={'template': template}
+        )
+        if not created and not _.template_id:
+            _.template = template
+            _.save(update_fields=['template', 'updated_at'])
         if created:
             messages.success(request, f'Questionnaire created for {org.name}.')
         else:
@@ -271,13 +307,25 @@ def cycle_add_org_questionnaire(request, pk):
 def category_edit(request, pk):
     category = get_object_or_404(AssessmentCategory, pk=pk)
     if request.method == 'POST':
+        from decimal import Decimal, InvalidOperation
         name = request.POST.get('name', '').strip()
-        if name:
-            category.name = name
-            category.save(update_fields=['name', 'updated_at'])
-            messages.success(request, f'Category renamed to "{name}".')
-        else:
-            messages.error(request, 'Name cannot be empty.')
+        code = request.POST.get('code', '').strip()
+        raw_weight = request.POST.get('weight', '').strip()
+        if not name or not code:
+            messages.error(request, 'Category code and name cannot be empty.')
+            return redirect('category_edit', pk=category.pk)
+        try:
+            weight = Decimal(raw_weight or '0')
+            if weight < 0:
+                raise InvalidOperation
+        except (InvalidOperation, ValueError):
+            messages.error(request, 'Enter a valid non-negative category weight.')
+            return redirect('category_edit', pk=category.pk)
+        category.code = code
+        category.name = name
+        category.weight = weight
+        category.save(update_fields=['code', 'name', 'weight', 'updated_at'])
+        messages.success(request, f'Category {code} updated.')
         return redirect('cycle_detail', pk=category.cycle_id)
     return render(request, 'assessment/category_edit.html', {'category': category})
 
@@ -586,14 +634,11 @@ def questionnaire_fill(request, pk):
         messages.warning(request, 'This cycle is closed.')
         return redirect('member_dashboard')
 
-    is_informal = questionnaire.organization.org_type == 'informal_sector'
     category_id = request.GET.get('category')
-    categories = categories_for_org(questionnaire.cycle, questionnaire.organization)
+    categories = _categories_for_questionnaire(questionnaire)
     current_category = (
         get_object_or_404(
-            AssessmentCategory, id=category_id,
-            cycle=questionnaire.cycle, is_active=True,
-            is_informal_sector_only=is_informal,
+            categories, id=category_id,
         ) if category_id
         else categories.first()
     )
@@ -688,12 +733,9 @@ def save_category(request, pk):
     if not questionnaire.cycle.is_open:
         return JsonResponse({'success': False, 'error': 'Cycle is closed.'}, status=403)
 
-    is_informal = questionnaire.organization.org_type == 'informal_sector'
     cat_id = request.POST.get('category_id')
     category = get_object_or_404(
-        AssessmentCategory, id=cat_id,
-        cycle=questionnaire.cycle, is_active=True,
-        is_informal_sector_only=is_informal,
+        _categories_for_questionnaire(questionnaire), pk=cat_id
     )
     form = BulkResponseForm(request.POST, category=category, questionnaire=questionnaire)
     if not form.is_valid():
@@ -712,7 +754,7 @@ def save_category(request, pk):
                     response='', score=None, numeric_data=None
                 )
 
-    categories = categories_for_org(questionnaire.cycle, questionnaire.organization)
+    categories = _categories_for_questionnaire(questionnaire)
     next_cat = categories.filter(order__gt=category.order).first()
     next_url = None
     if next_cat:
@@ -734,11 +776,13 @@ def evidence_upload_ajax(request):
     q = get_object_or_404(Questionnaire, pk=request.POST.get('questionnaire_id'))
     if q.organization_id != profile.organization_id:
         raise PermissionDenied
-    is_informal = q.organization.org_type == 'informal_sector'
     criterion = get_object_or_404(
-        Criterion, pk=request.POST.get('criterion_id'),
-        category__cycle=q.cycle, category__is_active=True, is_active=True,
-        category__is_informal_sector_only=is_informal,
+        Criterion.objects.filter(
+            category__in=_categories_for_questionnaire(q),
+            category__is_active=True,
+            is_active=True,
+        ),
+        pk=request.POST.get('criterion_id'),
     )
     if q.is_submitted or not q.cycle.is_open:
         return JsonResponse({'success': False, 'error': 'Locked.'}, status=403)
@@ -811,7 +855,7 @@ def questionnaire_submitted(request, pk):
     if not questionnaire.is_submitted:
         return redirect('questionnaire_fill', pk=pk)
     categories = list(
-        categories_for_org(questionnaire.cycle, questionnaire.organization).prefetch_related(
+        _categories_for_questionnaire(questionnaire).prefetch_related(
             Prefetch('criteria', queryset=Criterion.objects.filter(is_active=True).order_by('number'),
                      to_attr='active_criteria')
         )
@@ -850,8 +894,12 @@ def evidence_link(request):
     else:
         q = get_object_or_404(Questionnaire, pk=request.POST.get('questionnaire_id'))
         criterion = get_object_or_404(
-            Criterion, pk=request.POST.get('criterion_id'),
-            category__cycle=q.cycle, category__is_active=True, is_active=True,
+            Criterion.objects.filter(
+                category__in=_categories_for_questionnaire(q),
+                category__is_active=True,
+                is_active=True,
+            ),
+            pk=request.POST.get('criterion_id'),
         )
         resp = None
 
@@ -1012,9 +1060,7 @@ def _refresh_judging_completion(questionnaire):
         questionnaire.save(update_fields=['judging_completed', 'updated_at'])
         return False
 
-    applicable_category_ids = set(categories_for_org(
-        questionnaire.cycle, questionnaire.organization
-    ).values_list('id', flat=True))
+    applicable_category_ids = set(_categories_for_questionnaire(questionnaire).values_list('id', flat=True))
     criterion_ids = set(Criterion.objects.filter(
         category__id__in=applicable_category_ids,
         category__is_active=True, is_active=True, is_numeric=False,
@@ -1087,7 +1133,7 @@ def judges_dashboard(request):
                     is_active=True,
                     is_numeric=False,
                 ).filter(
-                    category_id__in=categories_for_org(q.cycle, q.organization).values_list('id', flat=True)
+                    category_id__in=_categories_for_questionnaire(q).values_list('id', flat=True)
                 ).values_list('id', flat=True)
             )
             my_scored = JudgeResponse.objects.filter(
@@ -1157,7 +1203,7 @@ def judge_questionnaire(request, pk):
         )
         return redirect('judges_dashboard')
 
-    applicable_categories = categories_for_org(questionnaire.cycle, questionnaire.organization)
+    applicable_categories = _categories_for_questionnaire(questionnaire)
     applicable_category_ids = set(applicable_categories.values_list('id', flat=True))
     criteria = list(
         Criterion.objects.filter(
@@ -1345,12 +1391,10 @@ def verify_questionnaire(request, pk):
 
     is_informal = questionnaire.organization.org_type == 'informal_sector'
     category_id = request.GET.get('category')
-    categories = categories_for_org(questionnaire.cycle, questionnaire.organization)
+    categories = _categories_for_questionnaire(questionnaire)
     current_category = (
         get_object_or_404(
-            AssessmentCategory, id=category_id,
-            cycle=questionnaire.cycle, is_active=True,
-            is_informal_sector_only=is_informal,
+            categories, id=category_id,
         ) if category_id
         else categories.first()
     )
@@ -1366,9 +1410,7 @@ def verify_questionnaire(request, pk):
         action = request.POST.get('action', 'save')
         cat_id = request.POST.get('category_id')
         category = get_object_or_404(
-            AssessmentCategory, id=cat_id,
-            cycle=questionnaire.cycle, is_active=True,
-            is_informal_sector_only=is_informal,
+            _categories_for_questionnaire(questionnaire), pk=cat_id
         )
         category_submission, _ = StageSubmission.objects.get_or_create(
             questionnaire=questionnaire, user=request.user,

@@ -31,7 +31,7 @@ class Command(BaseCommand):
 
         self.stdout.write("")
         self.stdout.write(
-            self.style.MIGRATE_HEADING(
+            self.style.MIGRDSE_HEADING(
                 "Creating Judge workflow test data..."
             )
         )
@@ -179,7 +179,7 @@ class Command(BaseCommand):
         cycle.save()
 
         # ============================================================
-        # 6. CATEGORIES
+        # 6. CDSEGORIES
         # ============================================================
 
         category, _ = AssessmentCategory.objects.get_or_create(
@@ -379,7 +379,7 @@ class Command(BaseCommand):
 
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS("========================================"))
-        self.stdout.write(self.style.SUCCESS("JUDGE TEST DATA CREATED"))
+        self.stdout.write(self.style.SUCCESS("JUDGE TEST DATA CREDSED"))
         self.stdout.write(self.style.SUCCESS("========================================"))
 
         self.stdout.write("")

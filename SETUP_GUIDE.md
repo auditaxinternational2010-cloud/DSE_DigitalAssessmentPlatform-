@@ -1,4 +1,4 @@
-# EYA Questionnaire System - Complete Setup Guide
+# DSE Questionnaire System - Complete Setup Guide
 
 ## Project Overview
 
@@ -302,4 +302,4 @@ sudo chown -R $USER:$USER .
 
 ## License
 
-This project is created for EYA assessment purposes.
+This project is created for DSE assessment purposes.

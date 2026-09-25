@@ -47,8 +47,8 @@ class EvidenceDocumentModelTest(TestCase):
 
     def test_evidencelink_unique_per_response_document(self):
         from django.db import IntegrityError
-        cycle = AwardCycle.objects.create(year=2099, name='EYA 2099', is_open=True)
-        q = Questionnaire.objects.get(cycle=cycle, organization=self.org)
+        cycle = AwardCycle.objects.create(year=2099, name='DSE 2099', is_open=True)
+        q = Questionnaire.objects.get_or_create(cycle=cycle, organization=self.org)[0]
         cat = AssessmentCategory.objects.create(cycle=cycle, name='Cat', order=1)
         crit = Criterion.objects.create(category=cat, number=1, name='C1', order=1)
         resp = Response.objects.create(questionnaire=q, criterion=crit)
@@ -62,39 +62,42 @@ class EvidenceDocumentModelTest(TestCase):
 
 class AwardCycleTest(TestCase):
     def test_only_one_open_cycle_at_a_time(self):
-        cycle1 = AwardCycle.objects.create(year=2024, name='EYA 2024', is_open=True)
-        cycle2 = AwardCycle.objects.create(year=2025, name='EYA 2025', is_open=True)
+        cycle1 = AwardCycle.objects.create(year=2024, name='DSE 2024', is_open=True)
+        cycle2 = AwardCycle.objects.create(year=2025, name='DSE 2025', is_open=True)
         cycle1.refresh_from_db()
         self.assertFalse(cycle1.is_open)
         self.assertTrue(cycle2.is_open)
 
-    def test_questionnaires_created_when_cycle_opens(self):
+    def test_questionnaires_are_not_created_when_cycle_opens(self):
         org = Organization.objects.create(name='Org A')
-        cycle = AwardCycle.objects.create(year=2025, name='EYA 2025')
-        self.assertEqual(Questionnaire.objects.count(), 0)
+        cycle = AwardCycle.objects.create(year=2025, name='DSE 2025')
+        self.assertFalse(Questionnaire.objects.filter(cycle=cycle).exists())
         cycle.is_open = True
         cycle.save()
-        self.assertEqual(Questionnaire.objects.filter(cycle=cycle, organization=org).count(), 1)
+        self.assertFalse(
+            Questionnaire.objects.filter(cycle=cycle, organization=org).exists()
+        )
 
     def test_questionnaire_unique_per_cycle_org(self):
         from django.db import IntegrityError
         org = Organization.objects.create(name='Org B')
-        cycle = AwardCycle.objects.create(year=2026, name='EYA 2026')
+        cycle = AwardCycle.objects.create(year=2026, name='DSE 2026')
         Questionnaire.objects.create(cycle=cycle, organization=org)
         with self.assertRaises(IntegrityError):
             Questionnaire.objects.create(cycle=cycle, organization=org)
 
-    def test_opening_cycle_creates_questionnaires_for_all_active_orgs(self):
-        from accounts.models import Organization as Org
-        org1 = Org.objects.create(name='Atomic Org 1', is_active=True)
-        org2 = Org.objects.create(name='Atomic Org 2', is_active=True)
-        org_inactive = Org.objects.create(name='Inactive Org', is_active=False)
-        cycle = AwardCycle.objects.create(year=2050, name='EYA 2050')
+    def test_opening_cycle_does_not_assign_all_active_orgs(self):
+        org1 = Organization.objects.create(name='Atomic Org 1', is_active=True)
+        org2 = Organization.objects.create(name='Atomic Org 2', is_active=True)
+        Organization.objects.create(name='Inactive Org', is_active=False)
+        cycle = AwardCycle.objects.create(year=2050, name='DSE 2050')
         cycle.is_open = True
         cycle.save()
-        self.assertTrue(Questionnaire.objects.filter(cycle=cycle, organization=org1).exists())
-        self.assertTrue(Questionnaire.objects.filter(cycle=cycle, organization=org2).exists())
-        self.assertFalse(Questionnaire.objects.filter(cycle=cycle, organization=org_inactive).exists())
+        self.assertFalse(
+            Questionnaire.objects.filter(
+                cycle=cycle, organization__in=[org1, org2]
+            ).exists()
+        )
 
 
 import io
@@ -103,125 +106,106 @@ from .models import LevelIndicator
 
 
 class ExcelParserTest(TestCase):
-    def _make_excel(self, preamble='Category preamble text'):
-        """Build a minimal in-memory Excel matching the new EYA structure."""
+    """Tests for the current DSE workbook layout (13 columns)."""
+
+    def _make_excel(self, *, include_second_parameter=True, sheet_name='Bond Issuer'):
+        import io
+        import openpyxl
+
         wb = openpyxl.Workbook()
         ws = wb.active
-        ws.title = 'Leadership'
-        ws.append([preamble, None, None, None])                          # row 1 — preamble
-        ws.append(['Leadership', None, None, None])                      # row 2 — category name
-        ws.append([None, 'Assessment Criteria', 'Level', 'Indicators']) # row 3 — column headers
-        ws.append([1, 'Criterion One', 0, 'Level 0 indicator'])         # row 4 — data starts
-        ws.append([None, None, 1, 'Level 1 indicator'])
-        ws.append([None, None, 2, 'Level 2 indicator'])
-        ws.append([2, 'Criterion Two', 0, 'C2 level 0'])
+        ws.title = sheet_name
+        ws.append([
+            'Code', 'Assessment Category', 'S/N', 'Assessment Areas',
+            'S/N', 'Assessment Criteria', 'S/N', 'Measurable Parameters',
+            'Relevant Act / Guideline / Regulation', 'Weight (%)',
+            'Response', 'Remarks', 'Score',
+        ])
+        ws.append([
+            '1', 'Leadership', '1', 'Governance', '1',
+            'Board oversight', '1.1', 'Board charter is documented',
+            'Companies Act', 0.25, None, None, None,
+        ])
+        if include_second_parameter:
+            ws.append([
+                None, None, None, None, None, None, '1.2',
+                'Board meetings are recorded', 'DSE Rules', 0.15,
+                None, None, None,
+            ])
         buf = io.BytesIO()
         wb.save(buf)
         buf.seek(0)
         return buf
 
     def setUp(self):
-        self.cycle = AwardCycle.objects.create(year=2025, name='EYA 2025')
+        self.cycle = AwardCycle.objects.create(year=2025, name='DSE 2025')
 
-    def test_parser_creates_category(self):
+    def test_parser_creates_template_and_category(self):
         from .excel_parser import parse_excel_questionnaire
         parse_excel_questionnaire(self._make_excel(), self.cycle)
-        self.assertTrue(AssessmentCategory.objects.filter(cycle=self.cycle, name='Leadership').exists())
+        from .models import QuestionnaireTemplate
+        template = QuestionnaireTemplate.objects.get(cycle=self.cycle, code='bond_issuer')
+        self.assertTrue(
+            AssessmentCategory.objects.filter(
+                cycle=self.cycle, template=template, code='1', name='Leadership'
+            ).exists()
+        )
 
-    def test_parser_creates_criteria(self):
+    def test_parser_creates_measurable_parameters(self):
         from .excel_parser import parse_excel_questionnaire
         parse_excel_questionnaire(self._make_excel(), self.cycle)
-        self.assertEqual(Criterion.objects.filter(category__cycle=self.cycle).count(), 2)
+        self.assertEqual(
+            Criterion.objects.filter(category__cycle=self.cycle).count(), 2
+        )
 
-    def test_parser_creates_level_indicators(self):
+    def test_parser_maps_hierarchy_regulation_and_weight(self):
         from .excel_parser import parse_excel_questionnaire
         parse_excel_questionnaire(self._make_excel(), self.cycle)
-        c1 = Criterion.objects.get(category__cycle=self.cycle, number=1)
-        self.assertEqual(LevelIndicator.objects.filter(criterion=c1).count(), 3)
+        criterion = Criterion.objects.get(
+            category__cycle=self.cycle, number='1.1'
+        )
+        self.assertEqual(criterion.name, 'Board charter is documented')
+        self.assertEqual(criterion.assessment_area, 'Governance')
+        self.assertEqual(criterion.assessment_criterion, 'Board oversight')
+        self.assertEqual(criterion.regulation, 'Companies Act')
+        self.assertEqual(str(criterion.weight), '0.25000000')
 
-    def test_parser_reupload_replaces_levels(self):
+    def test_parser_reupload_updates_existing_parameters_without_duplicates(self):
         from .excel_parser import parse_excel_questionnaire
         parse_excel_questionnaire(self._make_excel(), self.cycle)
-        parse_excel_questionnaire(self._make_excel(), self.cycle)  # re-upload
-        c1 = Criterion.objects.get(category__cycle=self.cycle, number=1)
-        self.assertEqual(LevelIndicator.objects.filter(criterion=c1).count(), 3)  # not 6
+        parse_excel_questionnaire(self._make_excel(), self.cycle)
+        self.assertEqual(
+            Criterion.objects.filter(category__cycle=self.cycle).count(), 2
+        )
+
+    def test_parser_skips_unrecognised_sheet(self):
+        from .excel_parser import parse_excel_questionnaire
+        warnings = parse_excel_questionnaire(
+            self._make_excel(sheet_name='Unrecognised Sheet'), self.cycle
+        )
+        self.assertTrue(any('skipped' in warning for warning in warnings))
+        self.assertFalse(AssessmentCategory.objects.filter(cycle=self.cycle).exists())
 
     def test_parser_returns_warning_for_corrupt_file(self):
         import io
         from .excel_parser import parse_excel_questionnaire
-        corrupt = io.BytesIO(b'this is not a zip/excel file at all')
+        corrupt = io.BytesIO(b'not an Excel workbook')
         warnings = parse_excel_questionnaire(corrupt, self.cycle)
         self.assertEqual(len(warnings), 1)
-        self.assertIn('Could not read', warnings[0])
+        self.assertIn('Could not read Excel file', warnings[0])
 
     def test_parser_returns_warning_for_empty_bytes(self):
         import io
         from .excel_parser import parse_excel_questionnaire
         warnings = parse_excel_questionnaire(io.BytesIO(b''), self.cycle)
         self.assertEqual(len(warnings), 1)
-        self.assertIn('Could not read', warnings[0])
-
-    def test_parser_stores_preamble_in_category_description(self):
-        from .excel_parser import parse_excel_questionnaire
-        parse_excel_questionnaire(self._make_excel(preamble='This is the intro text.'), self.cycle)
-        cat = AssessmentCategory.objects.get(cycle=self.cycle, name='Leadership')
-        self.assertEqual(cat.description, 'This is the intro text.')
-
-    def test_parser_stores_empty_description_when_preamble_missing(self):
-        from .excel_parser import parse_excel_questionnaire
-        parse_excel_questionnaire(self._make_excel(preamble=''), self.cycle)
-        cat = AssessmentCategory.objects.get(cycle=self.cycle, name='Leadership')
-        self.assertEqual(cat.description, '')
-
-    def _make_excel_with_numeric(self):
-        """Build an Excel with one normal criterion and one numeric criterion."""
-        import io
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = 'Talent'
-        ws.append(['Preamble', None, None, None])                         # row 1
-        ws.append(['Talent', None, None, None])                           # row 2
-        ws.append([None, 'Assessment Criteria', 'Level', 'Indicators'])   # row 3
-        ws.append([1, 'Fair recruitment', 0, 'No process'])               # row 4 — normal crit
-        ws.append([None, None, 1, 'Basic process'])                       # row 5 — level
-        ws.append([8, 'Fill employment data', None, None])                # row 6 — numeric crit
-        ws.append([None, 'Number of employees 2024', None, None])         # row 7 — sub-field
-        ws.append([None, 'Employee turnover rate 2024 (%)', None, None])  # row 8 — sub-field (decimal)
-        ws.append([None, 'Evidence', None, None])                         # row 9 — stop marker
-        ws.append([None, '• Recruitment policy', None, None])             # row 10 — guidance (skip)
-        buf = io.BytesIO()
-        wb.save(buf)
-        buf.seek(0)
-        return buf
-
-    def test_parser_detects_numeric_criterion(self):
-        from .excel_parser import parse_excel_questionnaire
-        parse_excel_questionnaire(self._make_excel_with_numeric(), self.cycle)
-        c = Criterion.objects.get(category__cycle=self.cycle, number=8)
-        self.assertTrue(c.is_numeric)
-
-    def test_parser_sets_numeric_fields_with_correct_types(self):
-        from .excel_parser import parse_excel_questionnaire
-        parse_excel_questionnaire(self._make_excel_with_numeric(), self.cycle)
-        c = Criterion.objects.get(category__cycle=self.cycle, number=8)
-        self.assertEqual(len(c.numeric_fields), 2)
-        self.assertEqual(c.numeric_fields[0], {'name': 'Number of employees 2024', 'type': 'integer'})
-        self.assertEqual(c.numeric_fields[1], {'name': 'Employee turnover rate 2024 (%)', 'type': 'decimal'})
-
-    def test_parser_stops_numeric_fields_at_evidence_row(self):
-        from .excel_parser import parse_excel_questionnaire
-        parse_excel_questionnaire(self._make_excel_with_numeric(), self.cycle)
-        c = Criterion.objects.get(category__cycle=self.cycle, number=8)
-        names = [f['name'] for f in c.numeric_fields]
-        self.assertNotIn('Evidence', names)
-        self.assertNotIn('• Recruitment policy', names)
-
+        self.assertIn('Could not read Excel file', warnings[0])
 
 class NumericCriterionModelTest(TestCase):
     def setUp(self):
         from accounts.models import Organization
         self.org = Organization.objects.create(name='TestOrg', org_type='Private Sector')
-        self.cycle = AwardCycle.objects.create(year=2030, name='EYA 2030', is_open=False)
+        self.cycle = AwardCycle.objects.create(year=2030, name='DSE 2030', is_open=False)
         self.cat = AssessmentCategory.objects.create(cycle=self.cycle, name='Cat', order=0)
         self.numeric_crit = Criterion.objects.create(
             category=self.cat, number=1, name='Employment Data',
@@ -284,7 +268,7 @@ class NumericCriterionFillViewTest(TestCase):
         self.org = Organization.objects.create(name='OrgA', org_type='Private Sector')
         UserProfile.objects.create(user=self.user, role='member', organization=self.org)
         # Create cycle with is_open=False first to add criteria before opening
-        self.cycle = AwardCycle.objects.create(year=2031, name='EYA 2031', is_open=False)
+        self.cycle = AwardCycle.objects.create(year=2031, name='DSE 2031', is_open=False)
         self.cat = AssessmentCategory.objects.create(cycle=self.cycle, name='Talent', order=0)
         self.numeric_crit = Criterion.objects.create(
             category=self.cat, number=1, name='Employment Data',
@@ -297,7 +281,7 @@ class NumericCriterionFillViewTest(TestCase):
         # Open the cycle so the view accepts it; auto-creates questionnaire for self.org
         self.cycle.is_open = True
         self.cycle.save()
-        self.questionnaire = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.questionnaire = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.client.login(username='member1', password='Pass@1234')
 
     def test_numeric_values_in_criteria_data_context(self):
@@ -343,14 +327,14 @@ class NumericCriterionVerifierViewTest(TestCase):
             profile.role = 'verifier'
             profile.save()
         VerifierAssignment.objects.create(verifier=self.verifier, organization=self.org)
-        self.cycle = AwardCycle.objects.create(year=2032, name='EYA 2032', is_open=True)
+        self.cycle = AwardCycle.objects.create(year=2032, name='DSE 2032', is_open=True)
         self.cat = AssessmentCategory.objects.create(cycle=self.cycle, name='Talent', order=0)
         self.numeric_crit = Criterion.objects.create(
             category=self.cat, number=1, name='Employment Data',
             is_numeric=True,
             numeric_fields=[{'name': 'Employees 2024', 'type': 'integer'}],
         )
-        self.questionnaire = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.questionnaire = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.questionnaire.is_submitted = True
         self.questionnaire.save()
         Response.objects.create(
@@ -389,8 +373,8 @@ class WorkflowTest(TestCase):
         self.verifier_user = U.objects.create_user(username='ver_wf', password='pass')
         UP2.objects.create(user=self.verifier_user, role='verifier')
         VA2.objects.create(verifier=self.verifier_user, organization=self.org)
-        self.cycle = AwardCycle.objects.create(year=2030, name='EYA 2030', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2030, name='DSE 2030', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
 
     def test_member_cannot_access_verifier_view_before_submit(self):
         self.client.login(username='mem_wf', password='pass')
@@ -419,8 +403,8 @@ class AdminDashboardContextTest(TestCase):
         UserProfile.objects.create(user=admin_user, role='admin')
         self.client.login(username='admin_ctx', password='pass')
         self.org = Organization.objects.create(name='Org Admin Ctx')
-        self.cycle = AwardCycle.objects.create(year=2033, name='EYA 2033', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2033, name='DSE 2033', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
 
     def test_context_includes_org_data(self):
         response = self.client.get(reverse('admin_dashboard'))
@@ -452,8 +436,8 @@ class QuestionnaireFillContextTest(TestCase):
         self.user = User.objects.create_user(username='fill_ctx', password='pass')
         UserProfile.objects.create(user=self.user, role='member', organization=self.org)
         self.client.login(username='fill_ctx', password='pass')
-        self.cycle = AwardCycle.objects.create(year=2034, name='EYA 2034', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2034, name='DSE 2034', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.cat = AssessmentCategory.objects.create(
             cycle=self.cycle, name='Fill Cat', order=1, is_active=True
         )
@@ -496,8 +480,8 @@ class ScoreValidationTest(TestCase):
         self.user = User.objects.create_user(username='score_val', password='pass')
         UserProfile.objects.create(user=self.user, role='member', organization=self.org)
         self.client.login(username='score_val', password='pass')
-        self.cycle = AwardCycle.objects.create(year=2040, name='EYA 2040', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2040, name='DSE 2040', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.cat = AssessmentCategory.objects.create(
             cycle=self.cycle, name='Score Cat', order=1, is_active=True
         )
@@ -577,8 +561,8 @@ class QuestionnaireSubmittedGuardTest(TestCase):
         self.user = User.objects.create_user(username='guard_user', password='pass')
         UserProfile.objects.create(user=self.user, role='member', organization=self.org)
         self.client.login(username='guard_user', password='pass')
-        self.cycle = AwardCycle.objects.create(year=2041, name='EYA 2041', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2041, name='DSE 2041', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
 
     def test_submitted_view_redirects_when_not_submitted(self):
         self.assertFalse(self.q.is_submitted)
@@ -607,7 +591,7 @@ class CycleAddOrgValidationTest(TestCase):
         admin_user = User.objects.create_user(username='admin_add', password='pass')
         UserProfile.objects.create(user=admin_user, role='admin')
         self.client.login(username='admin_add', password='pass')
-        self.cycle = AwardCycle.objects.create(year=2042, name='EYA 2042', is_open=True)
+        self.cycle = AwardCycle.objects.create(year=2042, name='DSE 2042', is_open=True)
 
     def test_missing_org_id_does_not_crash(self):
         response = self.client.post(reverse('cycle_add_org', args=[self.cycle.pk]), {})
@@ -636,8 +620,8 @@ class CycleResultsViewTest(TestCase):
         self.client.login(username='admin_results', password='pass')
 
         self.org = Organization.objects.create(name='Results Org')
-        self.cycle = AwardCycle.objects.create(year=2043, name='EYA 2043', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2043, name='DSE 2043', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         from django.utils import timezone
         self.q.is_submitted = True
         self.q.submitted_at = timezone.now()
@@ -680,7 +664,7 @@ class FileUploadValidationTest(TestCase):
         admin_user = User.objects.create_user(username='admin_upload', password='pass')
         UserProfile.objects.create(user=admin_user, role='admin')
         self.client.login(username='admin_upload', password='pass')
-        self.cycle = AwardCycle.objects.create(year=2044, name='EYA 2044')
+        self.cycle = AwardCycle.objects.create(year=2044, name='DSE 2044')
 
     def _make_fake_file(self, name, content=b'fake content', content_type='text/plain'):
         from django.core.files.uploadedfile import SimpleUploadedFile
@@ -727,9 +711,9 @@ class AccessDeniedReturns403Test(TestCase):
         UserProfile.objects.create(user=self.member, role='member', organization=self.org1)
         # org2 — a different org whose questionnaire the member must not access
         self.org2 = Organization.objects.create(name='Org403B')
-        self.cycle = AwardCycle.objects.create(year=2099, name='EYA 2099', is_open=True)
+        self.cycle = AwardCycle.objects.create(year=2099, name='DSE 2099', is_open=True)
         # Opening the cycle auto-creates questionnaires for all active orgs
-        self.q_org2 = Questionnaire.objects.get(cycle=self.cycle, organization=self.org2)
+        self.q_org2 = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org2)[0]
         self.client.login(username='mem_403', password='pass')
 
     def test_member_fill_other_org_questionnaire_returns_403(self):
@@ -765,8 +749,8 @@ class ErrorPageTemplateTest(TestCase):
         self.member = User.objects.create_user(username='mem_err', password='pass')
         UserProfile.objects.create(user=self.member, role='member', organization=self.org)
         self.org2 = Organization.objects.create(name='ErrPageOrg2')
-        self.cycle = AwardCycle.objects.create(year=2098, name='EYA 2098', is_open=True)
-        self.q_org2 = Questionnaire.objects.get(cycle=self.cycle, organization=self.org2)
+        self.cycle = AwardCycle.objects.create(year=2098, name='DSE 2098', is_open=True)
+        self.q_org2 = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org2)[0]
 
     @override_settings(DEBUG=False)
     def test_403_uses_custom_template(self):
@@ -793,8 +777,8 @@ class EvidenceQuotaContextTest(TestCase):
         self.user = User.objects.create_user(username='quota_ctx', password='pass')
         UserProfile.objects.create(user=self.user, role='member', organization=self.org)
         self.client.login(username='quota_ctx', password='pass')
-        self.cycle = AwardCycle.objects.create(year=2047, name='EYA 2047', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2047, name='DSE 2047', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.cat = AssessmentCategory.objects.create(
             cycle=self.cycle, name='Quota Cat', order=1, is_active=True
         )
@@ -835,8 +819,8 @@ class PreambleDisplayTest(TestCase):
         self.user = User.objects.create_user(username='preamble_mem', password='pass')
         UserProfile.objects.create(user=self.user, role='member', organization=self.org)
         self.client.login(username='preamble_mem', password='pass')
-        self.cycle = AwardCycle.objects.create(year=2051, name='EYA 2051', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2051, name='DSE 2051', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.cat = AssessmentCategory.objects.create(
             cycle=self.cycle, name='Preamble Cat', order=1, is_active=True,
             description='This is the preamble text for testing.'
@@ -877,8 +861,8 @@ class FillAccordionTest(TestCase):
         self.user = User.objects.create_user(username='acc_mem', password='pass')
         UserProfile.objects.create(user=self.user, role='member', organization=self.org)
         self.client.login(username='acc_mem', password='pass')
-        self.cycle = AwardCycle.objects.create(year=2060, name='EYA 2060', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2060, name='DSE 2060', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.cat = AssessmentCategory.objects.create(
             cycle=self.cycle, name='Acc Cat', order=1, is_active=True
         )
@@ -918,7 +902,7 @@ class CategoryAccordionTest(TestCase):
         admin_user = User.objects.create_user(username='cat_acc_admin', password='pass')
         UserProfile.objects.create(user=admin_user, role='admin')
         self.client.login(username='cat_acc_admin', password='pass')
-        self.cycle = AwardCycle.objects.create(year=2061, name='EYA 2061')
+        self.cycle = AwardCycle.objects.create(year=2061, name='DSE 2061')
         self.cat = AssessmentCategory.objects.create(
             cycle=self.cycle, name='Accordion Category', order=1, is_active=True,
             description='This is the preamble.'
@@ -1001,7 +985,7 @@ class VerifierDashboardStatsTests(TestCase):
         UserProfile.objects.create(user=self.verifier, role='verifier')
         VerifierAssignment.objects.create(verifier=self.verifier, organization=self.org1)
         VerifierAssignment.objects.create(verifier=self.verifier, organization=self.org2)
-        self.cycle = AwardCycle.objects.create(year=2026, name='EYA 2026', is_open=True)
+        self.cycle = AwardCycle.objects.create(year=2026, name='DSE 2026', is_open=True)
         # cycle.save() auto-creates questionnaires for active orgs; mark org1 submitted
         self.q1, _ = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org1)
         self.q1.is_submitted = True
@@ -1032,7 +1016,7 @@ class ComputeOrgAnalyticsTest(TestCase):
     def setUp(self):
         from django.contrib.auth.models import User
         self.org = Organization.objects.create(name='Analytics Org')
-        self.cycle = AwardCycle.objects.create(year=2060, name='EYA 2060', is_open=True)
+        self.cycle = AwardCycle.objects.create(year=2060, name='DSE 2060', is_open=True)
         self.cat = AssessmentCategory.objects.create(
             cycle=self.cycle, name='Cat A', order=1, is_active=True
         )
@@ -1042,7 +1026,7 @@ class ComputeOrgAnalyticsTest(TestCase):
         self.c2 = Criterion.objects.create(
             category=self.cat, number=2, name='C2', is_active=True
         )
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         from django.utils import timezone
         self.q.is_submitted = True
         self.q.submitted_at = timezone.now()
@@ -1130,15 +1114,15 @@ class ComputeCycleAnalyticsTest(TestCase):
         from django.utils import timezone
         self.org_a = Organization.objects.create(name='Org Alpha')
         self.org_b = Organization.objects.create(name='Org Beta')
-        self.cycle = AwardCycle.objects.create(year=2061, name='EYA 2061', is_open=True)
+        self.cycle = AwardCycle.objects.create(year=2061, name='DSE 2061', is_open=True)
         self.cat = AssessmentCategory.objects.create(
             cycle=self.cycle, name='Cat X', order=1, is_active=True
         )
         self.c1 = Criterion.objects.create(
             category=self.cat, number=1, name='CX1', is_active=True
         )
-        self.q_a = Questionnaire.objects.get(cycle=self.cycle, organization=self.org_a)
-        self.q_b = Questionnaire.objects.get(cycle=self.cycle, organization=self.org_b)
+        self.q_a = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org_a)[0]
+        self.q_b = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org_b)[0]
         now = timezone.now()
         self.q_a.is_submitted = True; self.q_a.submitted_at = now; self.q_a.save()
         self.q_b.is_submitted = True; self.q_b.submitted_at = now; self.q_b.save()
@@ -1184,7 +1168,7 @@ class ComputeCycleAnalyticsTest(TestCase):
 
     def test_empty_cycle_returns_empty_results(self):
         from .analytics import compute_cycle_analytics
-        empty_cycle = AwardCycle.objects.create(year=2099, name='EYA 2099')
+        empty_cycle = AwardCycle.objects.create(year=2099, name='DSE 2099')
         result = compute_cycle_analytics(empty_cycle)
         self.assertEqual(result['ranked_orgs'], [])
         self.assertIsNone(result['cycle_avg_verifier'])
@@ -1207,8 +1191,8 @@ class NewUrlsTest(TestCase):
         UserProfile.objects.create(user=admin, role='admin')
         self.client.login(username='admin_urls', password='pass')
         self.org = Organization.objects.create(name='URL Test Org')
-        self.cycle = AwardCycle.objects.create(year=2063, name='EYA 2063', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2063, name='DSE 2063', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.q.is_submitted = True
         self.q.submitted_at = timezone.now()
         self.q.save()
@@ -1244,7 +1228,7 @@ class CycleResultsViewTest(TestCase):
         admin = User.objects.create_user(username='admin_cres', password='pass')
         UserProfile.objects.create(user=admin, role='admin')
         self.client.login(username='admin_cres', password='pass')
-        self.cycle = AwardCycle.objects.create(year=2064, name='EYA 2064')
+        self.cycle = AwardCycle.objects.create(year=2064, name='DSE 2064')
 
     def test_admin_can_access(self):
         response = self.client.get(reverse('cycle_results', args=[self.cycle.pk]))
@@ -1278,8 +1262,8 @@ class OrgReportViewTest(TestCase):
         self.admin = admin
         # Org and submitted questionnaire
         self.org = Organization.objects.create(name='OrgRpt Org')
-        self.cycle = AwardCycle.objects.create(year=2065, name='EYA 2065', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2065, name='DSE 2065', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.q.is_submitted = True
         self.q.submitted_at = timezone.now()
         self.q.save()
@@ -1338,8 +1322,8 @@ class ExcelExportTest(TestCase):
         UserProfile.objects.create(user=admin, role='admin')
         self.admin = admin
         self.org = Organization.objects.create(name='XLS Org')
-        self.cycle = AwardCycle.objects.create(year=2066, name='EYA 2066', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2066, name='DSE 2066', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.q.is_submitted = True
         self.q.submitted_at = timezone.now()
         self.q.save()
@@ -1394,8 +1378,8 @@ class PdfExportTest(TestCase):
         admin = User.objects.create_user(username='admin_pdf', password='pass')
         UserProfile.objects.create(user=admin, role='admin')
         self.org = Organization.objects.create(name='PDF Org')
-        self.cycle = AwardCycle.objects.create(year=2067, name='EYA 2067', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2067, name='DSE 2067', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.q.is_submitted = True
         self.q.submitted_at = timezone.now()
         self.q.save()
@@ -1441,8 +1425,8 @@ class VerifyCrossCycleCategoryTest(TestCase):
         from accounts.models import VerifierAssignment
         self.client = Client()
         self.org = Organization.objects.create(name='XCycle Org')
-        self.cycle = AwardCycle.objects.create(year=2071, name='EYA 2071', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2071, name='DSE 2071', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.q.is_submitted = True
         self.q.submitted_at = timezone.now()
         self.q.save()
@@ -1450,7 +1434,7 @@ class VerifyCrossCycleCategoryTest(TestCase):
         UserProfile.objects.create(user=self.ver, role='verifier')
         VerifierAssignment.objects.create(verifier=self.ver, organization=self.org)
         # A category in a *different* cycle
-        self.other_cycle = AwardCycle.objects.create(year=2072, name='EYA 2072', is_open=False)
+        self.other_cycle = AwardCycle.objects.create(year=2072, name='DSE 2072', is_open=False)
         self.foreign_cat = AssessmentCategory.objects.create(
             cycle=self.other_cycle, name='Foreign Cat', order=0
         )
@@ -1643,7 +1627,7 @@ class EvidenceLinkTests(TestCase):
         self.cycle = AwardCycle.objects.create(year=90004, name="C4", is_open=True)
         self.cat = AssessmentCategory.objects.create(cycle=self.cycle, name="K", order=1)
         self.crit = Criterion.objects.create(category=self.cat, number=1, name="Cr")
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.resp = Response.objects.create(questionnaire=self.q, criterion=self.crit, score=2)
         self.doc = EvidenceDocument.objects.create(
             organization=self.org, title="d",
@@ -1766,8 +1750,8 @@ class CanAccessDocumentTest(TestCase):
 
     def test_verifier_with_evidence_link_can_access(self):
         from assessment.access import can_access_document
-        cycle = AwardCycle.objects.create(year=2088, name='EYA 2088', is_open=True)
-        q = Questionnaire.objects.get(cycle=cycle, organization=self.org)
+        cycle = AwardCycle.objects.create(year=2088, name='DSE 2088', is_open=True)
+        q = Questionnaire.objects.get_or_create(cycle=cycle, organization=self.org)[0]
         cat = AssessmentCategory.objects.create(cycle=cycle, name='Cat', order=1)
         crit = Criterion.objects.create(category=cat, number=1, name='C1', order=1)
         resp = Response.objects.create(questionnaire=q, criterion=crit, score=3)
@@ -1842,8 +1826,8 @@ class LibrarySearchViewTest(TestCase):
         self.member_user = User.objects.create_user(username='search_mem', password='pass')
         UserProfile.objects.create(user=self.member_user, role='member', organization=self.org)
 
-        self.cycle = AwardCycle.objects.create(year=2077, name='EYA 2077', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2077, name='DSE 2077', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.cat = AssessmentCategory.objects.create(cycle=self.cycle, name='Cat', order=1)
         self.crit = Criterion.objects.create(category=self.cat, number=1, name='C1', order=1)
         self.crit2 = Criterion.objects.create(category=self.cat, number=2, name='C2', order=2)
@@ -1920,8 +1904,8 @@ class EvidenceLinkUnlinkTest(TestCase):
         self.org = Organization.objects.create(name='LinkOrg')
         self.member_user = User.objects.create_user(username='link_mem', password='pass')
         UserProfile.objects.create(user=self.member_user, role='member', organization=self.org)
-        self.cycle = AwardCycle.objects.create(year=2066, name='EYA 2066', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2066, name='DSE 2066', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.cat = AssessmentCategory.objects.create(cycle=self.cycle, name='Cat', order=1)
         self.crit = Criterion.objects.create(category=self.cat, number=1, name='C1', order=1)
         self.doc = EvidenceDocument.objects.create(
@@ -2015,8 +1999,8 @@ class QuestionnaireFillUploadTest(TestCase):
         self.org = Organization.objects.create(name='FillOrg')
         self.member_user = User.objects.create_user(username='fill_mem', password='pass')
         UserProfile.objects.create(user=self.member_user, role='member', organization=self.org)
-        self.cycle = AwardCycle.objects.create(year=2055, name='EYA 2055', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2055, name='DSE 2055', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.cat = AssessmentCategory.objects.create(cycle=self.cycle, name='Cat', order=1)
         self.crit = Criterion.objects.create(category=self.cat, number=1, name='C1', order=1)
         LevelIndicator.objects.create(criterion=self.crit, level=3, indicator='Good')
@@ -2071,7 +2055,7 @@ class ReportDistributionTest(TestCase):
         UserProfile.objects.create(user=self.verifier, role='verifier')
         VerifierAssignment.objects.create(verifier=self.verifier, organization=self.org)
         self.org2 = Organization.objects.create(name='Org Reports B')
-        self.cycle = AwardCycle.objects.create(year=2041, name='EYA 2041', is_open=False)
+        self.cycle = AwardCycle.objects.create(year=2041, name='DSE 2041', is_open=False)
         self.q = Questionnaire.objects.create(
             cycle=self.cycle, organization=self.org, is_submitted=True
         )
@@ -2202,7 +2186,7 @@ class ReportDistributionTest(TestCase):
         self.assertTrue(item['available'])
 
     def test_verifier_reports_list_shows_only_assigned_cycles(self):
-        cycle2 = AwardCycle.objects.create(year=2042, name='EYA 2042', is_open=False)
+        cycle2 = AwardCycle.objects.create(year=2042, name='DSE 2042', is_open=False)
         Questionnaire.objects.create(cycle=cycle2, organization=self.org2, is_submitted=True)
         self.client.login(username='verifier_rep', password='pass')
         response = self.client.get(reverse('reports_list'))
@@ -2286,7 +2270,7 @@ class InformalSectorScopingTest(TestCase):
         )
 
         # Create cycle closed so we control questionnaire creation
-        self.cycle = AwardCycle.objects.create(year=2099, name='EYA 2099', is_open=False)
+        self.cycle = AwardCycle.objects.create(year=2099, name='DSE 2099', is_open=False)
 
         # Two categories: one regular, one informal-only
         self.regular_cat = AssessmentCategory.objects.create(
@@ -2310,8 +2294,8 @@ class InformalSectorScopingTest(TestCase):
         self.cycle.is_open = True
         self.cycle.save()
 
-        self.regular_q = Questionnaire.objects.get(cycle=self.cycle, organization=self.regular_org)
-        self.informal_q = Questionnaire.objects.get(cycle=self.cycle, organization=self.informal_org)
+        self.regular_q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.regular_org)[0]
+        self.informal_q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.informal_org)[0]
 
         # Member users
         self.regular_user = User.objects.create_user(username='regular_member', password='Pass@123')
@@ -2498,8 +2482,8 @@ class SaveCategoryAjaxTest(TestCase):
         self.user = User.objects.create_user(username='savecat_mem', password='pass')
         UserProfile.objects.create(user=self.user, role='member', organization=self.org)
         self.client.login(username='savecat_mem', password='pass')
-        self.cycle = AwardCycle.objects.create(year=2070, name='EYA 2070', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2070, name='DSE 2070', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.cat = AssessmentCategory.objects.create(cycle=self.cycle, name='Cat A', order=1)
         self.cat2 = AssessmentCategory.objects.create(cycle=self.cycle, name='Cat B', order=2)
         self.crit = Criterion.objects.create(category=self.cat, number=1, name='C1', order=1)
@@ -2566,7 +2550,7 @@ class SaveCategoryAjaxTest(TestCase):
         self.assertFalse(data['success'])
 
     def test_cross_cycle_category_returns_404(self):
-        other_cycle = AwardCycle.objects.create(year=2071, name='EYA 2071')
+        other_cycle = AwardCycle.objects.create(year=2071, name='DSE 2071')
         other_cat = AssessmentCategory.objects.create(cycle=other_cycle, name='Other', order=1)
         r = self.client.post(self._url(), {'category_id': other_cat.pk})
         self.assertEqual(r.status_code, 404)
@@ -2643,8 +2627,8 @@ class EvidenceUploadAjaxTest(TestCase):
         self.user = User.objects.create_user(username='evupload_mem', password='pass')
         UserProfile.objects.create(user=self.user, role='member', organization=self.org)
         self.client.login(username='evupload_mem', password='pass')
-        self.cycle = AwardCycle.objects.create(year=2072, name='EYA 2072', is_open=True)
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.cycle = AwardCycle.objects.create(year=2072, name='DSE 2072', is_open=True)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.cat = AssessmentCategory.objects.create(cycle=self.cycle, name='EvCat', order=1)
         self.crit = Criterion.objects.create(category=self.cat, number=1, name='EvCrit', order=1)
 
@@ -2885,7 +2869,7 @@ class VerifierCoverageTest(TestCase):
         )
 
         # Cycle closed first so we control questionnaire creation.
-        self.cycle = AwardCycle.objects.create(year=2098, name='EYA 2098', is_open=False)
+        self.cycle = AwardCycle.objects.create(year=2098, name='DSE 2098', is_open=False)
 
         self.cat_a = AssessmentCategory.objects.create(
             cycle=self.cycle, name='Cat A', order=1,
@@ -2920,11 +2904,11 @@ class VerifierCoverageTest(TestCase):
         self.cycle.is_open = True
         self.cycle.save()
 
-        self.q = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
+        self.q = Questionnaire.objects.get_or_create(cycle=self.cycle, organization=self.org)[0]
         self.q.is_submitted = True
         self.q.save()
-        self.informal_q = Questionnaire.objects.get(
-            cycle=self.cycle, organization=self.informal_org)
+        self.informal_q = Questionnaire.objects.get_or_create(
+            cycle=self.cycle, organization=self.informal_org)[0]
         self.informal_q.is_submitted = True
         self.informal_q.save()
 

@@ -64,7 +64,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'eya_questionnaire.urls'
 
-TEMPLATES = [
+TEMPLDSES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
@@ -157,8 +157,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Crispy Forms
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-CRISPY_TEMPLATE_PACK = "bootstrap5"
+CRISPY_ALLOWED_TEMPLDSE_PACKS = "bootstrap5"
+CRISPY_TEMPLDSE_PACK = "bootstrap5"
 
 # Evidence upload limits (override via .env)
 EVIDENCE_MAX_FILE_BYTES     = config('EVIDENCE_MAX_FILE_BYTES',     default=5   * 1024 * 1024, cast=int)
@@ -218,14 +218,14 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 
 # Abuse protection (override via .env). Counters live in the cache backend.
-LOGIN_RATELIMIT_ATTEMPTS = config('LOGIN_RATELIMIT_ATTEMPTS', default=10, cast=int)
-LOGIN_RATELIMIT_WINDOW = config('LOGIN_RATELIMIT_WINDOW', default=900, cast=int)        # 15 min
-PARTICIPATION_RATELIMIT_ATTEMPTS = config('PARTICIPATION_RATELIMIT_ATTEMPTS', default=10, cast=int)
-PARTICIPATION_RATELIMIT_WINDOW = config('PARTICIPATION_RATELIMIT_WINDOW', default=3600, cast=int)  # 1 hr
+LOGIN_RDSELIMIT_ATTEMPTS = config('LOGIN_RDSELIMIT_ATTEMPTS', default=10, cast=int)
+LOGIN_RDSELIMIT_WINDOW = config('LOGIN_RDSELIMIT_WINDOW', default=900, cast=int)        # 15 min
+PARTICIPATION_RDSELIMIT_ATTEMPTS = config('PARTICIPATION_RDSELIMIT_ATTEMPTS', default=10, cast=int)
+PARTICIPATION_RDSELIMIT_WINDOW = config('PARTICIPATION_RDSELIMIT_WINDOW', default=3600, cast=int)  # 1 hr
 # Public share-dashboard endpoints. Loose — this blunts token brute-forcing
 # without interfering with a page left open on a wall display polling every 60s.
-SHARE_RATELIMIT_ATTEMPTS = config('SHARE_RATELIMIT_ATTEMPTS', default=60, cast=int)
-SHARE_RATELIMIT_WINDOW = config('SHARE_RATELIMIT_WINDOW', default=60, cast=int)
+SHARE_RDSELIMIT_ATTEMPTS = config('SHARE_RDSELIMIT_ATTEMPTS', default=60, cast=int)
+SHARE_RDSELIMIT_WINDOW = config('SHARE_RDSELIMIT_WINDOW', default=60, cast=int)
 
 # CSRF — required for HTTPS in Django 4.0+
 CSRF_TRUSTED_ORIGINS = config(
@@ -257,7 +257,7 @@ EMAIL_USE_SSL    = config('EMAIL_USE_SSL', default=True, cast=bool)
 EMAIL_USE_TLS    = False
 EMAIL_HOST_USER  = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='EYA Platform <noreply@auditaxinternational.co.tz>')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='DSE Platform <noreply@auditaxinternational.co.tz>')
 SITE_URL         = config('SITE_URL', default='http://localhost:8000')
 
 # Comma-separated override. When set, new-participation-request alerts go to

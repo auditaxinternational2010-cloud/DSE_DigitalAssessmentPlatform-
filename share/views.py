@@ -27,7 +27,7 @@ def _throttled(request):
     if settings.TESTING:
         return False
     key = f'share:{ratelimit.client_ip(request)}'
-    return ratelimit.hit(key, settings.SHARE_RATELIMIT_WINDOW) > settings.SHARE_RATELIMIT_ATTEMPTS
+    return ratelimit.hit(key, settings.SHARE_RDSELIMIT_WINDOW) > settings.SHARE_RDSELIMIT_ATTEMPTS
 
 
 def _get_valid_link(token):

@@ -1,4 +1,4 @@
-# EYA Questionnaire System
+# DSE Questionnaire System
 
 A comprehensive Django-based organizational assessment questionnaire system.
 

@@ -23,14 +23,31 @@ class AwardCycle(models.Model):
             if self.is_open:
                 AwardCycle.objects.exclude(pk=self.pk).update(is_open=False)
             super().save(*args, **kwargs)
-            if self.is_open:
-                Organization = apps.get_model('accounts', 'Organization')
-                for org in Organization.objects.filter(is_active=True):
-                    Questionnaire.objects.get_or_create(cycle=self, organization=org)
+            # Opening a cycle must not silently assign every organization.
+            # Questionnaires are created explicitly after a template is selected.
+
+
+class QuestionnaireTemplate(models.Model):
+    """Reusable questionnaire definition within an award cycle."""
+    cycle = models.ForeignKey(AwardCycle, on_delete=models.CASCADE, related_name='templates')
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=50, blank=True)
+    assessment_profile = models.CharField(max_length=30, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['cycle__year', 'name']
+        constraints = [models.UniqueConstraint(fields=['cycle', 'code'], condition=~models.Q(code=''), name='uniq_template_cycle_code')]
+
+    def __str__(self):
+        return f"{self.cycle.name} — {self.name}"
 
 
 class AssessmentCategory(models.Model):
     cycle = models.ForeignKey(AwardCycle, on_delete=models.CASCADE, related_name='categories')
+    template = models.ForeignKey(QuestionnaireTemplate, on_delete=models.CASCADE, null=True, blank=True, related_name='categories')
     code = models.CharField(max_length=20, blank=True)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -92,6 +109,7 @@ class LevelIndicator(models.Model):
 
 class Questionnaire(models.Model):
     cycle = models.ForeignKey(AwardCycle, on_delete=models.CASCADE, related_name='questionnaires')
+    template = models.ForeignKey(QuestionnaireTemplate, on_delete=models.PROTECT, null=True, blank=True, related_name='questionnaires')
     organization = models.ForeignKey(
         'accounts.Organization', on_delete=models.CASCADE, related_name='questionnaires'
     )
@@ -135,11 +153,14 @@ class Questionnaire(models.Model):
     @property
     def completion_percentage(self):
         is_informal = self.organization.org_type == 'informal_sector'
-        total = Criterion.objects.filter(
+        criteria = Criterion.objects.filter(
             category__cycle=self.cycle,
             category__is_informal_sector_only=is_informal,
             is_active=True,
-        ).count()
+        )
+        if self.template_id:
+            criteria = criteria.filter(category__template=self.template)
+        total = criteria.count()
         if total == 0:
             return 0
         answered = (
@@ -324,16 +345,22 @@ class StageSubmission(models.Model):
         return f"{self.stage} — {self.user.username} — {scope}"
 
 
-def categories_for_org(cycle, org, *, is_active=True):
-    """Return the applicable AssessmentCategory queryset for this org's type.
+def categories_for_org(cycle, org, *, is_active=True, questionnaire=None):
+    """Categories for the organization's assigned questionnaire template.
 
-    Informal Sector orgs receive only is_informal_sector_only=True categories.
-    All other org types receive only is_informal_sector_only=False categories.
+    Legacy cycles without templates retain profile-based filtering so existing
+    installations can migrate without losing access to their current content.
     """
-    is_informal = org.org_type == 'informal_sector'
-    qs = cycle.categories.filter(is_informal_sector_only=is_informal)
-    if getattr(org, 'assessment_profile', ''):
-        qs = qs.filter(assessment_profile=org.assessment_profile)
+    if questionnaire is None:
+        questionnaire = Questionnaire.objects.filter(cycle=cycle, organization=org).select_related('template').first()
+    qs = cycle.categories.all()
+    if questionnaire and questionnaire.template_id:
+        qs = qs.filter(template_id=questionnaire.template_id)
+    else:
+        is_informal = org.org_type == 'informal_sector'
+        qs = qs.filter(is_informal_sector_only=is_informal)
+        if getattr(org, 'assessment_profile', ''):
+            qs = qs.filter(assessment_profile=org.assessment_profile)
     if is_active:
         qs = qs.filter(is_active=True)
-    return qs.order_by('order')
+    return qs.order_by('order', 'name')

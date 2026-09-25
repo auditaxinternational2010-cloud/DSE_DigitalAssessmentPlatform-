@@ -7,7 +7,7 @@
 <div class="q-layout">
   <aside class="section-nav">
     <div style="padding:16px 16px 8px;font-size:10px;font-weight:700;letter-spacing:0.08em;color:var(--ink-3);text-transform:uppercase;">
-      Categories · <span class="num">{{ answered_count }}/{{ total_criteria }}</span> answered
+      Assessment Categories · <span class="num">{{ answered_count }}/{{ total_criteria }}</span> answered
     </div>
     {% for cat in categories %}
     <a href="?category={{ cat.id }}" class="section-item {% if cat.id == current_category.id %}active{% endif %} {% if cat.is_complete %}done{% endif %}" style="text-decoration:none;">

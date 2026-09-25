@@ -31,7 +31,7 @@ class ReportAnalyticsTest(TestCase):
             name='Informal Org', org_type='informal_sector')
 
         self.cycle = AwardCycle.objects.create(
-            year=2070, name='EYA 2070', is_open=True)
+            year=2070, name='DSE 2070', is_open=True)
 
         # Governance holds 3 criteria, Reporting holds 1. Under a mean of
         # category means those two carry equal weight; under a flat mean over
@@ -395,7 +395,7 @@ class ReportPageRenderTest(TestCase):
         self.org = Organization.objects.create(name='Render Org', org_type='ict')
         self.peer = Organization.objects.create(name='Peer Org', org_type='ict')
         self.cycle = AwardCycle.objects.create(
-            year=2071, name='EYA 2071', is_open=True)
+            year=2071, name='DSE 2071', is_open=True)
 
         self.cat = AssessmentCategory.objects.create(
             cycle=self.cycle, name='Governance', order=1, is_active=True)
@@ -588,7 +588,7 @@ class CompareScoringCommandTest(TestCase):
     def setUp(self):
         self.org = Organization.objects.create(name='Cmp Org', org_type='ict')
         self.cycle = AwardCycle.objects.create(
-            year=2075, name='EYA 2075', is_open=True)
+            year=2075, name='DSE 2075', is_open=True)
         self.cat = AssessmentCategory.objects.create(
             cycle=self.cycle, name='Cat', order=1, is_active=True)
         self.c1 = Criterion.objects.create(
@@ -613,7 +613,7 @@ class CompareScoringCommandTest(TestCase):
 
     def test_runs_and_reports_the_cycle(self):
         output = self._run()
-        self.assertIn('EYA 2075', output)
+        self.assertIn('DSE 2075', output)
         self.assertIn('Cmp Org', output)
         self.assertIn('No data was modified', output)
 
@@ -637,10 +637,10 @@ class CompareScoringCommandTest(TestCase):
 
     def test_cycle_filter_excludes_others(self):
         other_org = Organization.objects.create(name='Other Cmp Org', org_type='ict')
-        AwardCycle.objects.create(year=2076, name='EYA 2076', is_open=False)
+        AwardCycle.objects.create(year=2076, name='DSE 2076', is_open=False)
         output = self._run(cycle=2075)
-        self.assertIn('EYA 2075', output)
-        self.assertNotIn('EYA 2076', output)
+        self.assertIn('DSE 2075', output)
+        self.assertNotIn('DSE 2076', output)
 
     def test_distributed_only_filter(self):
         output = self._run(distributed_only=True)

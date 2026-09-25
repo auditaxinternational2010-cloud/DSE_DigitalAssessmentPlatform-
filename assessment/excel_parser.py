@@ -2,8 +2,7 @@
 
 Workbook layout:
   Sheet = assessment profile (Bond Issuer, Bond Trader, ...)
-  Row 9 = headers
-  Row 10+ = measurable parameters
+  Header row is detected by column labels; data starts on the next row.
 
 Columns:
   A Code, B Assessment Category, C S/N, D Assessment Areas,
@@ -20,7 +19,7 @@ from decimal import Decimal, InvalidOperation
 
 import openpyxl
 
-from .models import AssessmentCategory, Criterion, LevelIndicator
+from .models import AssessmentCategory, Criterion, QuestionnaireTemplate
 
 PROFILE_MAP = {
     'bond issuer': 'bond_issuer',
@@ -34,7 +33,21 @@ PROFILE_MAP = {
     'ldm': 'ldms',
 }
 
-DASHBOARD_SHEET = 'assement dashboard'
+DASHBOARD_SHEET = 'assessment dashboard'
+DASHBOARD_SHEETS = {'assessment dashboard', 'assement dashboard'}
+
+def _normalise_sheet_name(name):
+    return ' '.join(_text(name).lower().split())
+
+
+def _find_header_row(rows):
+    """Find the workbook header row by its column labels, not a fixed row number."""
+    required = ('assessment category', 'assessment areas', 'assessment criteria', 'measurable parameters')
+    for index, row in enumerate(rows):
+        values = {_text(value).lower().replace('\\n', ' ') for value in row if value is not None}
+        if all(any(label in value for value in values) for label in required):
+            return index
+    return None
 
 
 def _text(value):
@@ -53,7 +66,7 @@ def _decimal(value):
 
 
 def _profile_from_sheet(name):
-    return PROFILE_MAP.get(_text(name).lower())
+    return PROFILE_MAP.get(_normalise_sheet_name(name))
 
 
 def _load_rows(file_obj):
@@ -87,31 +100,44 @@ def parse_excel_questionnaire(file_obj, cycle):
         return [f'Could not read Excel file: {exc}']
 
     imported_profiles = set()
+    templates = {}
     imported_categories = 0
     imported_parameters = 0
 
     for sheet_order, (sheet_name, rows) in enumerate(sheets):
         profile = _profile_from_sheet(sheet_name)
         if not profile:
-            if _text(sheet_name).lower() != DASHBOARD_SHEET:
+            if _normalise_sheet_name(sheet_name) not in DASHBOARD_SHEETS:
                 warnings.append(f"Sheet '{sheet_name}' is not a recognised DSE assessment profile and was skipped.")
             continue
 
         imported_profiles.add(profile)
-        # This upload is the source of truth for this profile in this cycle.
-        # Deactivate old profile sections first; historical responses remain intact.
-        AssessmentCategory.objects.filter(
-            cycle=cycle, assessment_profile=profile
-        ).update(is_active=False)
-        # Workbook has its table header on row 9 (1-based), i.e. index 8.
-        data_rows = rows[9:] if len(rows) > 9 else []
+        template, _ = QuestionnaireTemplate.objects.get_or_create(
+            cycle=cycle, code=profile,
+            defaults={'name': sheet_name.strip(), 'assessment_profile': profile, 'is_active': True},
+        )
+        templates[profile] = template
+        header_index = _find_header_row(rows)
+        if header_index is None:
+            warnings.append(
+                f"Sheet '{sheet_name}' was recognised, but its assessment table header could not be found."
+            )
+            continue
+        # The workbook is parsed from the row immediately after its actual header.
+        # Existing categories are not deactivated until a successful import.
+        data_rows = rows[header_index + 1:]
         current_category = None
         current_category_code = ''
         current_category_name = ''
         current_category_weight = Decimal('0')
+        current_area_no = ''
+        current_area_name = ''
+        current_criterion_no = ''
+        current_criterion_name = ''
         category_order = 0
         seen_categories = set()
         seen_parameters = set()
+        imported_before_sheet = imported_parameters
 
         for raw in data_rows:
             row = list(raw) + [None] * max(0, 13 - len(raw))
@@ -121,6 +147,19 @@ def parse_excel_questionnaire(file_obj, cycle):
             area_name = _text(row[3])
             criterion_no = _text(row[4])
             criterion_name = _text(row[5])
+
+            # Excel commonly merges category/area/criterion cells vertically.
+            # Carry the last explicit hierarchy values down to parameter rows.
+            if area_no or area_name:
+                current_area_no = area_no or current_area_no
+                current_area_name = area_name or current_area_name
+            else:
+                area_no, area_name = current_area_no, current_area_name
+            if criterion_no or criterion_name:
+                current_criterion_no = criterion_no or current_criterion_no
+                current_criterion_name = criterion_name or current_criterion_name
+            else:
+                criterion_no, criterion_name = current_criterion_no, current_criterion_name
             parameter_no = _text(row[6])
             parameter_name = _text(row[7])
             regulation = _text(row[8])
@@ -142,6 +181,7 @@ def parse_excel_questionnaire(file_obj, cycle):
                 current_category, _ = AssessmentCategory.objects.update_or_create(
                     cycle=cycle,
                     assessment_profile=profile,
+                    template=template,
                     code=code,
                     defaults={
                         'name': category_name,
@@ -151,8 +191,9 @@ def parse_excel_questionnaire(file_obj, cycle):
                         'is_informal_sector_only': False,
                     },
                 )
-                seen_categories.add(current_category.pk)
-                imported_categories += 1
+                if current_category.pk not in seen_categories:
+                    imported_categories += 1
+                    seen_categories.add(current_category.pk)
 
             if not current_category:
                 continue
@@ -190,9 +231,14 @@ def parse_excel_questionnaire(file_obj, cycle):
                     'numeric_fields': [],
                 },
             )
-            # The old level model is not used for this workbook format.
-            LevelIndicator.objects.filter(criterion=obj).delete()
             imported_parameters += 1
+
+        if imported_parameters > imported_before_sheet:
+            # Only deactivate categories after the sheet has imported usable rows.
+            AssessmentCategory.objects.filter(
+                cycle=cycle, assessment_profile=profile, template=template
+            ).exclude(pk__in=seen_categories).update(is_active=False)
+            AssessmentCategory.objects.filter(pk__in=seen_categories).update(is_active=True)
 
         # Deactivate old criteria in this profile/category that disappeared from
         # the latest workbook import, without deleting historical responses.

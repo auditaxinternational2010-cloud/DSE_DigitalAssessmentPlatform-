@@ -1,6 +1,6 @@
 Dear {{ user.first_name }},
 
-Your registration on the EYA Platform has been approved.
+Your registration on the DSE Platform has been approved.
 
 Your login credentials are:
 

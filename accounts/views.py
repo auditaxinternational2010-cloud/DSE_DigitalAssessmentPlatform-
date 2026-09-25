@@ -35,7 +35,7 @@ def login_view(request):
     throttle_message = None
     if request.method == 'POST':
         fail_key = f'login-fail:{ratelimit.client_ip(request)}'
-        if not settings.TESTING and ratelimit.count(fail_key) >= settings.LOGIN_RATELIMIT_ATTEMPTS:
+        if not settings.TESTING and ratelimit.count(fail_key) >= settings.LOGIN_RDSELIMIT_ATTEMPTS:
             throttle_message = (
                 'Too many failed sign-in attempts. Please wait a few minutes and try again.'
             )
@@ -44,7 +44,7 @@ def login_view(request):
             ratelimit.reset(fail_key)
             return redirect('dashboard')
         elif not settings.TESTING:
-            ratelimit.hit(fail_key, settings.LOGIN_RATELIMIT_WINDOW)
+            ratelimit.hit(fail_key, settings.LOGIN_RDSELIMIT_WINDOW)
     return render(request, 'accounts/login.html', {'form': form, 'throttle_message': throttle_message})
 
 
@@ -280,8 +280,8 @@ def participation_request_view(request):
         over_limit = (
             not settings.TESTING
             and ratelimit.hit(f'preq:{ratelimit.client_ip(request)}',
-                              settings.PARTICIPATION_RATELIMIT_WINDOW)
-            > settings.PARTICIPATION_RATELIMIT_ATTEMPTS
+                              settings.PARTICIPATION_RDSELIMIT_WINDOW)
+            > settings.PARTICIPATION_RDSELIMIT_ATTEMPTS
         )
         valid = form.is_valid()
         if valid and not over_limit:

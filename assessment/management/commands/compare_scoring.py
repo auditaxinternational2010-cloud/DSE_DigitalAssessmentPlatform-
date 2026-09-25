@@ -83,7 +83,7 @@ class Command(BaseCommand):
                 continue
 
             self.stdout.write('')
-            self.stdout.write(self.style.MIGRATE_HEADING(
+            self.stdout.write(self.style.MIGRDSE_HEADING(
                 f'=== {cycle.name} ({cycle.year}) ==='))
 
             analytics = compute_cycle_analytics(cycle)
@@ -139,7 +139,7 @@ class Command(BaseCommand):
             self.stdout.write(f'  leagues: {leagues or "none"}')
 
         self.stdout.write('')
-        self.stdout.write(self.style.MIGRATE_HEADING('=== SUMMARY ==='))
+        self.stdout.write(self.style.MIGRDSE_HEADING('=== SUMMARY ==='))
         self.stdout.write(f'  questionnaires examined : {grand_total}')
         self.stdout.write(f'  scores that change      : {grand_moved}')
         self.stdout.write(f'  already released        : {grand_released}')

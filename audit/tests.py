@@ -92,7 +92,7 @@ class AuditLogIntegrationTest(TestCase):
             phone_number='+255700000001', email='test_integ@example.com',
         )
 
-        self.cycle = AwardCycle.objects.create(year=2070, name='EYA 2070', is_open=True)
+        self.cycle = AwardCycle.objects.create(year=2070, name='DSE 2070', is_open=True)
         self.questionnaire = Questionnaire.objects.get(cycle=self.cycle, organization=self.org)
         self.cat = AssessmentCategory.objects.create(
             cycle=self.cycle, name='Integ Cat', order=1, is_active=True
@@ -155,17 +155,17 @@ class AuditLogIntegrationTest(TestCase):
     # ── Assessment ────────────────────────────────────────────────────────────
 
     def test_cycle_open_creates_audit_log(self):
-        closed_cycle = AwardCycle.objects.create(year=2071, name='EYA 2071', is_open=False)
+        closed_cycle = AwardCycle.objects.create(year=2071, name='DSE 2071', is_open=False)
         self.client.post(reverse('cycle_toggle_open', args=[closed_cycle.pk]))
         self.assertEqual(AuditLog.objects.filter(action='cycle.opened').count(), 1)
         entry = AuditLog.objects.get(action='cycle.opened')
-        self.assertIn('EYA 2071', entry.description)
+        self.assertIn('DSE 2071', entry.description)
 
     def test_cycle_close_creates_audit_log(self):
         self.client.post(reverse('cycle_toggle_open', args=[self.cycle.pk]))
         self.assertEqual(AuditLog.objects.filter(action='cycle.closed').count(), 1)
         entry = AuditLog.objects.get(action='cycle.closed')
-        self.assertIn('EYA 2070', entry.description)
+        self.assertIn('DSE 2070', entry.description)
 
     def test_questionnaire_submit_creates_audit_log(self):
         self.client.login(username='mem_integ', password='pass')
@@ -212,8 +212,8 @@ class AuditLogViewTest(TestCase):
         )
         AuditLog.objects.create(
             user=self.member, action='questionnaire.submitted',
-            description='Submitted questionnaire for EYA 2026 — View Test Org',
-            object_type='Questionnaire', object_repr='EYA 2026 — View Test Org',
+            description='Submitted questionnaire for DSE 2026 — View Test Org',
+            object_type='Questionnaire', object_repr='DSE 2026 — View Test Org',
             organization=self.org,
         )
 

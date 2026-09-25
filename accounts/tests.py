@@ -1083,7 +1083,7 @@ class LoginThrottleTest(TestCase):
 
     def test_blocks_after_too_many_failures(self):
         from django.conf import settings
-        for _ in range(settings.LOGIN_RATELIMIT_ATTEMPTS):
+        for _ in range(settings.LOGIN_RDSELIMIT_ATTEMPTS):
             self.client.post(reverse('login'), {'username': 'throttle_u', 'password': 'wrong'})
         # Even with the correct password, the next attempt is throttled.
         resp = self.client.post(reverse('login'), {'username': 'throttle_u', 'password': 'Right1!'})

@@ -43,7 +43,7 @@ def _send_and_log(kind, subject, message, recipients, *,
 
 def send_welcome_email(user, password, *, triggered_by=None):
     login_url = settings.SITE_URL.rstrip('/') + '/login/'
-    subject = 'Welcome to the EYA Platform — Your Login Credentials'
+    subject = 'Welcome to the DSE Platform — Your Login Credentials'
     message = render_to_string('accounts/email/welcome.txt', {
         'user': user,
         'password': password,
@@ -75,7 +75,7 @@ def send_new_request_notification(pr):
         return
 
     review_url = f"{settings.SITE_URL.rstrip('/')}/accounts/requests/{pr.pk}/"
-    subject = f'New EYA participation request — {pr.org_name}'
+    subject = f'New DSE participation request — {pr.org_name}'
     message = render_to_string('accounts/email/new_request_notification.txt', {
         'pr': pr,
         'review_url': review_url,

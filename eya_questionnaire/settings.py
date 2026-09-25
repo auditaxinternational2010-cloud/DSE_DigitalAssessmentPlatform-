@@ -436,33 +436,33 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 
 
 # ============================================================
-# RATE LIMITING
+# RDSE LIMITING
 # ============================================================
 
 # Abuse protection.
 # Override via .env.
 # Counters live in the cache backend.
 
-LOGIN_RATELIMIT_ATTEMPTS = config(
-    'LOGIN_RATELIMIT_ATTEMPTS',
+LOGIN_RDSELIMIT_ATTEMPTS = config(
+    'LOGIN_RDSELIMIT_ATTEMPTS',
     default=10,
     cast=int
 )
 
-LOGIN_RATELIMIT_WINDOW = config(
-    'LOGIN_RATELIMIT_WINDOW',
+LOGIN_RDSELIMIT_WINDOW = config(
+    'LOGIN_RDSELIMIT_WINDOW',
     default=900,
     cast=int
 )  # 15 min
 
-PARTICIPATION_RATELIMIT_ATTEMPTS = config(
-    'PARTICIPATION_RATELIMIT_ATTEMPTS',
+PARTICIPATION_RDSELIMIT_ATTEMPTS = config(
+    'PARTICIPATION_RDSELIMIT_ATTEMPTS',
     default=10,
     cast=int
 )
 
-PARTICIPATION_RATELIMIT_WINDOW = config(
-    'PARTICIPATION_RATELIMIT_WINDOW',
+PARTICIPATION_RDSELIMIT_WINDOW = config(
+    'PARTICIPATION_RDSELIMIT_WINDOW',
     default=3600,
     cast=int
 )  # 1 hr
@@ -473,14 +473,14 @@ PARTICIPATION_RATELIMIT_WINDOW = config(
 # without interfering with a page left open on a wall display
 # polling every 60s.
 
-SHARE_RATELIMIT_ATTEMPTS = config(
-    'SHARE_RATELIMIT_ATTEMPTS',
+SHARE_RDSELIMIT_ATTEMPTS = config(
+    'SHARE_RDSELIMIT_ATTEMPTS',
     default=60,
     cast=int
 )
 
-SHARE_RATELIMIT_WINDOW = config(
-    'SHARE_RATELIMIT_WINDOW',
+SHARE_RDSELIMIT_WINDOW = config(
+    'SHARE_RDSELIMIT_WINDOW',
     default=60,
     cast=int
 )
@@ -613,7 +613,7 @@ EMAIL_HOST_PASSWORD = config(
 
 DEFAULT_FROM_EMAIL = config(
     'DEFAULT_FROM_EMAIL',
-    default='EYA Platform <noreply@auditaxinternational.co.tz>'
+    default='DSE Platform <noreply@auditaxinternational.co.tz>'
 )
 
 EMAIL_TIMEOUT = config(

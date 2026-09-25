@@ -85,7 +85,7 @@ class BuildSubmissionReportTest(TestCase):
             first_name='Anna', last_name='Alpha', position='HR Manager',
             phone_number='0711000001', email='A@Alpha.co.tz')
 
-        self.cycle = AwardCycle.objects.create(year=2031, name='EYA 2031', is_open=True)
+        self.cycle = AwardCycle.objects.create(year=2031, name='DSE 2031', is_open=True)
         Questionnaire.objects.filter(
             cycle=self.cycle, organization=self.org_a
         ).update(is_submitted=True)
@@ -146,7 +146,7 @@ class BuildSubmissionReportTest(TestCase):
 
     def test_cycle_metadata(self):
         report = build_submission_report(include_contacts=False)
-        self.assertEqual(report['cycle']['name'], 'EYA 2031')
+        self.assertEqual(report['cycle']['name'], 'DSE 2031')
         self.assertEqual(report['cycle']['year'], 2031)
 
     def test_no_open_cycle(self):
@@ -180,7 +180,7 @@ class PublicDashboardViewTest(TestCase):
             password='pass', first_name='Anna', last_name='Alpha')
         UserProfile.objects.create(
             user=user, role='member', organization=self.org, phone_number='0711000001')
-        self.cycle = AwardCycle.objects.create(year=2032, name='EYA 2032', is_open=True)
+        self.cycle = AwardCycle.objects.create(year=2032, name='DSE 2032', is_open=True)
         self.link = ShareLink.objects.create(label='Board', include_contacts=True)
         self.private = ShareLink.objects.create(label='Public', include_contacts=False)
 

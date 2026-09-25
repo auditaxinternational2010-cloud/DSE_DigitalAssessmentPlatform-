@@ -1,4 +1,4 @@
-A new participation request has been submitted on the EYA Platform.
+A new participation request has been submitted on the DSE Platform.
 
 ORGANIZATION
   Name:       {{ pr.org_name }}
@@ -20,4 +20,4 @@ Review and approve this request:
 {{ review_url }}
 
 Regards,
-The EYA Platform
+The DSE Platform

@@ -120,7 +120,7 @@ def compute_org_analytics(questionnaire, *, benchmark=None):
     )
 
     categories = list(
-        categories_for_org(questionnaire.cycle, questionnaire.organization)
+        categories_for_org(questionnaire.cycle, questionnaire.organization, questionnaire=questionnaire)
         .prefetch_related('criteria')
     )
     criteria_by_cat = {
@@ -535,7 +535,7 @@ def compute_cycle_analytics(cycle):
     questionnaires = list(
         cycle.questionnaires
         .filter(is_submitted=True)
-        .select_related('organization')
+        .select_related('organization', 'template')
         .order_by('organization__name')
     )
 
@@ -580,13 +580,14 @@ def compute_cycle_analytics(cycle):
         secretariat_map.setdefault(sr.questionnaire_id, {}).setdefault(
             sr.criterion_id, []).append(sr.score)
 
-    # The workbook defines a separate assessment profile for each DSE
-    # participant class (Bond Issuer, Bond Trader, Custodian, etc.). Never mix
-    # profiles when calculating averages or rankings.
+    # A reusable template defines the comparison cohort. Organizations are
+    # ranked only against others assigned to the same template. Legacy
+    # questionnaires without a template retain profile-based grouping.
     profile_qs = {}
     for q in questionnaires:
-        key = q.organization.assessment_profile or (
-            'informal' if q.organization.org_type == 'informal_sector' else 'main'
+        key = f'template:{q.template_id}' if q.template_id else (
+            q.organization.assessment_profile or
+            ('informal' if q.organization.org_type == 'informal_sector' else 'main')
         )
         profile_qs.setdefault(key, []).append(q)
 
@@ -594,13 +595,18 @@ def compute_cycle_analytics(cycle):
 
     leagues = []
     for key, qs in profile_qs.items():
-        cat_ids = {
-            cat.id for cat in all_categories
-            if (cat.assessment_profile or key) == key
-        }
+        if key.startswith('template:'):
+            template = qs[0].template
+            cat_ids = {cat.id for cat in all_categories if cat.template_id == template.pk}
+            label = template.name
+        else:
+            cat_ids = {
+                cat.id for cat in all_categories
+                if cat.template_id is None and (cat.assessment_profile or key) == key
+            }
+            label = profile_labels.get(key, key.replace('_', ' ').title())
         if not cat_ids:
             continue
-        label = profile_labels.get(key, key.replace('_', ' ').title())
         league = _build_league(
             key, label, qs,
             {cid: criteria_by_cat[cid] for cid in cat_ids},

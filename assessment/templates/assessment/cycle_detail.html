@@ -43,8 +43,8 @@
             <form method="post" enctype="multipart/form-data">
               {% csrf_token %}
               <div class="field" style="margin-bottom:12px;">
-                <div class="label">Excel File (.xlsx)</div>
-                <input type="file" name="excel_file" accept=".xlsx" class="input" required>
+                <div class="label">Excel File (.xlsx or .xls)</div>
+                <input type="file" name="excel_file" accept=".xlsx,.xls" class="input" required>
               </div>
               <button type="submit" class="btn btn-primary btn-sm">Upload &amp; Parse</button>
             </form>
@@ -69,7 +69,7 @@
               <tr class="cat-row" data-cat="{{ cat.pk }}">
                 <td>
                   <span class="cat-chevron">&#9660;</span>
-                  <span style="font-weight:500;">{{ cat.name }}</span>
+                  <span style="font-weight:500;">{{ cat.code }} — {{ cat.name }}</span><span class="t-muted" style="margin-left:8px;">Weight: {{ cat.weight }}</span>
                 </td>
                 <td style="text-align:right;">
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;">
@@ -114,12 +114,18 @@
         <a href="{% url 'cycle_results' cycle.pk %}" class="btn btn-sm btn-accent">View Results</a>
         <form method="post" action="{% url 'cycle_add_org' cycle.pk %}" style="display:inline;display:flex;gap:6px;align-items:center;">
           {% csrf_token %}
-          <select name="org_id" style="padding:4px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;">
+          <select name="org_id" required style="padding:4px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;">
             {% for org in missing_orgs %}
               <option value="{{ org.pk }}">{{ org.name }}</option>
             {% endfor %}
           </select>
-          <button type="submit" class="btn btn-sm btn-ghost">+ Add Org</button>
+          <select name="template_id" required style="padding:4px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;">
+            <option value="">Select template</option>
+            {% for template in templates %}
+              <option value="{{ template.pk }}">{{ template.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-sm btn-ghost">+ Assign</button>
         </form>
         {% endif %}
       </div>
@@ -129,6 +135,7 @@
         <thead>
           <tr>
             <th>Organization</th>
+            <th>Questionnaire Template</th>
             <th>Status</th>
             <th>Completion</th>
             <th>Submitted</th>
@@ -138,6 +145,7 @@
           {% for q in questionnaires %}
           <tr>
             <td>{{ q.organization.name }}</td>
+            <td>{{ q.template.name|default:"Not assigned" }}</td>
             <td>
               {% if q.is_submitted %}
                 <span class="badge accent">Submitted</span>
