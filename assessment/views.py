@@ -316,10 +316,10 @@ def category_edit(request, pk):
             return redirect('category_edit', pk=category.pk)
         try:
             weight = Decimal(raw_weight or '0')
-            if weight < 0:
+            if weight < 0 or weight > 100:
                 raise InvalidOperation
         except (InvalidOperation, ValueError):
-            messages.error(request, 'Enter a valid non-negative category weight.')
+            messages.error(request, 'Enter a valid category weight from 0% to 100%.')
             return redirect('category_edit', pk=category.pk)
         category.code = code
         category.name = name
@@ -384,7 +384,7 @@ def org_report(request, pk, q_pk):
 
 
 _ORG_SHEET_HEADERS = [
-    'Category', 'Criterion #', 'Criterion Name',
+    'Category', 'Criterion #', 'Criterion Name', 'Weight (%)',
     'Verified Score', 'Verified Level', 'Self-Assessed', 'Self-Awareness',
     'Why this level', 'What the next level requires', 'Verifier comments',
 ]
@@ -430,6 +430,7 @@ def _write_org_sheet(ws, Font, cycle, questionnaire, analytics):
                 cat_entry['category'].name,
                 e['criterion'].number,
                 e['criterion'].name,
+                float(e['criterion'].weight or 0),
                 e['verified_score'],
                 e['level_now'],
                 e['claimed_score'],

@@ -27,7 +27,7 @@
         <h3 class="card-title" style="margin-top:4px;">{{ item.criterion.name }}</h3>
         <div style="font-size:12px;color:var(--ink-3);margin-top:5px;">Assessment Area: {{ item.criterion.area_code }} — {{ item.criterion.assessment_area }}</div>
         <div style="font-size:12px;color:var(--ink-3);margin-top:3px;">Assessment Criteria: {{ item.criterion.assessment_criterion_code }} — {{ item.criterion.assessment_criterion }}</div>
-        <div style="font-size:12px;color:var(--ink-3);margin-top:3px;">Weight: {{ item.criterion.weight }}</div>
+        <div style="font-size:12px;color:var(--ink-3);margin-top:3px;">Weight: {{ item.criterion.weight|floatformat:2 }}%</div>
       </div>
     </div>
     <div class="card-body">

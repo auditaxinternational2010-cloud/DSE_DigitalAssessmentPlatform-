@@ -45,7 +45,7 @@ The application still follows:
 - Secretariat and Member cannot see judge marks/comments while the cycle is open.
 - When the cycle is closed, judge results are revealed to authorised Secretariat/admin views and final results are calculated.
 - Final parameter results use the average of the submitted judge scores.
-- Parameter weights from column J and category weights from the workbook are used in final weighted results.
+- Parameter weights from column J are stored and displayed as percentage points (0–100). For example, `0.25` is imported as `25%`, while `25` or `25%` remains `25%`. Category weights continue to be supported as percentage points.
 
 ## Organisation assessment profile
 

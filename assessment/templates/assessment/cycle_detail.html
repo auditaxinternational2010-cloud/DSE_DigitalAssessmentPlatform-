@@ -69,7 +69,7 @@
               <tr class="cat-row" data-cat="{{ cat.pk }}">
                 <td>
                   <span class="cat-chevron">&#9660;</span>
-                  <span style="font-weight:500;">{{ cat.code }} — {{ cat.name }}</span><span class="t-muted" style="margin-left:8px;">Weight: {{ cat.weight }}</span>
+                  <span style="font-weight:500;">{{ cat.code }} — {{ cat.name }}</span><span class="t-muted" style="margin-left:8px;">Weight: {{ cat.weight|floatformat:2 }}%</span>
                 </td>
                 <td style="text-align:right;">
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;">

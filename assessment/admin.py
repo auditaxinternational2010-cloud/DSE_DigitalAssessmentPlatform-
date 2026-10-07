@@ -33,7 +33,7 @@ class AssessmentCategoryAdmin(admin.ModelAdmin):
 class CriterionAdmin(admin.ModelAdmin):
     list_display = (
         "category", "number", "name", "area_code", "assessment_area",
-        "assessment_criterion_code", "weight", "is_active", "order",
+        "assessment_criterion_code", "weight", "weight_percentage", "is_active", "order",
     )
     list_filter = ("category__cycle", "category__assessment_profile", "category", "is_active")
     search_fields = (
@@ -43,6 +43,10 @@ class CriterionAdmin(admin.ModelAdmin):
     )
     list_editable = ("weight", "is_active", "order")
     ordering = ("category__order", "order", "number")
+
+    @admin.display(description="Weight (%)", ordering="weight")
+    def weight_percentage(self, obj):
+        return f"{obj.weight:.2f}%"
     readonly_fields = ("created_at", "updated_at")
 
 

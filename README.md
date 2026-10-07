@@ -26,3 +26,7 @@ docker-compose up --build
 ## Documentation
 
 See [SETUP_GUIDE.md](SETUP_GUIDE.md) for complete setup instructions.
+
+
+## Assessment criterion weights
+Criterion weights are stored as percentage points from 0 to 100 and displayed with a `%` sign throughout the member, Secretariat/Judge, and reporting screens. Workbook imports accept either fractional values (for example `0.25` = `25%`) or percentage values (`25` / `25%`).

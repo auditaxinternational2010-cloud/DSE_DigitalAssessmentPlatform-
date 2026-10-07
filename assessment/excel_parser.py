@@ -59,10 +59,25 @@ def _decimal(value):
         return Decimal('0')
     try:
         d = Decimal(str(value).replace('%', '').strip())
-        # The supplied workbook stores 0.01 for 1%, so preserve the value.
+        # Raw workbook weights are normalised by _percentage_weight().
         return d
     except (InvalidOperation, ValueError):
         return Decimal('0')
+
+def _percentage_weight(value):
+    """Return workbook weights as percentages.
+
+    Workbooks may express a percentage either as a fraction (0.25 = 25%)
+    or as a percentage value (25 = 25%). Values in the fraction range are
+    converted so the database consistently stores 0–100 percentage points.
+    """
+    value = _decimal(value)
+    if value is None:
+        return Decimal('0')
+    if Decimal('0') < value <= Decimal('1'):
+        return value * Decimal('100')
+    return value
+
 
 
 def _profile_from_sheet(name):
@@ -163,7 +178,7 @@ def parse_excel_questionnaire(file_obj, cycle):
             parameter_no = _text(row[6])
             parameter_name = _text(row[7])
             regulation = _text(row[8])
-            weight = _decimal(row[9])
+            weight = _percentage_weight(row[9])
 
             # Sub-total / grand-total rows are not assessment parameters.
             if any('total' == x.lower().strip() or x.lower().strip().endswith('total')

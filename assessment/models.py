@@ -78,7 +78,11 @@ class Criterion(models.Model):
     assessment_criterion_code = models.CharField(max_length=50, blank=True)
     assessment_criterion = models.TextField(blank=True)
     regulation = models.TextField(blank=True)
-    weight = models.DecimalField(max_digits=10, decimal_places=8, default=0)
+    weight = models.DecimalField(
+        max_digits=10, decimal_places=6, default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text='Percentage weight (0–100). Example: 25 means 25%.',
+    )
     order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     is_numeric = models.BooleanField(default=False)

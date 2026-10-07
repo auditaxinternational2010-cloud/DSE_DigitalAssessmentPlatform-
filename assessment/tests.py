@@ -168,7 +168,7 @@ class ExcelParserTest(TestCase):
         self.assertEqual(criterion.assessment_area, 'Governance')
         self.assertEqual(criterion.assessment_criterion, 'Board oversight')
         self.assertEqual(criterion.regulation, 'Companies Act')
-        self.assertEqual(str(criterion.weight), '0.25000000')
+        self.assertEqual(str(criterion.weight), '25.000000')
 
     def test_parser_reupload_updates_existing_parameters_without_duplicates(self):
         from .excel_parser import parse_excel_questionnaire

@@ -173,6 +173,7 @@
           <div>
             <div class="rpt-item-cat">{{ e.category.name }} · Criterion {{ e.criterion.number }}</div>
             <div class="rpt-item-name">{{ e.criterion.name }}</div>
+            <div class="rpt-sub">Weight: {{ e.criterion.weight|floatformat:2 }}%</div>
           </div>
           <div class="rpt-item-scores">
             <span class="badge {% if e.verified_score >= 3 %}sage{% elif e.verified_score >= 2 %}accent{% else %}brick{% endif %}">
@@ -230,6 +231,7 @@
           <div>
             <div class="rpt-item-cat">{{ e.category.name }} · Criterion {{ e.criterion.number }}</div>
             <div class="rpt-item-name">{{ e.criterion.name }}</div>
+            <div class="rpt-sub">Weight: {{ e.criterion.weight|floatformat:2 }}%</div>
           </div>
           <div class="rpt-item-scores">
             <span class="badge sage">Judge average {{ e.verified_score }}</span>
@@ -267,6 +269,7 @@
           <div>
             <div class="rpt-item-cat">{{ e.category.name }} · Criterion {{ e.criterion.number }}</div>
             <div class="rpt-item-name">{{ e.criterion.name }}</div>
+            <div class="rpt-sub">Weight: {{ e.criterion.weight|floatformat:2 }}%</div>
           </div>
           <div class="rpt-item-scores">
             <span class="badge accent">Mean {{ e.verified_score }}</span>
@@ -320,7 +323,7 @@
         <div class="crit-row">
           <div class="crit-row-head">
             <div class="crit-row-name">
-              <span class="rpt-item-cat">Criterion {{ e.criterion.number }}</span>
+              <span class="rpt-item-cat">Criterion {{ e.criterion.number }} · Weight {{ e.criterion.weight|floatformat:2 }}%</span>
               <div>{{ e.criterion.name }}</div>
             </div>
             <div class="crit-row-scores">

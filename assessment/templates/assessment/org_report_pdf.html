@@ -205,7 +205,8 @@
 <table>
   <thead>
     <tr>
-      <th style="width:46%;">Criterion</th>
+      <th style="width:40%;">Criterion</th>
+      <th>Weight</th>
       <th>Verified</th>
       <th>Level</th>
       <th>Self</th>
@@ -216,6 +217,7 @@
     {% for e in cat_entry.criteria %}
     <tr>
       <td>{{ e.criterion.number }}. {{ e.criterion.name }}</td>
+      <td>{{ e.criterion.weight|floatformat:2 }}%</td>
       <td>
         {% if e.verified_score is not None %}
         <span class="badge badge-neutral">{{ e.verified_score }}</span>
