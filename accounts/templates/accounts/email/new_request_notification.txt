@@ -8,6 +8,11 @@ ORGANIZATION
   Employees:  {{ pr.get_num_employees_display }}
   Capital:    {{ pr.get_investment_capital_display }}
 
+REQUESTED QUESTIONNAIRES
+{% for questionnaire in questionnaires %}  - {{ questionnaire.name }} ({{ questionnaire.cycle.name }})
+{% empty %}  - None selected
+{% endfor %}
+
 RESPONDENT
   Name:       {{ pr.first_name }} {{ pr.last_name }}
   Position:   {{ pr.position|default:"—" }}

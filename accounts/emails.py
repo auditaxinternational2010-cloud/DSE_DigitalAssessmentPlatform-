@@ -41,13 +41,14 @@ def _send_and_log(kind, subject, message, recipients, *,
             logger.exception('Failed to write EmailLog row for %s → %s', kind, recipients)
 
 
-def send_welcome_email(user, password, *, triggered_by=None):
+def send_welcome_email(user, password, *, triggered_by=None, questionnaires=None):
     login_url = settings.SITE_URL.rstrip('/') + '/login/'
     subject = 'Welcome to the DSE Platform — Your Login Credentials'
     message = render_to_string('accounts/email/welcome.txt', {
         'user': user,
         'password': password,
         'login_url': login_url,
+        'questionnaires': questionnaires or [],
     })
     organization = getattr(getattr(user, 'userprofile', None), 'organization', None)
     _send_and_log('welcome', subject, message, [user.email],
@@ -79,5 +80,6 @@ def send_new_request_notification(pr):
     message = render_to_string('accounts/email/new_request_notification.txt', {
         'pr': pr,
         'review_url': review_url,
+        'questionnaires': pr.requested_questionnaires.select_related('cycle').all(),
     })
     _send_and_log('new_request', subject, message, recipients)

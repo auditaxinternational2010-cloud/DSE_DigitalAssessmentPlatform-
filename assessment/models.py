@@ -149,7 +149,7 @@ class Questionnaire(models.Model):
 
     class Meta:
         ordering = ['-cycle__year', 'organization__name']
-        unique_together = ['cycle', 'organization']
+        unique_together = [('cycle', 'organization', 'template')]
 
     def __str__(self):
         return f"{self.cycle.name} — {self.organization.name}"

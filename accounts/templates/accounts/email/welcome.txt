@@ -9,6 +9,11 @@ Your login credentials are:
 
 Please log in at: {{ login_url }}
 
+Questionnaires assigned to your organization:
+{% for questionnaire in questionnaires %}  - {{ questionnaire.template.name }} ({{ questionnaire.cycle.name }})
+{% empty %}  - No questionnaires were assigned. Please contact the administrator.
+{% endfor %}
+
 You will be required to change your password immediately after your first login.
 
 Any password issued to you before this email is no longer valid — please use the

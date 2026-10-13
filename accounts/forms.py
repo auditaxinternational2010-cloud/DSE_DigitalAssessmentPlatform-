@@ -4,6 +4,7 @@ from django.db import transaction
 
 from .models import Organization, UserProfile, VerifierAssignment, ParticipationRequest, ORG_TYPE_SUBTYPES
 from .validators import validate_tanzanian_phone
+from assessment.models import AwardCycle, QuestionnaireTemplate
 
 
 def validate_org_subtype(org_type, org_subtype, org_subtype_other):
@@ -253,6 +254,14 @@ class OrgForm(forms.ModelForm):
 
 
 class ParticipationRequestForm(forms.ModelForm):
+    requested_questionnaires = forms.ModelMultipleChoiceField(
+        queryset=QuestionnaireTemplate.objects.none(),
+        required=True,
+        widget=forms.CheckboxSelectMultiple,
+        label='Questionnaire(s) requested',
+        help_text='Select one or more questionnaires for your organization.',
+    )
+
     # Honeypot: hidden from humans via CSS, left blank by them. Bots that fill
     # every field will populate it — the view treats a non-empty value as spam.
     website = forms.CharField(
@@ -268,10 +277,29 @@ class ParticipationRequestForm(forms.ModelForm):
     org_subtype = forms.CharField(required=False, widget=forms.HiddenInput())
     org_subtype_other = forms.CharField(required=False, widget=forms.HiddenInput())
 
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        open_cycle = AwardCycle.objects.filter(is_open=True).first()
+
+        if open_cycle:
+            self.fields['requested_questionnaires'].queryset = (
+                QuestionnaireTemplate.objects.filter(
+                    cycle=open_cycle,
+                    is_active=True,
+                )
+                .exclude(
+                    name__iexact="General Questionnaire"
+                )
+                .order_by('name')
+            )
+
+
     class Meta:
         model = ParticipationRequest
         fields = [
-            'org_name', 'org_type', 'org_subtype', 'org_subtype_other', 'region',
+            'requested_questionnaires', 'org_name', 'org_type', 'org_subtype', 'org_subtype_other', 'region',
             'physical_address', 'postal_address',
             'num_employees', 'investment_capital',
             'first_name', 'last_name', 'position', 'phone_number', 'email',

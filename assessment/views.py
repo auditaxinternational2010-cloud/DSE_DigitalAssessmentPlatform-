@@ -291,15 +291,12 @@ def cycle_add_org_questionnaire(request, pk):
             messages.error(request, 'Select a questionnaire template for this organization before assigning it.')
             return redirect('cycle_detail', pk=pk)
         _, created = Questionnaire.objects.get_or_create(
-            cycle=cycle, organization=org, defaults={'template': template}
+            cycle=cycle, organization=org, template=template,
         )
-        if not created and not _.template_id:
-            _.template = template
-            _.save(update_fields=['template', 'updated_at'])
         if created:
-            messages.success(request, f'Questionnaire created for {org.name}.')
+            messages.success(request, f'{template.name} questionnaire created for {org.name}.')
         else:
-            messages.info(request, f'{org.name} already has a questionnaire for this cycle.')
+            messages.info(request, f'{org.name} already has this questionnaire for this cycle.')
     return redirect('cycle_detail', pk=pk)
 
 
@@ -598,13 +595,15 @@ def member_dashboard(request):
     profile = request.user.userprofile
     org = profile.organization
     open_cycle = AwardCycle.objects.filter(is_open=True).first()
-    questionnaire = None
-    if open_cycle and org:
-        questionnaire = Questionnaire.objects.filter(cycle=open_cycle, organization=org).first()
+    questionnaires = Questionnaire.objects.filter(
+        cycle=open_cycle, organization=org
+    ).select_related('template', 'cycle').order_by('template__name', 'id') if open_cycle and org else Questionnaire.objects.none()
+    questionnaire = questionnaires.first()
     return render(request, 'assessment/dashboard_member.html', {
         'org': org,
         'open_cycle': open_cycle,
         'questionnaire': questionnaire,
+        'questionnaires': questionnaires,
     })
 
 

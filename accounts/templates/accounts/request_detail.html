@@ -71,6 +71,16 @@
             <dt style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;">Email</dt>
             <dd style="margin:2px 0 0;"><a href="mailto:{{ pr.email }}" style="color:var(--gold-2);">{{ pr.email }}</a></dd>
           </dl>
+          <div style="margin-top:16px;">
+            <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;">Requested Questionnaires</div>
+            <ul style="margin:6px 0 0;padding-left:18px;">
+              {% for template in pr.requested_questionnaires.all %}
+                <li>{{ template.name }} — {{ template.cycle.name }}</li>
+              {% empty %}
+                <li>No questionnaires selected</li>
+              {% endfor %}
+            </ul>
+          </div>
         </div>
       </div>
 
@@ -78,12 +88,12 @@
         <div class="card-head"><h3 class="card-title">Status</h3></div>
         <div class="card-body">
           {% if pr.status == 'pending' %}
-            <p style="font-size:13.5px;color:var(--ink-2);margin-bottom:16px;">This request is awaiting review. Approve to create the organization and member account, or reject to decline.</p>
+            <p style="font-size:13.5px;color:var(--ink-2);margin-bottom:16px;">This request is awaiting review. Approve to reuse or create the organization, create the member account, and assign the selected questionnaires, or reject to decline.</p>
             <div style="display:flex;gap:8px;">
               <form method="post" action="{% url 'request_approve' pr.pk %}" id="approve-form-{{ pr.pk }}">
                 {% csrf_token %}
                 <button type="button" class="btn btn-primary"
-                  onclick="eya.confirm('Approve this request and create the organization and user account?', function(){ document.getElementById('approve-form-{{ pr.pk }}').submit(); })">Approve</button>
+                  onclick="eya.confirm('Approve this request, reuse or create the organization, create the user account, and assign the selected questionnaires?', function(){ document.getElementById('approve-form-{{ pr.pk }}').submit(); })">Approve</button>
               </form>
               <form method="post" action="{% url 'request_reject' pr.pk %}" id="reject-form-{{ pr.pk }}">
                 {% csrf_token %}

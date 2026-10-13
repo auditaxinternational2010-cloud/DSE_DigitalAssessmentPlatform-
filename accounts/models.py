@@ -294,6 +294,10 @@ class ParticipationRequest(models.Model):
     position = models.CharField(max_length=150, blank=True)
     phone_number = models.CharField(max_length=30)
     email = models.EmailField()
+    requested_questionnaires = models.ManyToManyField(
+        'assessment.QuestionnaireTemplate', blank=False, related_name='participation_requests',
+        help_text='Questionnaire templates requested during registration.',
+    )
 
     # Status tracking
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')

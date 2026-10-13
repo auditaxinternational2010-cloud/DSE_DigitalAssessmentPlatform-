@@ -20,6 +20,7 @@ from django.views.decorators.http import require_POST
 from .models import Organization, UserProfile, VerifierAssignment, ParticipationRequest, EmailLog, ORG_TYPE_SUBTYPES
 from .decorators import role_required
 from .emails import send_welcome_email, send_new_request_notification
+from assessment.models import AwardCycle, QuestionnaireTemplate, Questionnaire
 from .forms import UserCreateForm, UserEditForm, OrgForm, ParticipationRequestForm, ProfileForm
 from . import ratelimit
 from audit.models import AuditLog
@@ -241,7 +242,10 @@ def org_edit_view(request, pk):
         open_cycle = AwardCycle.objects.filter(is_open=True).first()
         if open_cycle:
             if org.is_active:
-                Questionnaire.objects.get_or_create(cycle=open_cycle, organization=org)
+                if not Questionnaire.objects.filter(cycle=open_cycle, organization=org).exists():
+                    Questionnaire.objects.get_or_create(
+                        cycle=open_cycle, organization=org, template=None
+                    )
             else:
                 Questionnaire.objects.filter(organization=org, cycle=open_cycle).delete()
         messages.success(request, f'Organization {org.name} updated.')
@@ -344,24 +348,25 @@ def request_approve_view(request, pk):
             if pr.status != 'pending':
                 messages.error(request, 'This request has already been reviewed.')
                 return redirect('request_detail', pk=pk)
-            if Organization.objects.filter(name=pr.org_name).exists():
-                messages.error(request, f'An organization named "{pr.org_name}" already exists. Resolve the conflict before approving.')
+            # Reuse an existing organization by case-insensitive name. Existing
+            # organization details are deliberately left unchanged.
+            org = Organization.objects.filter(name__iexact=pr.org_name.strip()).first()
+            if User.objects.filter(username__iexact=pr.email).exists() or User.objects.filter(email__iexact=pr.email).exists():
+                messages.error(request, f'An account with email "{pr.email}" already exists. Resolve the account conflict before approving.')
                 return redirect('request_detail', pk=pk)
-            if User.objects.filter(username=pr.email).exists():
-                messages.error(request, f'A user with email "{pr.email}" already exists. Resolve the conflict before approving.')
+            requested_templates = list(pr.requested_questionnaires.select_related('cycle').filter(is_active=True))
+            if not requested_templates:
+                messages.error(request, 'This request has no questionnaires selected. Reopen or correct the request before approval.')
                 return redirect('request_detail', pk=pk)
+            if org is None:
+                org = Organization.objects.create(
+                    name=pr.org_name.strip(), org_type=pr.org_type,
+                    org_subtype=pr.org_subtype, org_subtype_other=pr.org_subtype_other,
+                    region=pr.region, physical_address=pr.physical_address,
+                    postal_address=pr.postal_address, num_employees=pr.num_employees,
+                    investment_capital=pr.investment_capital,
+                )
             password = _generate_password()
-            org = Organization.objects.create(
-                name=pr.org_name,
-                org_type=pr.org_type,
-                org_subtype=pr.org_subtype,
-                org_subtype_other=pr.org_subtype_other,
-                region=pr.region,
-                physical_address=pr.physical_address,
-                postal_address=pr.postal_address,
-                num_employees=pr.num_employees,
-                investment_capital=pr.investment_capital,
-            )
             user = User.objects.create_user(
                 username=pr.email,
                 email=pr.email,
@@ -376,12 +381,21 @@ def request_approve_view(request, pk):
                 must_change_password=True,
                 phone_number=pr.phone_number,
             )
+            # Create/assign one questionnaire per selected template, including
+            # multiple templates belonging to the same award cycle.
+            for template in requested_templates:
+                Questionnaire.objects.get_or_create(
+                    cycle=template.cycle, organization=org, template=template,
+                )
             pr.status = 'approved'
             pr.reviewed_at = timezone.now()
             pr.reviewed_by = request.user
             pr.save()
         try:
-            send_welcome_email(user, password, triggered_by=request.user)
+            send_welcome_email(
+                user, password, triggered_by=request.user,
+                questionnaires=Questionnaire.objects.filter(organization=org, template__in=requested_templates).select_related('template', 'cycle'),
+            )
         except Exception:
             messages.warning(
                 request,
@@ -437,7 +451,12 @@ def resend_welcome_email_view(request, pk):
 
     send_failed = False
     try:
-        send_welcome_email(user, password, triggered_by=request.user)
+        send_welcome_email(
+                user, password, triggered_by=request.user,
+                questionnaires=Questionnaire.objects.filter(
+                    organization=profile.organization
+                ).select_related('template', 'cycle'),
+            )
         messages.success(request, f'Welcome email resent to {user.email} with new credentials.')
     except Exception:
         send_failed = True
