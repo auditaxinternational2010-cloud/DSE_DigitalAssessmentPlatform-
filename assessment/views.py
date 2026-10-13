@@ -246,13 +246,18 @@ def cycle_detail(request, pk):
             )
         )
     )
-    assigned_org_ids = questionnaires.values_list('organization_id', flat=True)
-    missing_orgs = Organization.objects.filter(is_active=True).exclude(id__in=assigned_org_ids)
+    # Admin assigns questionnaire templates by member account. The questionnaire
+    # records remain organization-scoped because responses belong to the organization.
+    members = User.objects.filter(
+        userprofile__role='member',
+        userprofile__organization__isnull=False,
+        userprofile__organization__is_active=True,
+    ).select_related('userprofile__organization').order_by('username')
     return render(request, 'assessment/cycle_detail.html', {
         'cycle': cycle,
         'questionnaires': questionnaires,
         'categories': categories,
-        'missing_orgs': missing_orgs,
+        'members': members,
         'templates': cycle.templates.filter(is_active=True).order_by('name'),
     })
 
@@ -275,30 +280,78 @@ def cycle_toggle_open(request, pk):
 @role_required('admin')
 def cycle_add_org_questionnaire(request, pk):
     cycle = get_object_or_404(AwardCycle, pk=pk, is_open=True)
-    if request.method == 'POST':
-        org_id = request.POST.get('org_id', '')
-        if not org_id or not str(org_id).isdigit():
-            messages.error(request, 'Invalid organization selected.')
-            return redirect('cycle_detail', pk=pk)
-        org = get_object_or_404(Organization, pk=int(org_id), is_active=True)
-        template_id = request.POST.get('template_id', '').strip()
-        template = None
-        if template_id:
-            template = get_object_or_404(QuestionnaireTemplate, pk=template_id, cycle=cycle, is_active=True)
-        elif org.assessment_profile:
-            template = QuestionnaireTemplate.objects.filter(cycle=cycle, assessment_profile=org.assessment_profile, is_active=True).first()
-        if not template:
-            messages.error(request, 'Select a questionnaire template for this organization before assigning it.')
-            return redirect('cycle_detail', pk=pk)
+    if request.method != 'POST':
+        return redirect('cycle_detail', pk=pk)
+
+    # Select a member account; questionnaire instances are stored against that
+    # member's organization so the member can access each assigned template.
+    user_id = request.POST.get('user_id', '').strip()
+    if not user_id.isdigit():
+        messages.error(request, 'Select a member user first.')
+        return redirect('cycle_detail', pk=pk)
+
+    member = get_object_or_404(
+        User.objects.select_related('userprofile__organization'),
+        pk=int(user_id),
+        userprofile__role='member',
+        userprofile__organization__isnull=False,
+        userprofile__organization__is_active=True,
+    )
+    org = member.userprofile.organization
+
+    # Accept multiple checked template_ids; retain backward compatibility
+    # with the previous single-template form.
+    template_ids = request.POST.getlist('template_ids')
+    if not template_ids:
+        legacy_template_id = request.POST.get('template_id', '').strip()
+        if legacy_template_id:
+            template_ids = [legacy_template_id]
+
+    template_ids = list(dict.fromkeys(
+        str(template_id).strip()
+        for template_id in template_ids
+        if str(template_id).strip().isdigit()
+    ))
+    if not template_ids:
+        messages.error(request, 'Select at least one questionnaire template.')
+        return redirect('cycle_detail', pk=pk)
+
+    templates = list(
+        QuestionnaireTemplate.objects.filter(
+            pk__in=template_ids,
+            cycle=cycle,
+            is_active=True,
+        ).order_by('name')
+    )
+    if len(templates) != len(template_ids):
+        messages.error(request, 'One or more selected questionnaire templates are invalid or inactive.')
+        return redirect('cycle_detail', pk=pk)
+
+    created_names = []
+    existing_names = []
+    for template in templates:
         _, created = Questionnaire.objects.get_or_create(
-            cycle=cycle, organization=org, template=template,
+            cycle=cycle,
+            organization=org,
+            template=template,
         )
         if created:
-            messages.success(request, f'{template.name} questionnaire created for {org.name}.')
+            created_names.append(template.name)
         else:
-            messages.info(request, f'{org.name} already has this questionnaire for this cycle.')
-    return redirect('cycle_detail', pk=pk)
+            existing_names.append(template.name)
 
+    if created_names:
+        messages.success(
+            request,
+            f'Assigned {len(created_names)} questionnaire(s) to {member.username} ({org.name}): '
+            + ', '.join(created_names),
+        )
+    if existing_names:
+        messages.info(
+            request,
+            f'Already assigned to {member.username} ({org.name}): ' + ', '.join(existing_names),
+        )
+    return redirect('cycle_detail', pk=pk)
 
 @role_required('admin')
 def category_edit(request, pk):

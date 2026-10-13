@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from accounts.models import Organization, UserProfile
 from .models import (
-    AwardCycle, AssessmentCategory, Criterion, Questionnaire, VerifierResponse, Response,
+    AwardCycle, QuestionnaireTemplate, AssessmentCategory, Criterion, Questionnaire, VerifierResponse, Response,
     EvidenceDocument, EvidenceLink, LevelIndicator,
 )
 
@@ -609,6 +609,31 @@ class CycleAddOrgValidationTest(TestCase):
         self.assertRedirects(
             response, reverse('cycle_detail', args=[self.cycle.pk]),
             fetch_redirect_response=False
+        )
+
+    def test_admin_can_assign_multiple_templates_to_one_member_user(self):
+        org = Organization.objects.create(name='Multi Template Member Org')
+        member = User.objects.create_user(username='multi_template_member', password='pass')
+        UserProfile.objects.create(user=member, role='member', organization=org)
+        template_one = QuestionnaireTemplate.objects.create(
+            cycle=self.cycle, name='Template One', code='T1'
+        )
+        template_two = QuestionnaireTemplate.objects.create(
+            cycle=self.cycle, name='Template Two', code='T2'
+        )
+
+        response = self.client.post(
+            reverse('cycle_add_org', args=[self.cycle.pk]),
+            {'user_id': str(member.pk), 'template_ids': [str(template_one.pk), str(template_two.pk)]},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            Questionnaire.objects.filter(
+                cycle=self.cycle, organization=org,
+                template__in=[template_one, template_two],
+            ).count(),
+            2,
         )
 
 

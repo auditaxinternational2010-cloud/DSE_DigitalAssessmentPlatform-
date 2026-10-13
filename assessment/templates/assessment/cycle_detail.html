@@ -112,21 +112,38 @@
       <div style="display:flex;gap:8px;align-items:center;">
         {% if cycle.is_open %}
         <a href="{% url 'cycle_results' cycle.pk %}" class="btn btn-sm btn-accent">View Results</a>
-        <form method="post" action="{% url 'cycle_add_org' cycle.pk %}" style="display:inline;display:flex;gap:6px;align-items:center;">
-          {% csrf_token %}
-          <select name="org_id" required style="padding:4px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;">
-            {% for org in missing_orgs %}
-              <option value="{{ org.pk }}">{{ org.name }}</option>
-            {% endfor %}
-          </select>
-          <select name="template_id" required style="padding:4px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;">
-            <option value="">Select template</option>
-            {% for template in templates %}
-              <option value="{{ template.pk }}">{{ template.name }}</option>
-            {% endfor %}
-          </select>
-          <button type="submit" class="btn btn-sm btn-ghost">+ Assign</button>
-        </form>
+        <details style="position:relative;">
+          <summary class="btn btn-sm btn-ghost" style="cursor:pointer;list-style:none;">+ Assign Questionnaires to User</summary>
+          <div class="card" style="position:absolute;right:0;top:36px;z-index:20;width:min(420px,85vw);padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.16);">
+            <form method="post" action="{% url 'cycle_add_org' cycle.pk %}">
+              {% csrf_token %}
+              <div class="field" style="margin-bottom:12px;">
+                <label class="label" for="assign-member">Member user</label>
+                <select id="assign-member" name="user_id" required class="input" style="width:100%;">
+                  <option value="">Select member user</option>
+                  {% for member in members %}
+                    <option value="{{ member.pk }}">{{ member.get_full_name|default:member.username }} ({{ member.username }}) — {{ member.userprofile.organization.name }}</option>
+                  {% empty %}
+                    <option value="" disabled>No member users with an active organization</option>
+                  {% endfor %}
+                </select>
+                <div style="font-size:12px;color:var(--ink-3);margin-top:5px;">Questionnaires are assigned to the selected member's organization and appear on that member's dashboard.</div>
+              </div>
+              <div class="field" style="margin-bottom:14px;">
+                <div class="label">Select questionnaires</div>
+                {% for template in templates %}
+                  <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;cursor:pointer;">
+                    <input type="checkbox" name="template_ids" value="{{ template.pk }}" style="margin-top:3px;">
+                    <span>{{ template.name }}</span>
+                  </label>
+                {% empty %}
+                  <p style="font-size:13px;color:var(--ink-3);">No active questionnaire templates are available for this cycle.</p>
+                {% endfor %}
+              </div>
+              <button type="submit" class="btn btn-sm btn-primary">Assign selected</button>
+            </form>
+          </div>
+        </details>
         {% endif %}
       </div>
     </div>

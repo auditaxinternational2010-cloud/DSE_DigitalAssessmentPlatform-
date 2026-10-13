@@ -53,3 +53,8 @@ If the app labels differ in your checkout, use `python manage.py test` to run th
 ## Database safety
 
 Back up the database before applying migrations. Do not use `docker compose down -v` unless you intentionally want to delete the local PostgreSQL volume and all data stored in it.
+
+
+## Assign multiple questionnaire templates to one member user
+
+On an open award cycle's detail page, an administrator can select a member account in the **Assign Questionnaires to User** control, tick one or more active questionnaire templates, and submit once. The view resolves the selected member's active organization and creates one Questionnaire record per selected template for that organization. Existing assignments are not duplicated, and questionnaire responses remain tied to their individual Questionnaire records.
