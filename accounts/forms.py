@@ -4,7 +4,7 @@ from django.db import transaction
 
 from .models import Organization, UserProfile, VerifierAssignment, ParticipationRequest, ORG_TYPE_SUBTYPES
 from .validators import validate_tanzanian_phone
-from assessment.models import AwardCycle, QuestionnaireTemplate
+from assessment.models import AwardCycle, QuestionnaireTemplate, Questionnaire
 
 
 def validate_org_subtype(org_type, org_subtype, org_subtype_other):
@@ -159,6 +159,13 @@ class UserEditForm(forms.ModelForm):
 
 
 class OrgForm(forms.ModelForm):
+    questionnaire_templates = forms.ModelMultipleChoiceField(
+        queryset=QuestionnaireTemplate.objects.none(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        label='Questionnaire Templates',
+        help_text='Select one or more active questionnaire templates for this organization. Assignments are added without deleting existing questionnaire records or responses.',
+    )
     member = forms.ModelChoiceField(
         queryset=User.objects.filter(userprofile__role='member').select_related('userprofile'),
         required=False,
@@ -196,6 +203,17 @@ class OrgForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        open_cycle = AwardCycle.objects.filter(is_open=True).first()
+        if open_cycle:
+            self.fields['questionnaire_templates'].queryset = QuestionnaireTemplate.objects.filter(
+                cycle=open_cycle,
+                is_active=True,
+            ).order_by('name')
+            if self.instance and self.instance.pk:
+                self.fields['questionnaire_templates'].initial = QuestionnaireTemplate.objects.filter(
+                    questionnaires__organization=self.instance,
+                    questionnaires__cycle=open_cycle,
+                ).distinct()
         if self.instance and self.instance.pk:
             current_member = UserProfile.objects.filter(
                 role='member', organization=self.instance
@@ -249,6 +267,17 @@ class OrgForm(forms.ModelForm):
         VerifierAssignment.objects.filter(organization=org).delete()
         for verifier in data.get('verifiers') or []:
             VerifierAssignment.objects.get_or_create(verifier=verifier, organization=org)
+
+        # Attach every selected template to this organization. Each assignment is
+        # represented by a separate Questionnaire row (cycle + organization + template).
+        # Existing rows are intentionally preserved so submitted responses are never
+        # deleted merely because an administrator edits the organization form.
+        for template in data.get('questionnaire_templates') or []:
+            Questionnaire.objects.get_or_create(
+                cycle=template.cycle,
+                organization=org,
+                template=template,
+            )
 
         return org
 

@@ -62,6 +62,21 @@
               {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
               {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
             </div>
+          {% elif field.html_name == 'questionnaire_templates' %}
+            <div class="field" style="margin-bottom:14px;">
+              <div class="label">{{ field.label }}</div>
+              <div style="border:1px solid var(--line-2);border-radius:var(--radius-sm);padding:10px;max-height:240px;overflow-y:auto;">
+                {% for choice in field %}
+                  <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;">
+                    {{ choice.tag }} <label for="{{ choice.id_for_label }}" style="cursor:pointer;">{{ choice.choice_label }}</label>
+                  </div>
+                {% empty %}
+                  <span class="t-muted" style="font-size:12px;">No active questionnaire templates are available. Open an assessment cycle and activate its templates first.</span>
+                {% endfor %}
+              </div>
+              {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+              {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            </div>
           {% else %}
             <div class="field" style="margin-bottom:14px;">
               <div class="label">{{ field.label }}</div>
