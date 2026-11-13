@@ -40,6 +40,7 @@
         <thead>
           <tr>
             <th>Organization</th>
+            <th>Questionnaire Assigned</th>
             <th>Status</th>
             <th>Coverage</th>
             <th>Action</th>
@@ -49,6 +50,15 @@
           {% for item in org_data %}
           <tr>
             <td>{{ item.org.name }}</td>
+            <td>
+              {% if item.template %}
+                <strong>{{ item.template.name }}</strong>
+              {% elif item.questionnaire %}
+                <strong>{{ open_cycle.name }}</strong>
+              {% else %}
+                <span class="t-muted">No questionnaire assigned in this cycle</span>
+              {% endif %}
+            </td>
             <td>
               {% if item.questionnaire %}
                 {% if item.questionnaire.is_submitted %}
@@ -114,12 +124,19 @@
     <div class="card-body tight">
       <table class="table">
         <thead>
-          <tr><th>Organization</th><th>Type</th></tr>
+          <tr><th>Organization</th><th>Questionnaire Assigned</th><th>Type</th></tr>
         </thead>
         <tbody>
           {% for a in assigned_orgs %}
           <tr>
             <td>{{ a.organization.name }}</td>
+            <td>
+              {% with assigned_questionnaires=a.organization.questionnaires.all %}
+                {% for q in assigned_questionnaires %}
+                  <div>{{ q.template.name|default:q.cycle.name }}</div>
+                {% empty %}<span class="t-muted">No questionnaire assigned</span>{% endfor %}
+              {% endwith %}
+            </td>
             <td><span class="badge slate">{{ a.organization.get_org_type_display|default:"—" }}</span></td>
           </tr>
           {% endfor %}

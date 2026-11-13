@@ -1088,42 +1088,56 @@ def library_list(request):
 @role_required('verifier')
 def verifier_dashboard(request):
     from accounts.models import VerifierAssignment
-    assignments = VerifierAssignment.objects.filter(
-        verifier=request.user
-    ).select_related('organization')
-    open_cycle = AwardCycle.objects.filter(is_open=True).first()
 
+    assignments = list(
+        VerifierAssignment.objects.filter(verifier=request.user)
+        .select_related('organization').order_by('organization__name')
+    )
+    assigned_orgs = [assignment.organization for assignment in assignments]
+    open_cycle = AwardCycle.objects.filter(is_open=True).order_by('-year').first()
+
+    # A verifier is assigned at organization level. Therefore every
+    # questionnaire/template belonging to that organization in the active
+    # cycle must appear as its own dashboard row (not one row per org).
     questionnaires = []
-    q_by_org = {}
-    if open_cycle:
+    if open_cycle and assigned_orgs:
         questionnaires = list(
-            Questionnaire.objects
-            .filter(cycle=open_cycle, organization__in=[a.organization for a in assignments])
-            .select_related('organization')
+            Questionnaire.objects.filter(
+                cycle=open_cycle,
+                organization__in=assigned_orgs,
+            ).select_related('organization', 'template').order_by(
+                'organization__name', 'template__name', 'pk'
+            )
         )
-        q_by_org = {q.organization_id: q for q in questionnaires}
 
     coverage_map = questionnaire_coverage(
         [q for q in questionnaires if q.is_submitted]
     )
+    org_data = [{
+        'org': q.organization,
+        'questionnaire': q,
+        'template': q.template,
+        'coverage': coverage_map.get(q.pk) if q.is_submitted else None,
+    } for q in questionnaires]
 
-    org_data = []
-    for a in assignments:
-        q = q_by_org.get(a.organization_id)
-        org_data.append({
-            'org': a.organization,
-            'questionnaire': q,
-            'coverage': coverage_map.get(q.pk) if q and q.is_submitted else None,
-        })
+    # Keep organizations with no questionnaire in the active cycle visible,
+    # so an assignment is not silently hidden from the verifier.
+    represented_org_ids = {q.organization_id for q in questionnaires}
+    for org in assigned_orgs:
+        if org.pk not in represented_org_ids:
+            org_data.append({
+                'org': org, 'questionnaire': None, 'template': None,
+                'coverage': None,
+            })
 
-    submitted_count = 0
-    pending_count = 0
-    if open_cycle:
-        submitted_count = sum(
-            1 for item in org_data
-            if item['questionnaire'] and item['questionnaire'].is_submitted
-        )
-        pending_count = len(org_data) - submitted_count
+    submitted_count = sum(
+        1 for item in org_data
+        if item['questionnaire'] and item['questionnaire'].is_submitted
+    )
+    pending_count = sum(
+        1 for item in org_data
+        if item['questionnaire'] and not item['questionnaire'].is_submitted
+    )
 
     return render(request, 'assessment/dashboard_verifier.html', {
         'org_data': org_data,
@@ -1132,7 +1146,6 @@ def verifier_dashboard(request):
         'submitted_count': submitted_count,
         'pending_count': pending_count,
     })
-
 
 
 
