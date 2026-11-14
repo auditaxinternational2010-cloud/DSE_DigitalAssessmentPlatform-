@@ -51,6 +51,11 @@
             </span>
           </a>
 
+          <div class="nav-section">Dashboards</div>
+          <a href="{% url 'admin_member_overview' %}" class="nav-item {% if request.resolver_match.url_name == 'admin_member_overview' %}active{% endif %}">Members Dashboard</a>
+          <a href="{% url 'admin_secretariat_overview' %}" class="nav-item {% if request.resolver_match.url_name == 'admin_secretariat_overview' %}active{% endif %}">Secretariat Dashboard</a>
+          <a href="{% url 'admin_judges_overview' %}" class="nav-item {% if request.resolver_match.url_name == 'admin_judges_overview' %}active{% endif %}">Judges Dashboard</a>
+
           <a href="{% url 'cycle_list' %}" class="nav-item {% if request.resolver_match.url_name == 'cycle_list' or request.resolver_match.url_name == 'cycle_detail' or request.resolver_match.url_name == 'cycle_create' or request.resolver_match.url_name == 'cycle_results' or request.resolver_match.url_name == 'category_edit' %}active{% endif %}">
             <span style="display:inline-flex;align-items:center;gap:10px;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 4v5h-5"/></svg>

@@ -16,6 +16,12 @@
     </div>
   </div>
 
+  <div class="row g-3 mb-4">
+    <div class="col-md-4"><a class="card h-100 text-decoration-none" href="{% url 'admin_member_overview' %}"><div class="card-body"><h3 class="h6">Members Dashboard</h3><p class="text-muted mb-0 small">View member questionnaire progress and submissions.</p></div></a></div>
+    <div class="col-md-4"><a class="card h-100 text-decoration-none" href="{% url 'admin_secretariat_overview' %}"><div class="card-body"><h3 class="h6">Secretariat Dashboard</h3><p class="text-muted mb-0 small">View Secretariat verification progress.</p></div></a></div>
+    <div class="col-md-4"><a class="card h-100 text-decoration-none" href="{% url 'admin_judges_overview' %}"><div class="card-body"><h3 class="h6">Judges Dashboard</h3><p class="text-muted mb-0 small">View submitted, pending and judging statuses.</p></div></a></div>
+  </div>
+
   {% if open_cycle %}
 
   <div class="stat-row" style="margin-bottom:24px;">
@@ -48,6 +54,7 @@
         <thead>
           <tr>
             <th>Organization</th>
+            <th>Questionnaire Assigned</th>
             <th>Criteria Answered</th>
             <th>Submitted</th>
             <th>Verified</th>
@@ -58,6 +65,7 @@
           {% for item in org_data %}
           <tr>
             <td style="font-weight:500;">{{ item.org.name }}</td>
+            <td>{{ item.questionnaire.template.name|default:item.questionnaire.cycle.name }}</td>
             <td><span class="num">{{ item.answered_count }}</span> <span style="color:var(--ink-4);font-size:12px;">criteria</span></td>
             <td>
               {% if item.questionnaire.is_submitted %}
@@ -87,6 +95,30 @@
     </div>
   </div>
   {% endif %}
+
+  <div class="card mt-4">
+    <div class="card-head">
+      <div class="card-title">Assigned Questionnaires — No Member Activity</div>
+      <span class="badge slate">{{ no_activity_data|length }} pending</span>
+    </div>
+    <div class="card-body tight">
+      <p class="text-muted small">Organizations with an assigned questionnaire where no member response fields have been filled yet.</p>
+      <table class="table">
+        <thead><tr><th>Organization</th><th>Questionnaire Assigned</th><th>Member Status</th></tr></thead>
+        <tbody>
+          {% for item in no_activity_data %}
+          <tr>
+            <td>{{ item.org.name }}</td>
+            <td>{{ item.questionnaire.template.name|default:item.questionnaire.cycle.name }}</td>
+            <td><span class="badge slate">No fields filled</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="text-center text-muted py-4">All assigned questionnaires have at least one member response.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
   {% else %}
 

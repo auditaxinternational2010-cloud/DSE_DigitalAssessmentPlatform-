@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} — DMA{% endblock %}
+{% block breadcrumb_parent %}DSE Admin{% endblock %}
+{% block breadcrumb_current %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div><h1 class="page-title t-display">{{ page_title }}</h1><p class="page-subtitle">{{ page_subtitle }}</p></div>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-ghost">Back to Admin Dashboard</a>
+  </div>
+  {% if open_cycle %}
+    <div class="card mb-3"><div class="card-body"><strong>{{ open_cycle.name }}</strong></div></div>
+    <div class="card"><div class="card-body tight">
+      <table class="table">
+        <thead>
+          <tr><th>Organization</th><th>Questionnaire Assigned</th>
+          {% if mode == 'member' %}<th>Member Status</th><th>Fields Filled</th>
+          {% elif mode == 'secretariat' %}<th>Verification Status</th><th>Coverage</th>
+          {% else %}<th>Current Status</th><th>Pending With</th><th>Judges Submitted</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in rows %}
+          <tr>
+            <td>{{ item.questionnaire.organization.name }}</td>
+            <td>{{ item.questionnaire.template.name|default:item.questionnaire.cycle.name }}</td>
+            {% if mode == 'member' %}
+              <td>{% if item.questionnaire.is_submitted %}<span class="badge sage">Submitted</span>{% elif item.filled %}<span class="badge accent">In progress</span>{% else %}<span class="badge slate">Not started</span>{% endif %}</td>
+              <td>{{ item.filled }}</td>
+            {% elif mode == 'secretariat' %}
+              <td>{% if item.complete %}<span class="badge sage">Completed</span>{% else %}<span class="badge slate">Pending</span>{% endif %}</td>
+              <td>{{ item.covered }}/{{ item.total }}</td>
+            {% else %}
+              <td>{{ item.status }}</td><td>{{ item.pending_at }}</td>
+              <td>{{ item.judge_submitted }}/{{ item.active_judges }}</td>
+            {% endif %}
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center text-muted py-4">No questionnaires found for this cycle.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  {% else %}
+    <div class="card"><div class="card-body text-muted">There is no active award cycle.</div></div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -150,44 +150,122 @@ def admin_dashboard(request):
     submitted = 0
     total_q = 0
     org_data = []
+    no_activity_data = []
     submission_rate = 0
     if open_cycle:
-        qs = open_cycle.questionnaires.select_related('organization').all()
+        qs = open_cycle.questionnaires.select_related('organization', 'template').all()
         total_q = qs.count()
         submitted = qs.filter(is_submitted=True).count()
         submission_rate = round(submitted / total_q * 100) if total_q else 0
 
         verified_counts = (
-            JudgeResponse.objects
-            .filter(questionnaire__cycle=open_cycle, score__isnull=False)
-            .values('questionnaire_id')
-            .annotate(count=Count('id'))
+            JudgeResponse.objects.filter(questionnaire__cycle=open_cycle, score__isnull=False)
+            .values('questionnaire_id').annotate(count=Count('id'))
         )
-        verified_map = {v['questionnaire_id']: v['count'] for v in verified_counts}
-
-        answered_counts = (
-            Response.objects
-            .filter(questionnaire__cycle=open_cycle, score__isnull=False)
-            .values('questionnaire_id')
-            .annotate(count=Count('id'))
-        )
-        answered_map = {r['questionnaire_id']: r['count'] for r in answered_counts}
+        verified_map = {r['questionnaire_id']: r['count'] for r in verified_counts}
 
         for q in qs:
-            org_data.append({
+            # A criterion is considered touched when any member-entered field has data.
+            answered_count = q.responses.filter(
+                Q(score__isnull=False) | ~Q(response='') | Q(numeric_data__isnull=False)
+            ).count()
+            row = {
                 'org': q.organization,
                 'questionnaire': q,
-                'answered_count': answered_map.get(q.pk, 0),
+                'answered_count': answered_count,
                 'verified_count': verified_map.get(q.pk, 0),
-            })
+            }
+            org_data.append(row)
+            if answered_count == 0:
+                no_activity_data.append(row)
+
     return render(request, 'assessment/dashboard_admin.html', {
-        'open_cycle': open_cycle,
-        'total_orgs': total_orgs,
-        'submitted': submitted,
-        'total_q': total_q,
-        'cycles': cycles,
-        'org_data': org_data,
+        'open_cycle': open_cycle, 'total_orgs': total_orgs,
+        'submitted': submitted, 'total_q': total_q, 'cycles': cycles,
+        'org_data': org_data, 'no_activity_data': no_activity_data,
         'submission_rate': submission_rate,
+    })
+
+
+@role_required('admin')
+def admin_member_overview(request):
+    open_cycle = AwardCycle.objects.filter(is_open=True).first()
+    questionnaires = list(
+        Questionnaire.objects.filter(cycle=open_cycle).select_related(
+            'organization', 'template'
+        ).order_by('organization__name', 'template__name')
+    ) if open_cycle else []
+    rows = []
+    for q in questionnaires:
+        filled = q.responses.filter(
+            Q(score__isnull=False) | ~Q(response='') | Q(numeric_data__isnull=False)
+        ).count()
+        rows.append({'questionnaire': q, 'filled': filled})
+    return render(request, 'assessment/admin_role_overview.html', {
+        'page_title': 'Members Dashboard', 'page_subtitle': 'Member questionnaire submission and completion overview.',
+        'open_cycle': open_cycle, 'rows': rows, 'mode': 'member',
+    })
+
+
+@role_required('admin')
+def admin_secretariat_overview(request):
+    open_cycle = AwardCycle.objects.filter(is_open=True).first()
+    questionnaires = list(
+        Questionnaire.objects.filter(cycle=open_cycle).select_related(
+            'organization', 'template'
+        ).order_by('organization__name', 'template__name')
+    ) if open_cycle else []
+    coverage = questionnaire_coverage(questionnaires)
+    rows = []
+    for q in questionnaires:
+        covered, total = coverage.get(q.pk, (0, 0))
+        rows.append({'questionnaire': q, 'covered': covered, 'total': total,
+                     'complete': total > 0 and covered >= total})
+    return render(request, 'assessment/admin_role_overview.html', {
+        'page_title': 'Secretariat Dashboard', 'page_subtitle': 'Secretariat verification progress across assigned questionnaires.',
+        'open_cycle': open_cycle, 'rows': rows, 'mode': 'secretariat',
+    })
+
+
+@role_required('admin')
+def admin_judges_overview(request):
+    open_cycle = AwardCycle.objects.filter(is_open=True).first()
+    active_judges = User.objects.filter(userprofile__role='judge', is_active=True).count()
+    questionnaires = list(
+        Questionnaire.objects.filter(cycle=open_cycle).select_related(
+            'organization', 'template'
+        ).order_by('organization__name', 'template__name')
+    ) if open_cycle else []
+    coverage = questionnaire_coverage(questionnaires)
+    rows = []
+    for q in questionnaires:
+        covered, total = coverage.get(q.pk, (0, 0))
+        secretariat_complete = total > 0 and covered >= total
+        judge_submitted = StageSubmission.objects.filter(
+            questionnaire=q, stage='judge', category__isnull=True,
+            submitted_at__isnull=False
+        ).values('user_id').distinct().count()
+        if not q.is_submitted:
+            pending_at = 'Member'
+            status = 'Member has not submitted'
+        elif not secretariat_complete:
+            pending_at = 'Secretariat'
+            status = 'Secretariat has not completed verification'
+        elif q.organization.requires_judging and judge_submitted < active_judges:
+            pending_at = 'Judges'
+            status = f'{judge_submitted} of {active_judges} judges submitted'
+        elif q.organization.requires_judging:
+            pending_at = 'Complete'
+            status = 'All judges submitted'
+        else:
+            pending_at = 'Not required'
+            status = 'Judging not required'
+        rows.append({'questionnaire': q, 'pending_at': pending_at, 'status': status,
+                     'judge_submitted': judge_submitted, 'active_judges': active_judges,
+                     'covered': covered, 'total': total})
+    return render(request, 'assessment/admin_role_overview.html', {
+        'page_title': 'Judges Dashboard', 'page_subtitle': 'All questionnaire statuses, including the stage currently awaiting submission.',
+        'open_cycle': open_cycle, 'rows': rows, 'mode': 'judges',
     })
 
 

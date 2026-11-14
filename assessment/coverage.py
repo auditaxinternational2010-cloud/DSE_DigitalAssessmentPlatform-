@@ -54,7 +54,7 @@ def questionnaire_coverage(questionnaires):
     questionnaires = list(questionnaires)
     result = {}
     for q in questionnaires:
-        cats = list(categories_for_org(q.cycle, q.organization))
+        cats = list(categories_for_org(q.cycle, q.organization, questionnaire=q))
         submitted = _submitted_category_ids(q)
         total = Criterion.objects.filter(
             category__in=cats, category__is_active=True, is_active=True
