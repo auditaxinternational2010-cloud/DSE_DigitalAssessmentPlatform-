@@ -37,7 +37,15 @@
           <div style="margin-top:8px;font-size:13px;color:var(--ink-2);line-height:1.6;white-space:pre-wrap;">{{ item.member_response.response|default:"No response provided." }}</div>
           {% if item.links %}
           <div class="label" style="margin-top:12px;">Member Evidence</div>
-          {% for link in item.links %}<div style="margin-top:6px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius-sm);"><a href="{% url 'document_file' link.document.id %}" target="_blank">{{ link.document.original_filename }}</a></div>{% endfor %}
+          {% for link in item.links %}
+            <div style="margin-top:6px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius-sm);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="font-size:13px;">{{ link.document.original_filename }}</span>
+              <span style="display:flex;gap:8px;align-items:center;">
+                <a class="btn btn-sm btn-primary" href="{% url 'document_file' link.document.id %}" target="_blank" rel="noopener">Preview</a>
+                <a class="btn btn-sm btn-ghost" href="{% url 'document_file' link.document.id %}?download=1">Download</a>
+              </span>
+            </div>
+          {% endfor %}
           {% endif %}
         {% else %}<div class="t-muted" style="margin-top:8px;">No member response found.</div>{% endif %}
       </div>

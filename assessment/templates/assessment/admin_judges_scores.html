@@ -13,6 +13,30 @@
   </div>
   {% if open_cycle %}
     <div class="card mb-3"><div class="card-body"><strong>{{ open_cycle.name }}</strong></div></div>
+    <section class="card mb-4">
+      <div class="card-head"><div><h2 class="card-title">Judge Score Summary</h2><p class="page-subtitle mb-0">Aggregated scores for each judge and questionnaire template.</p></div></div>
+      <div class="card-body tight">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead><tr><th>Judge Name</th><th>Organization</th><th>Questionnaire Template</th><th class="text-end">Score</th><th class="text-end">Total Score</th><th class="text-end">Average</th></tr></thead>
+            <tbody>
+              {% for row in judge_summary_rows %}
+                <tr>
+                  <td>{{ row.judge.get_full_name|default:row.judge.username }}</td>
+                  <td>{{ row.organization.name }}</td>
+                  <td>{{ row.template.name|default:"—" }}</td>
+                  <td class="text-end">{{ row.score|floatformat:2 }}</td>
+                  <td class="text-end">{{ row.total_score|floatformat:2 }}</td>
+                  <td class="text-end">{% if row.average is not None %}{{ row.average|floatformat:2 }}%{% else %}—{% endif %}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-3">No judge scores have been entered in this cycle.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
     {% for item in questionnaire_rows %}
       <section class="card mb-4">
         <div class="card-head" style="justify-content:space-between;gap:12px;flex-wrap:wrap;">

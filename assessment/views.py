@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, FileResponse, Http404
 from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Prefetch, Count, Sum, Max, Q
@@ -25,6 +25,7 @@ from audit.models import AuditLog
 import os as _os
 import re as _re
 import uuid as _uuid
+import mimetypes as _mimetypes
 
 _ALLOWED_EXCEL_EXT = {'.xlsx', '.xls'}
 _ALLOWED_EVIDENCE_EXT = {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg'}
@@ -275,11 +276,49 @@ def admin_judges_scores(request):
     """Show all judge marks and averages, grouped by template, organization and category."""
     open_cycle = AwardCycle.objects.filter(is_open=True).first()
     questionnaire_rows = []
+    judge_summary_rows = []
     if open_cycle:
         questionnaires = Questionnaire.objects.filter(cycle=open_cycle).select_related(
             'organization', 'template', 'cycle'
         ).order_by('template__name', 'organization__name')
         for questionnaire in questionnaires:
+            # Build one aggregate row per judge and questionnaire. The maximum
+            # total is the sum of weights for all applicable scorable criteria.
+            applicable_categories = _categories_for_questionnaire(questionnaire, active_only=False)
+            applicable_criteria = list(Criterion.objects.filter(
+                category__in=applicable_categories,
+                category__is_active=True,
+                is_active=True,
+                is_numeric=False,
+            ).order_by('category__order', 'order', 'number'))
+            possible_total = sum((c.weight for c in applicable_criteria), Decimal('0'))
+            judge_totals = {}
+            judge_scores = JudgeResponse.objects.filter(
+                questionnaire=questionnaire, score__isnull=False,
+                criterion__in=applicable_criteria,
+            ).select_related('judge').order_by('judge__last_name', 'judge__first_name', 'judge__username')
+            for judge_response in judge_scores:
+                entry = judge_totals.setdefault(judge_response.judge_id, {
+                    'judge': judge_response.judge,
+                    'score': Decimal('0'),
+                    'scored_criteria': 0,
+                })
+                entry['score'] += judge_response.score
+                entry['scored_criteria'] += 1
+            for entry in judge_totals.values():
+                entry['total_score'] = possible_total
+                entry['average'] = (
+                    (entry['score'] / possible_total * Decimal('100')).quantize(Decimal('0.01'))
+                    if possible_total > 0 else None
+                )
+                entry['score'] = entry['score'].quantize(Decimal('0.01'))
+                judge_summary_rows.append({
+                    'questionnaire': questionnaire,
+                    'organization': questionnaire.organization,
+                    'template': questionnaire.template,
+                    **entry,
+                })
+
             categories_data = []
             questionnaire_values = []
             categories = _categories_for_questionnaire(questionnaire, active_only=False)
@@ -322,6 +361,7 @@ def admin_judges_scores(request):
     return render(request, 'assessment/admin_judges_scores.html', {
         'open_cycle': open_cycle,
         'questionnaire_rows': questionnaire_rows,
+        'judge_summary_rows': judge_summary_rows,
         'page_title': 'Judges Dashboard Scores',
         'page_subtitle': 'Individual judge scores and averages by questionnaire template, organization and category.',
     })
@@ -1846,30 +1886,44 @@ def verify_questionnaire(request, pk):
 
 @login_required
 def document_file(request, doc_pk):
+    """Serve evidence inline for browser review, or as an attachment on download."""
     from assessment.access import can_access_document
     doc = get_object_or_404(EvidenceDocument, pk=doc_pk)
     if not can_access_document(request.user, doc):
         raise PermissionDenied
-    download = bool(request.GET.get('download'))
+
+    download = request.GET.get('download') == '1'
+    if not doc.file or not doc.file.name:
+        raise Http404('The evidence file is unavailable.')
+
+    filename = _os.path.basename(doc.original_filename or doc.file.name)
+    filename = _re.sub(r'[\r\n\"]', '', filename)
+    content_type = _mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+    disposition = f'{"attachment" if download else "inline"}; filename="{filename.replace(chr(34), "")}"'
     storage = doc.file.storage
     name = doc.file.name
-    disposition = f'attachment; filename="{doc.original_filename}"'
 
+    # For Spaces/S3, ask the object store to return a short-lived URL with an
+    # inline disposition for preview, or attachment disposition for download.
     if storage.__class__.__name__ == 'S3Boto3Storage':
-        if download:
-            return HttpResponseRedirect(storage.url(
-                name, parameters={'ResponseContentDisposition': disposition}))
-        return HttpResponseRedirect(doc.file.url)
+        return HttpResponseRedirect(storage.url(name, parameters={
+            'ResponseContentDisposition': disposition,
+            'ResponseContentType': content_type,
+        }))
 
-    if not name:
-        return redirect('library_list')
+    if not storage.exists(name):
+        raise Http404('The evidence file could not be found.')
 
-    if download and storage.exists(name):
-        from django.http import FileResponse
-        return FileResponse(
-            doc.file.open('rb'), as_attachment=True,
-            filename=doc.original_filename)
-    return HttpResponseRedirect(doc.file.url)
+    response = FileResponse(
+        doc.file.open('rb'),
+        as_attachment=download,
+        filename=filename,
+        content_type=content_type,
+    )
+    if not download:
+        response['Content-Disposition'] = disposition
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 @login_required
