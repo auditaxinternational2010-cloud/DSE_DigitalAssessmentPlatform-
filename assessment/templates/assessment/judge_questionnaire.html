@@ -50,8 +50,9 @@
       </div>
 
       <div style="border-top:1px solid var(--line);padding-top:18px;">
-        <div class="label">Your Judge Score (0–5)</div>
-        <input type="number" name="judge_score_{{ item.criterion.id }}" min="0" max="5" step="1" class="input" style="max-width:180px;margin-top:8px;" value="{% if item.judge_response and item.judge_response.score is not None %}{{ item.judge_response.score }}{% endif %}" {% if judge_submitted %}disabled{% endif %}>
+        <div class="label">Judge Score</div>
+        <div style="font-size:11px;color:var(--ink-3);margin-top:4px;">Enter a number from 0 up to and including the assigned criterion weight ({{ item.criterion.weight|floatformat:2 }}), with up to 2 decimal places. Do not enter a % sign.</div>
+        <input type="number" name="judge_score_{{ item.criterion.id }}" min="0" max="{{ item.criterion.weight }}" step="0.01" inputmode="decimal" class="input" style="max-width:180px;margin-top:8px;" value="{% if item.judge_response and item.judge_response.score is not None %}{{ item.judge_response.score }}{% endif %}" {% if judge_submitted %}disabled{% endif %}>
         <div class="field" style="margin-top:14px;">
           <div class="label">Your Comment</div>
           <textarea name="judge_notes_{{ item.criterion.id }}" class="textarea" rows="4" placeholder="Enter your independent comment or justification." {% if judge_submitted %}disabled{% endif %}>{{ item.judge_response.notes|default:"" }}</textarea>

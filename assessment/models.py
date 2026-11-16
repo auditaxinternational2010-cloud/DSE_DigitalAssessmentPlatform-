@@ -249,14 +249,18 @@ class EvidenceLink(models.Model):
 class JudgeResponse(models.Model):
     """A judge's private, criterion-level score and comment.
 
-    Each judge gets an independent row. Views never expose another judge's
-    rows; the Secretariat/admin report reveals them only after the cycle closes.
+    Each judge gets an independent row. Judge-facing views expose only the
+    current judge's rows; administrator score reporting is separately restricted
+    to administrators.
     """
     questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE, related_name='judge_responses')
     judge = models.ForeignKey(User, on_delete=models.CASCADE, related_name='judge_responses')
     criterion = models.ForeignKey(Criterion, on_delete=models.CASCADE, related_name='judge_responses')
-    score = models.PositiveIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(5)], null=True, blank=True
+    score = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(0)],
+        null=True, blank=True,
+        help_text='Numeric judge score from zero up to and including the criterion weight, with up to two decimal places.'
     )
     notes = models.TextField(blank=True)
     excel_attachment = models.FileField(

@@ -8,6 +8,7 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Prefetch, Count, Sum, Max, Q
+from decimal import Decimal, InvalidOperation
 
 from accounts.decorators import role_required
 from accounts.models import Organization
@@ -266,6 +267,63 @@ def admin_judges_overview(request):
     return render(request, 'assessment/admin_role_overview.html', {
         'page_title': 'Judges Dashboard', 'page_subtitle': 'All questionnaire statuses, including the stage currently awaiting submission.',
         'open_cycle': open_cycle, 'rows': rows, 'mode': 'judges',
+    })
+
+
+@role_required('admin')
+def admin_judges_scores(request):
+    """Show all judge marks and averages, grouped by template, organization and category."""
+    open_cycle = AwardCycle.objects.filter(is_open=True).first()
+    questionnaire_rows = []
+    if open_cycle:
+        questionnaires = Questionnaire.objects.filter(cycle=open_cycle).select_related(
+            'organization', 'template', 'cycle'
+        ).order_by('template__name', 'organization__name')
+        for questionnaire in questionnaires:
+            categories_data = []
+            questionnaire_values = []
+            categories = _categories_for_questionnaire(questionnaire, active_only=False)
+            for category in categories:
+                criteria_data = []
+                category_values = []
+                criteria = Criterion.objects.filter(category=category).order_by('order', 'number')
+                for criterion in criteria:
+                    judge_rows = list(JudgeResponse.objects.filter(
+                        questionnaire=questionnaire, criterion=criterion,
+                        score__isnull=False,
+                    ).select_related('judge').order_by('judge__last_name', 'judge__username'))
+                    scores = [row.score for row in judge_rows]
+                    average = (sum(scores, Decimal('0')) / len(scores)) if scores else None
+                    if average is not None:
+                        # Give each criterion equal representation in its
+                        # category/questionnaire roll-up, regardless of how
+                        # many judges have entered a score for that criterion.
+                        category_values.append(average)
+                        questionnaire_values.append(average)
+                    criteria_data.append({
+                        'criterion': criterion,
+                        'judge_rows': judge_rows,
+                        'average': average.quantize(Decimal('0.01')) if average is not None else None,
+                    })
+                category_average = (sum(category_values, Decimal('0')) / len(category_values)) if category_values else None
+                categories_data.append({
+                    'category': category,
+                    'criteria': criteria_data,
+                    'average': category_average.quantize(Decimal('0.01')) if category_average is not None else None,
+                    'score_count': sum(len(row['judge_rows']) for row in criteria_data),
+                })
+            questionnaire_average = (sum(questionnaire_values, Decimal('0')) / len(questionnaire_values)) if questionnaire_values else None
+            questionnaire_rows.append({
+                'questionnaire': questionnaire,
+                'categories': categories_data,
+                'average': questionnaire_average.quantize(Decimal('0.01')) if questionnaire_average is not None else None,
+                'score_count': sum(cat['score_count'] for cat in categories_data),
+            })
+    return render(request, 'assessment/admin_judges_scores.html', {
+        'open_cycle': open_cycle,
+        'questionnaire_rows': questionnaire_rows,
+        'page_title': 'Judges Dashboard Scores',
+        'page_subtitle': 'Individual judge scores and averages by questionnaire template, organization and category.',
     })
 
 
@@ -1432,26 +1490,39 @@ def judge_questionnaire(request, pk):
             messages.warning(request, 'Your Judge assessment has already been submitted and is locked.')
             return redirect('judge_questionnaire', pk=pk)
 
+        # Validate every submitted value before writing anything, so one bad
+        # score cannot leave a partially saved questionnaire.
+        parsed_scores = {}
+        for criterion in criteria:
+            score_raw = request.POST.get(f'judge_score_{criterion.id}', '').strip()
+            score = None
+            if not criterion.is_numeric and score_raw:
+                try:
+                    score = Decimal(score_raw)
+                except (InvalidOperation, ValueError, TypeError):
+                    messages.error(request, f'Invalid Judge Score for criterion {criterion.number}. Enter a number only, without a % sign.')
+                    return redirect('judge_questionnaire', pk=pk)
+                if not score.is_finite() or score < Decimal('0'):
+                    messages.error(request, f'Judge Score for criterion {criterion.number} must be a non-negative number.')
+                    return redirect('judge_questionnaire', pk=pk)
+                if score.as_tuple().exponent < -2:
+                    messages.error(request, f'Judge Score for criterion {criterion.number} may have at most 2 decimal places.')
+                    return redirect('judge_questionnaire', pk=pk)
+                if score > criterion.weight:
+                    messages.error(request, f'Judge Score for criterion {criterion.number} must be equal to or less than its assigned weight ({criterion.weight}).')
+                    return redirect('judge_questionnaire', pk=pk)
+            parsed_scores[criterion.id] = score
+            excel_error = _validate_judge_excel_upload(request.FILES.get(f'judge_excel_{criterion.id}'))
+            if excel_error:
+                messages.error(request, excel_error)
+                return redirect('judge_questionnaire', pk=pk)
+
         saved_count = 0
         with transaction.atomic():
             for criterion in criteria:
-                score_raw = request.POST.get(f'judge_score_{criterion.id}', '').strip()
+                score = parsed_scores.get(criterion.id)
                 notes = request.POST.get(f'judge_notes_{criterion.id}', '').strip()
                 excel_file = request.FILES.get(f'judge_excel_{criterion.id}')
-                score = None
-                if not criterion.is_numeric and score_raw:
-                    try:
-                        score = int(score_raw)
-                    except (ValueError, TypeError):
-                        score = None
-                    if score is not None and not 0 <= score <= 5:
-                        score = None
-
-                excel_error = _validate_judge_excel_upload(excel_file)
-                if excel_error:
-                    messages.error(request, excel_error)
-                    return redirect('judge_questionnaire', pk=pk)
-
                 existing = JudgeResponse.objects.filter(
                     questionnaire=questionnaire,
                     judge=request.user,
@@ -1467,7 +1538,7 @@ def judge_questionnaire(request, pk):
                     defaults={'score': score, 'notes': notes},
                 )
                 if excel_file:
-                    safe_name = _re.sub(r'[^\\w.\\-]', '_', _os.path.basename(excel_file.name))
+                    safe_name = _re.sub(r'[^\w.\-]', '_', _os.path.basename(excel_file.name))
                     obj.excel_attachment.save(
                         f'{_uuid.uuid4().hex}_{safe_name}', excel_file, save=True
                     )
@@ -1476,18 +1547,21 @@ def judge_questionnaire(request, pk):
             if action == 'submit':
                 # Submit means the judge is declaring this questionnaire complete.
                 # Require every non-numeric criterion to have a score.
-                missing = JudgeResponse.objects.filter(
-                    questionnaire=questionnaire, judge=request.user,
-                    criterion_id__in=scorable_ids, score__isnull=True,
-                ).count()
-                existing_scored = JudgeResponse.objects.filter(
-                    questionnaire=questionnaire, judge=request.user,
-                    criterion_id__in=scorable_ids, score__isnull=False,
-                ).count()
-                if existing_scored < len(scorable_ids) or missing:
+                saved_scores = {
+                    row.criterion_id: row.score for row in JudgeResponse.objects.filter(
+                        questionnaire=questionnaire, judge=request.user,
+                        criterion_id__in=scorable_ids, score__isnull=False,
+                    )
+                }
+                invalid_weight_scores = [
+                    c for c in criteria if c.id in scorable_ids
+                    and (saved_scores.get(c.id) is None or saved_scores[c.id] > c.weight)
+                ]
+                if invalid_weight_scores:
+                    first = invalid_weight_scores[0]
                     messages.error(
                         request,
-                        'Please enter a score for every applicable criterion before submitting.'
+                        f'Please enter a Judge Score equal to or less than the assigned weight for every criterion. First incomplete/invalid criterion: {first.number}.'
                     )
                     return redirect('judge_questionnaire', pk=pk)
                 judge_submission.submitted_at = timezone.now()
@@ -1737,7 +1811,7 @@ def verify_questionnaire(request, pk):
             'member_response': member_resp,
             'verifier_response': verifier_map.get(criterion.id),
             'judge_responses': judge_map.get(criterion.id, []),
-            'judge_average': round(sum(scores) / len(scores), 1) if scores else None,
+            'judge_average': (sum(scores, Decimal('0')) / len(scores)).quantize(Decimal('0.01')) if scores else None,
             'links': member_resp.evidence_links.all() if member_resp else [],
             'others': others,
             'others_extra': len(others) - 1 if others else 0,

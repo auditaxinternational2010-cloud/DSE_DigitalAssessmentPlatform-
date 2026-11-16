@@ -55,6 +55,7 @@
           <a href="{% url 'admin_member_overview' %}" class="nav-item {% if request.resolver_match.url_name == 'admin_member_overview' %}active{% endif %}">Members Dashboard</a>
           <a href="{% url 'admin_secretariat_overview' %}" class="nav-item {% if request.resolver_match.url_name == 'admin_secretariat_overview' %}active{% endif %}">Secretariat Dashboard</a>
           <a href="{% url 'admin_judges_overview' %}" class="nav-item {% if request.resolver_match.url_name == 'admin_judges_overview' %}active{% endif %}">Judges Dashboard</a>
+          <a href="{% url 'admin_judges_scores' %}" class="nav-item {% if request.resolver_match.url_name == 'admin_judges_scores' %}active{% endif %}">Judges Dashboard Scores</a>
 
           <a href="{% url 'cycle_list' %}" class="nav-item {% if request.resolver_match.url_name == 'cycle_list' or request.resolver_match.url_name == 'cycle_detail' or request.resolver_match.url_name == 'cycle_create' or request.resolver_match.url_name == 'cycle_results' or request.resolver_match.url_name == 'category_edit' %}active{% endif %}">
             <span style="display:inline-flex;align-items:center;gap:10px;">
