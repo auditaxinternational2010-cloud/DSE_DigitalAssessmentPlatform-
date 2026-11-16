@@ -8,20 +8,53 @@
     <div><h1 class="page-title t-display">Judges Dashboard</h1>{% if open_cycle %}<div class="page-subtitle">{{ open_cycle.name }}</div>{% else %}<div class="page-subtitle t-muted">No award cycle is currently open.</div>{% endif %}</div>
   </div>
   {% if open_cycle %}
-  <div class="stat-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px;">
-    <div class="stat"><div class="stat-label">Available Judges</div><div class="stat-value">{{ available_judges }}</div></div>
-    <div class="stat"><div class="stat-label">Ready</div><div class="stat-value">{{ pending_count }}</div></div>
-    <div class="stat"><div class="stat-label">My Completed</div><div class="stat-value">{{ judged_count }}</div></div>
-    <div class="stat"><div class="stat-label">Organizations</div><div class="stat-value">{{ org_data|length }}</div></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
+    <a href="{% url 'judges_dashboard' %}" class="btn {% if not selected_template_id %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">All questionnaires</a>
+    {% for tab in template_stats %}
+      <a href="?template={{ tab.template.id }}" class="btn {% if selected_template_id == tab.template.id %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">{{ tab.template.name }}</a>
+    {% endfor %}
   </div>
-  <div class="card"><div class="card-body tight"><table class="table"><thead><tr><th>Organization</th><th>Secretariat Coverage</th><th>Judges Submitted</th><th>My Status</th><th>Action</th></tr></thead><tbody>
+
+  {% if template_stats %}
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:22px;">
+    {% for tab in template_stats %}
+    <a href="?template={{ tab.template.id }}" class="card" style="text-decoration:none;color:inherit;border:2px solid {% if selected_template_id == tab.template.id %}var(--accent){% else %}var(--line){% endif %};">
+      <div class="card-body">
+        <div class="t-uppercase" style="font-size:10px;">Questionnaire template</div>
+        <div style="font-weight:700;margin:5px 0 12px;">{{ tab.template.name }}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;font-size:12px;">
+          <div><div class="t-muted">Judges assigned</div><strong>{{ tab.judges_assigned }}</strong></div>
+          <div><div class="t-muted">Ready</div><strong>{{ tab.ready }}</strong></div>
+          <div><div class="t-muted">Completed by me</div><strong>{{ tab.completed_by_me }}</strong></div>
+          <div><div class="t-muted">Completed by other judges</div><strong>{{ tab.completed_by_other_judges }}</strong></div>
+          <div style="grid-column:1/-1;"><div class="t-muted">No. of organizations</div><strong>{{ tab.organizations }}</strong></div>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="stat-row" style="grid-template-columns:repeat(5,1fr);margin-bottom:24px;">
+    <div class="stat"><div class="stat-label">Judges Assigned</div><div class="stat-value">{{ available_judges }}</div></div>
+    <div class="stat"><div class="stat-label">Ready</div><div class="stat-value">{{ pending_count }}</div></div>
+    <div class="stat"><div class="stat-label">Completed by Me</div><div class="stat-value">{{ judged_count }}</div></div>
+    <div class="stat"><div class="stat-label">Completed by Other Judges</div><div class="stat-value">{{ other_completed_count }}</div></div>
+    <div class="stat"><div class="stat-label">Organizations</div><div class="stat-value">{{ organization_count }}</div></div>
+  </div>
+
+  <div class="card"><div class="card-body tight"><table class="table"><thead><tr><th>Questionnaire</th><th>Organization</th><th>Secretariat Coverage</th><th>Judges Submitted</th><th>My Status</th><th>Other Judges</th><th>Action</th></tr></thead><tbody>
   {% for item in org_data %}
-  <tr><td><strong>{{ item.org.name }}</strong><div class="t-muted" style="font-size:11px;">Independent judging — other judges' marks are private</div></td>
-  <td><span class="badge {% if item.verifier_complete %}sage{% else %}slate{% endif %}">{{ item.covered }}/{{ item.total }}</span></td>
-  <td>{{ item.submitted_judges }}/{{ item.available_judges }}</td>
-  <td>{% if item.status == 'judged' %}<span class="badge sage">My scoring complete</span>{% elif item.status == 'ready' %}<span class="badge accent">Ready for me</span>{% else %}<span class="badge slate">Waiting for Secretariat</span>{% endif %}</td>
-  <td>{% if item.status != 'waiting' %}<a href="{% url 'judge_questionnaire' item.questionnaire.pk %}" class="btn btn-primary btn-sm">{% if item.my_complete %}View / Edit{% else %}Score / Review{% endif %}</a>{% else %}<button class="btn btn-ghost btn-sm" disabled>Waiting</button>{% endif %}</td></tr>
-  {% empty %}<tr><td colspan="5" style="padding:28px;text-align:center;" class="text-muted">No organizations are configured for the judging workflow in this cycle.</td></tr>{% endfor %}
+  <tr>
+    <td><strong>{{ item.questionnaire.template.name|default:"Questionnaire" }}</strong></td>
+    <td><strong>{{ item.org.name }}</strong><div class="t-muted" style="font-size:11px;">Other judges' marks and comments remain private</div></td>
+    <td><span class="badge {% if item.verifier_complete %}sage{% else %}slate{% endif %}">{{ item.covered }}/{{ item.total }}</span></td>
+    <td>{{ item.submitted_judges }}/{{ item.available_judges }}</td>
+    <td>{% if item.status == 'judged' %}<span class="badge sage">Completed by me</span>{% elif item.status == 'ready' %}<span class="badge accent">Ready</span>{% else %}<span class="badge slate">Waiting for Secretariat</span>{% endif %}</td>
+    <td>{% if item.other_judges_completed %}<span class="badge sage">Completed</span>{% else %}<span class="badge slate">Not yet completed</span>{% endif %}</td>
+    <td>{% if item.status != 'waiting' %}<a href="{% url 'judge_questionnaire' item.questionnaire.pk %}" class="btn btn-primary btn-sm">{% if item.my_complete %}View{% else %}Score / Review{% endif %}</a>{% else %}<button class="btn btn-ghost btn-sm" disabled>Waiting</button>{% endif %}</td>
+  </tr>
+  {% empty %}<tr><td colspan="7" style="padding:28px;text-align:center;" class="text-muted">No submitted questionnaires are available for this selection.</td></tr>{% endfor %}
   </tbody></table></div></div>
   {% else %}<div class="card"><div class="card-body"><div class="empty-state"><div class="empty-title">No award cycle is currently open</div><div class="empty-body">Judging assignments will appear here when a cycle is open.</div></div></div></div>{% endif %}
 </div>

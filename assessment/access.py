@@ -26,5 +26,6 @@ def can_access_document(user, document):
         return document.evidence_links.filter(
             response__questionnaire__is_submitted=True,
             response__questionnaire__organization_id=document.organization_id,
+            response__questionnaire__organization__requires_judging=True,
         ).exists()
     return False

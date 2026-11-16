@@ -1382,14 +1382,15 @@ def _refresh_judging_completion(questionnaire):
 
 @role_required('judge')
 def judges_dashboard(request):
-    """Dashboard for judges. Each judge works independently."""
+    """Judge dashboard with questionnaire-template tabs and per-judge status."""
     open_cycle = AwardCycle.objects.filter(is_open=True).first()
-    org_data = []
-    pending_count = 0
-    judged_count = 0
     available_judges = User.objects.filter(
         userprofile__role='judge', is_active=True
     ).count()
+    org_data = []
+    template_stats = []
+    pending_count = judged_count = other_completed_count = 0
+    organization_count = 0
 
     if open_cycle:
         questionnaires = list(
@@ -1399,43 +1400,33 @@ def judges_dashboard(request):
                 organization__requires_judging=True,
                 is_submitted=True,
             )
-            .select_related('organization')
+            .select_related('organization', 'template')
+            .order_by('template__name', 'organization__name')
         )
         coverage_map = questionnaire_coverage(questionnaires)
 
         for q in questionnaires:
             covered, total = coverage_map.get(q.pk, (0, 0))
             secretariat_complete = total > 0 and covered >= total
-            scorable_ids = list(
-                Criterion.objects.filter(
-                    category__cycle=q.cycle,
-                    category__is_active=True,
-                    is_active=True,
-                    is_numeric=False,
-                ).filter(
-                    category_id__in=_categories_for_questionnaire(q).values_list('id', flat=True)
-                ).values_list('id', flat=True)
-            )
-            my_scored = JudgeResponse.objects.filter(
-                questionnaire=q, judge=request.user,
-                criterion_id__in=scorable_ids, score__isnull=False,
-            ).count()
             my_complete = StageSubmission.objects.filter(
                 questionnaire=q, user=request.user, stage='judge', category__isnull=True,
                 submitted_at__isnull=False
             ).exists()
             submitted_judges = StageSubmission.objects.filter(
-                questionnaire=q, stage='judge', category__isnull=True, submitted_at__isnull=False
+                questionnaire=q, stage='judge', category__isnull=True,
+                submitted_at__isnull=False
             ).values('user_id').distinct().count()
+            other_judges_completed = StageSubmission.objects.filter(
+                questionnaire=q, stage='judge', category__isnull=True,
+                submitted_at__isnull=False
+            ).exclude(user=request.user).exists()
 
             if not secretariat_complete:
                 status = 'waiting'
             elif my_complete:
                 status = 'judged'
-                judged_count += 1
             else:
                 status = 'ready'
-                pending_count += 1
 
             org_data.append({
                 'questionnaire': q,
@@ -1445,16 +1436,71 @@ def judges_dashboard(request):
                 'verifier_complete': secretariat_complete,
                 'status': status,
                 'my_complete': my_complete,
+                'other_judges_completed': other_judges_completed,
                 'submitted_judges': submitted_judges,
                 'available_judges': available_judges,
             })
+
+        # All active judge accounts can assess all submitted questionnaires in
+        # this workflow; there is no separate per-template judge-assignment model.
+        by_template = {}
+        for item in org_data:
+            template = item['questionnaire'].template
+            if not template:
+                continue
+            bucket = by_template.setdefault(template.pk, {
+                'template': template,
+                'judges_assigned': available_judges,
+                'ready': 0,
+                'completed_by_me': 0,
+                'completed_by_other_judges': 0,
+                'organization_ids': set(),
+            })
+            bucket['organization_ids'].add(item['org'].pk)
+            if item['status'] == 'ready':
+                bucket['ready'] += 1
+            if item['my_complete']:
+                bucket['completed_by_me'] += 1
+            if item['other_judges_completed']:
+                bucket['completed_by_other_judges'] += 1
+
+        template_stats = [
+            {
+                **bucket,
+                'organizations': len(bucket['organization_ids']),
+            }
+            for bucket in sorted(by_template.values(), key=lambda row: row['template'].name.lower())
+        ]
+
+    selected_template_raw = request.GET.get('template', '').strip()
+    if selected_template_raw.isdigit():
+        selected_template_id = int(selected_template_raw)
+        valid_template_ids = {row['template'].pk for row in template_stats}
+        if selected_template_id in valid_template_ids:
+            org_data = [
+                item for item in org_data
+                if item['questionnaire'].template_id == selected_template_id
+            ]
+        else:
+            selected_template_id = None
+    else:
+        selected_template_id = None
+
+    pending_count = sum(1 for item in org_data if item['status'] == 'ready')
+    judged_count = sum(1 for item in org_data if item['my_complete'])
+    other_completed_count = sum(1 for item in org_data if item['other_judges_completed'])
+    organization_count = len({item['org'].pk for item in org_data})
 
     return render(request, 'assessment/dashboard_judges.html', {
         'open_cycle': open_cycle,
         'org_data': org_data,
         'pending_count': pending_count,
         'judged_count': judged_count,
+        'other_completed_count': other_completed_count,
+        'organization_count': organization_count,
         'available_judges': available_judges,
+        'template_stats': template_stats,
+        'selected_template_id': selected_template_id,
     })
 
 
@@ -1886,7 +1932,11 @@ def verify_questionnaire(request, pk):
 
 @login_required
 def document_file(request, doc_pk):
-    """Serve evidence inline for browser review, or as an attachment on download."""
+    """Stream evidence inline for preview or as an attachment for download.
+
+    Streaming through Django storage avoids browser-facing S3/Spaces preview
+    redirects that can fail with a storage-generated 404 or invalid signed URL.
+    """
     from assessment.access import can_access_document
     doc = get_object_or_404(EvidenceDocument, pk=doc_pk)
     if not can_access_document(request.user, doc):
@@ -1897,31 +1947,30 @@ def document_file(request, doc_pk):
         raise Http404('The evidence file is unavailable.')
 
     filename = _os.path.basename(doc.original_filename or doc.file.name)
-    filename = _re.sub(r'[\r\n\"]', '', filename)
+    filename = _re.sub(r'[\r\n"]', '', filename)
     content_type = _mimetypes.guess_type(filename)[0] or 'application/octet-stream'
-    disposition = f'{"attachment" if download else "inline"}; filename="{filename.replace(chr(34), "")}"'
     storage = doc.file.storage
-    name = doc.file.name
 
-    # For Spaces/S3, ask the object store to return a short-lived URL with an
-    # inline disposition for preview, or attachment disposition for download.
-    if storage.__class__.__name__ == 'S3Boto3Storage':
-        return HttpResponseRedirect(storage.url(name, parameters={
-            'ResponseContentDisposition': disposition,
-            'ResponseContentType': content_type,
-        }))
-
-    if not storage.exists(name):
-        raise Http404('The evidence file could not be found.')
+    try:
+        file_handle = storage.open(doc.file.name, 'rb')
+    except Exception as exc:
+        error_code = None
+        try:
+            error_code = exc.response.get('Error', {}).get('Code')
+        except (AttributeError, TypeError):
+            pass
+        if isinstance(exc, FileNotFoundError) or str(error_code) in {'404', 'NoSuchKey', 'NotFound'}:
+            raise Http404('The evidence file could not be found in storage.') from exc
+        raise
 
     response = FileResponse(
-        doc.file.open('rb'),
+        file_handle,
         as_attachment=download,
         filename=filename,
         content_type=content_type,
     )
     if not download:
-        response['Content-Disposition'] = disposition
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
     response['X-Content-Type-Options'] = 'nosniff'
     return response
 
